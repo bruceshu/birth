@@ -64,7 +64,7 @@ int main(int argc, char const *argv[])
             "\r\n"\
         ,url, domain);
 
-    printf("%s\n%d", header, (int) strlen(header));
+    printf("the header of http is:%sthe length of header is:%d\n", header, (int) strlen(header));
 
     //´´½¨Ì×½Ó×Ö
     int client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
