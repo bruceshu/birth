@@ -7,5 +7,5 @@ echo "the content of para is:$*"
 echo "the :$@"
 echo "the result of last is:$?"
 echo "===== test > and >> ====="
-echo "scene one" 1>&2
-echo "scene two" 1>&2
+echo "scene one" >standard.txt
+echo "scene two" >error.txt 2>&1
