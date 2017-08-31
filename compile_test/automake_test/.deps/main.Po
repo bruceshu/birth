@@ -1,0 +1,9 @@
+main.o: main.c /usr/include/stdc-predef.h test_a.h test_b.h test_c.h
+
+/usr/include/stdc-predef.h:
+
+test_a.h:
+
+test_b.h:
+
+test_c.h:
