@@ -29,12 +29,19 @@ void test2()
 	char *str1 = "abcdefghijklmnopqrstuvwxyz";
 	char *str2 = "shuhuan";
 	char *str3 = "123456";
+	char *str4 = "shu123huan";
 
 	int result = 0;
 
-	result = strspn(str1, str3);
-	printf("the result of strspn is %d\n", result);
+	result = strspn(str2, str1);
+        printf("the result of strspn is %d\n", result);
 
-	result = strcspn(str1, str3);
-	printf("the result of strcspn is %d\n", result);
+        result = strspn(str3, str1);
+        printf("the result of strspn is %d\n", result);
+
+        result = strspn(str4, str1);
+        printf("the result of strspn is %d\n", result);
+
+        result = strcspn(str1, str3);
+        printf("the result of strcspn is %d\n", result);
 }
