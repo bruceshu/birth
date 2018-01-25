@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-void func2()
+void fun2()
 {
 	printf("this is fun2\n");
 }
