@@ -1,14 +1,14 @@
-#include <stdio.h>
-#include "print.h"
+//#include "fun1.h"
+#include "fun2.h"
+#include "fun3.h"
+
 
 int main(int argc, char *argv[])
 {
-	int num;
 
-	printf("please input the number of multiplication table:");
-	scanf("%d", &num);
+//	fun1();
+	fun2();
+	fun3();
 
-	print_multi_table(num);
-	
 	return 0;
 }

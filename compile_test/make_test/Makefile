@@ -1,11 +1,8 @@
-objects = main.o print.o
+objects = main.o fun1.o fun2.o fun3.o
 
 out : $(objects)
-	cc -o out $(objects)
+	gcc -o out $(objects)
 
-print.o : print.c
-	gcc -c print.c -std=c99
-
-.PHONY:clean
+.PHONY : clean
 clean :
-	-rm out $(objects)
+	-rm out *.o
