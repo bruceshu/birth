@@ -3,6 +3,7 @@
 
 
 #define INPUT_SIZE 1024
+#define PORT 9999
 
 
 void parse_url(const char *url, char *domain, int *port)
@@ -54,18 +55,17 @@ void parse_url(const char *url, char *domain, int *port)
 
 int main(int argc, char *argv[])
 {
-    struct sockaddr_in addr;
-    int socket;
-
-    char ip[16] = {0};
-    unsigned short port = 80;
-
     if (argc != 2)
     {
         goto DETAIL;
     }
+    
+    struct sockaddr_in addr;
+    int socket;
 
-    parse_url(argv[1], ip, port);
+    //char ip[16] = {0};
+    //unsigned short port = 80;
+    //parse_url(argv[1], ip, port);
 
     int client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket < 0)
@@ -76,8 +76,8 @@ int main(int argc, char *argv[])
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(ip);
-    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr(argv[1]);
+    addr.sin_port = htons(PORT);
 
     int result = connect(client_socket, (struct sockaddr *)&addr, sizeof(addr));
     if (result == -1)
@@ -111,9 +111,9 @@ int main(int argc, char *argv[])
 DETAIL:
     printf("==============================\n");
     printf("please input one paremeter,like this:\n");
-    printf("./client 192.168.135.123:1234 or\n");    
+    //printf("./client 192.168.135.123:1234 or\n");    
     printf("./client 192.168.135.123 or\n");
-    printf("./client www.baidu.com");
+    //printf("./client www.baidu.com");
     printf("==============================\n");
     
     return 0;
