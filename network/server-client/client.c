@@ -1,3 +1,5 @@
+
+
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>  
@@ -64,7 +66,6 @@ int main(int argc, char *argv[])
     }
     
     struct sockaddr_in addr;
-    int socket;
 
     //char ip[16] = {0};
     //unsigned short port = 80;
@@ -108,7 +109,7 @@ int main(int argc, char *argv[])
         }  
     }
 
-    close(listen_socket);
+    close(client_socket);
     
     return 0;
 DETAIL:
