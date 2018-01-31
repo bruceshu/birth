@@ -16,7 +16,7 @@ int creat_socket()
     if(listen_socket == -1)  
     {  
         printf("create socket failed!\n");
-        return -1;  
+        return -1;
     }
 
     struct sockaddr_in addr;  
@@ -24,7 +24,8 @@ int creat_socket()
       
     addr.sin_family = AF_INET;    /* Internet地址族 */  
     addr.sin_port = htons(PORT);  /* 端口号 */  
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);   /* IP地址 */  
+    //addr.sin_addr.s_addr = htonl(INADDR_ANY);   /* IP地址 */  
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1");/* IP地址 */  
 
     int ret = bind(listen_socket, (struct sockaddr *)&addr, sizeof(addr));
     if(ret == -1)  
@@ -104,7 +105,7 @@ void hanld_client(int listen_socket, int client_socket)
 
 int main()  
 {  
-    int listen_socket = Creat_socket();  
+    int listen_socket = creat_socket();  
       
     int client_socket = wait_client(listen_socket);  
       
