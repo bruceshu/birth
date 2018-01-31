@@ -5,7 +5,7 @@
 #define INPUT_SIZE 1024
 #define PORT 9999
 
-
+#if 0
 void parse_url(const char *url, char *domain, int *port)
 {
     int j = 0;
@@ -51,6 +51,7 @@ void parse_url(const char *url, char *domain, int *port)
     }
     file_name[j] = '\0';
 }
+#endif
 
 
 int main(int argc, char *argv[])
