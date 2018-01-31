@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <sys/socket.h>
-
+#include <sys/types.h>  
+#include <unistd.h>  
+#include <arpa/inet.h>  
 
 #define INPUT_SIZE 1024
 #define PORT 9999
