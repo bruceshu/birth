@@ -1,10 +1,13 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>  
-#include <unistd.h>  
+#include <unistd.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>  
 
 #define INPUT_SIZE 1024
@@ -80,12 +83,10 @@ int main(int argc, char *argv[])
     char ip[16] = {0};
     unsigned short port = 9999;
     ret = parse_url(argv[1], ip, &port);
-    if (ret < 0)
+    if (ret != OK)
     {
         goto DETAIL;
     }
-
-
 
     int client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket < 0)
