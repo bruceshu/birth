@@ -8,7 +8,11 @@
 
 #define PORT 9999
 #define BUFF_SIZE 1024
-#define CLIENT_NUM 3
+#define CLIENT_NUM 20
+
+unsigned short count_client = 0;
+pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;
+
 
 int creat_socket()
 {
@@ -60,7 +64,11 @@ int wait_client(int listen_socket)
     }  
       
     printf("success to recive a client ：%s\n", inet_ntoa(cliaddr.sin_addr));  
-      
+    
+    pthread_mutex_lock(&mutex)
+    count_client++;
+    pthread_mutex_unlock(&mutex)
+    
     return client_socket;  
 }  
 
@@ -95,15 +103,20 @@ void *hanld_client(void * arg)
             break;  
         }  
     }  
-    
+
+    pthread_mutex_lock(&mutex)
+    count_client--;
+    pthread_mutex_unlock(&mutex)
+
     close(client_socket);  
 }  
 
+
 int main()  
 {  
-    int listen_socket = creat_socket();  
+    int listen_socket = creat_socket(); 
 
-    while(1)
+    while(count_client < 100)
     {
         int client_socket = wait_client(listen_socket);  
 
