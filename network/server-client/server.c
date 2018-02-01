@@ -64,7 +64,7 @@ int wait_client(int listen_socket)
     return client_socket;  
 }  
 
-//信息处理函数,功能是将客户端传过来的小写字母转化为大写字母  
+//将客户端信息原样输出
 void hanld_client(int listen_socket, int client_socket)   
 {  
     char buf[BUFF_SIZE] = {0};  
@@ -84,12 +84,7 @@ void hanld_client(int listen_socket, int client_socket)
         }  
         
         buf[ret] = '\0';
-        
-        int i;  
-        for(i = 0; i < ret; i++)  
-        {  
-            buf[i] = buf[i] + 'A' - 'a';  
-        }  
+         
         printf("%s\n", buf);
         
         write(client_socket, buf, ret);  
