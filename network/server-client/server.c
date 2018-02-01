@@ -91,6 +91,7 @@ void *hanld_client(void * arg)
         {  
             printf("client said nothing!\n");
         }  
+        buf[ret] = '\0';
          
         printf("client %d said:%s\n", client_socket, buf);
         
@@ -105,6 +106,7 @@ void *hanld_client(void * arg)
     pthread_mutex_lock(&mutex);
     count_client--;
     pthread_mutex_unlock(&mutex);
+    printf("current client num is %d\n", count_client);
 
     close(client_socket);  
 }  
