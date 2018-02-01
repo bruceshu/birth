@@ -63,9 +63,9 @@ int wait_client(int listen_socket)
         return -1;  
     }  
           
-    pthread_mutex_lock(&mutex)
+    pthread_mutex_lock(&mutex);
     count_client++;
-    pthread_mutex_unlock(&mutex)
+    pthread_mutex_unlock(&mutex);
     
     printf("success to recive a client ：%s\n", inet_ntoa(cliaddr.sin_addr));  
     printf("current client num is %d\n", count_client);
@@ -102,9 +102,9 @@ void *hanld_client(void * arg)
         }  
     }  
 
-    pthread_mutex_lock(&mutex)
+    pthread_mutex_lock(&mutex);
     count_client--;
-    pthread_mutex_unlock(&mutex)
+    pthread_mutex_unlock(&mutex);
 
     close(client_socket);  
 }  
