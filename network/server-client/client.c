@@ -110,10 +110,10 @@ int main(int argc, char *argv[])
 
     char buf[INPUT_SIZE] = {0};
     
-    printf("please input \"end\" to exit!");  
+    printf("please input \"end\" to exit!\n");  
     while(1)
     {
-        printf("please input what you want to say:");  
+        printf("what do you want to say:");  
         scanf("%s", buf);  
         write(client_socket, buf, strlen(buf));  
           
