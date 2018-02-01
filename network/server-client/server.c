@@ -89,15 +89,15 @@ void *hanld_client(void * arg)
         }  
         if(ret == 0)  
         {  
-            printf("read zero byte!\n");
+            printf("client said nothing!\n");
         }  
-        buf[ret] = '\0';
          
         printf("client %d said:%s\n", client_socket, buf);
+        
+        write(client_socket, buf, ret);
 
         if(strncmp(buf, "end", 3) == 0)  
         {  
-            write(client_socket, buf, ret);
             break;  
         }  
     }  

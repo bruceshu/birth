@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         }  
         if(ret == 0)  
         {  
-            printf("read zero byte!\n");
+            printf("server said nothing!\n");
         }  
 
         //当输入END时客户端退出
