@@ -62,12 +62,13 @@ int wait_client(int listen_socket)
         printf("accept socket failed!\n");
         return -1;  
     }  
-      
-    printf("success to recive a client ：%s\n", inet_ntoa(cliaddr.sin_addr));  
-    
+          
     pthread_mutex_lock(&mutex)
     count_client++;
     pthread_mutex_unlock(&mutex)
+    
+    printf("success to recive a client ：%s\n", inet_ntoa(cliaddr.sin_addr));  
+    printf("current client num is %d\n", count_client);
     
     return client_socket;  
 }  
@@ -89,17 +90,14 @@ void *hanld_client(void * arg)
         if(ret == 0)  
         {  
             printf("read zero byte!\n");
-            break;  
         }  
-        
         buf[ret] = '\0';
          
         printf("client %d said:%s\n", client_socket, buf);
-        
-        write(client_socket, buf, ret);  
-          
+
         if(strncmp(buf, "end", 3) == 0)  
         {  
+            write(client_socket, buf, ret);
             break;  
         }  
     }  

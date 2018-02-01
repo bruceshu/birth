@@ -117,8 +117,16 @@ int main(int argc, char *argv[])
         scanf("%s", buf);  
         write(client_socket, buf, strlen(buf));  
           
-        int ret = read(client_socket, buf, strlen(buf));  
-        printf("recv from server:buf = %s\n", buf);  
+        int ret = read(client_socket, buf, strlen(buf));
+        if(ret == -1)  
+        {  
+            printf("read from client socket failed!\n");
+            break;  
+        }  
+        if(ret == 0)  
+        {  
+            printf("read zero byte!\n");
+        }  
 
         //当输入END时客户端退出
         if(strncmp(buf, "end", 3) == 0)
