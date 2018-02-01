@@ -70,7 +70,7 @@ int wait_client(int listen_socket)
 void *hanld_client(void * arg)   
 {  
     char buf[BUFF_SIZE] = {0};  
-    int client_socket = *(int *)arg);
+    int client_socket = *(int *)(arg);
     
     while(1)  
     {  
