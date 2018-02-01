@@ -33,7 +33,7 @@ int isNumIP(const char *url)
     return TRUE;
 }
 
-int parse_url(const char *url, char *domain, int *port)
+int parse_url(const char *url, char *domain, unsigned short *port)
 {
     char *hostname = NULL;
     char *tmp = NULL;
@@ -44,12 +44,12 @@ int parse_url(const char *url, char *domain, int *port)
         return ERROR;
     }
 
-    tmp = strchr(hostname, ":");
+    tmp = strchr(hostname, ':');
     if (tmp)
     {
         *tmp = '\0';
         tmp += 1;
-        *port = atoi(tmp);
+        *port = (unsigned short)atoi(tmp);
     }
 
     if(isNumIP(hostname))
