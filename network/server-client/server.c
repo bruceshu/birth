@@ -1,5 +1,3 @@
-
-
 #include <sys/types.h>  
 #include <sys/socket.h>  
 #include <stdio.h>  
@@ -25,9 +23,9 @@ int creat_socket()
     memset(&addr, 0, sizeof(addr));  
       
     addr.sin_family = AF_INET;    /* Internet地址族 */  
-    addr.sin_port = htons(PORT);  /* 端口号 */  
-    //addr.sin_addr.s_addr = htonl(INADDR_ANY);   /* IP地址 */  
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");/* IP地址 */  
+    addr.sin_port = htons(PORT);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);   /* IP地址 */  
+    //addr.sin_addr.s_addr = inet_addr("127.0.0.1");/* IP地址 */  
 
     int ret = bind(listen_socket, (struct sockaddr *)&addr, sizeof(addr));
     if(ret == -1)  
@@ -36,7 +34,7 @@ int creat_socket()
         return -1;  
     } 
 
-    ret = listen(listen_socket, CLIENT_NUM);        //监听  
+    ret = listen(listen_socket, CLIENT_NUM); 
     if(ret == -1)  
     {  
         printf("listen socket failed!\n");
@@ -88,7 +86,7 @@ void *hanld_client(void * arg)
         
         buf[ret] = '\0';
          
-        printf("%s\n", buf);
+        printf("client %d said:%s\n", client_socket, buf);
         
         write(client_socket, buf, ret);  
           
