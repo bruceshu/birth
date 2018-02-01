@@ -6,9 +6,11 @@
 #include <unistd.h>  
 #include <string.h>  
 #include <arpa/inet.h>  
+#include <pthread.h>
 
 #define PORT 9999
 #define BUFF_SIZE 1024
+#define CLIENT_NUM 3
 
 int creat_socket()
 {
@@ -34,7 +36,7 @@ int creat_socket()
         return -1;  
     } 
 
-    ret = listen(listen_socket, 5);        //监听  
+    ret = listen(listen_socket, CLIENT_NUM);        //监听  
     if(ret == -1)  
     {  
         printf("listen socket failed!\n");
@@ -65,9 +67,10 @@ int wait_client(int listen_socket)
 }  
 
 //将客户端信息原样输出
-void hanld_client(int listen_socket, int client_socket)   
+void *hanld_client(void * arg)   
 {  
     char buf[BUFF_SIZE] = {0};  
+    int client_socket = *(int *)arg);
     
     while(1)  
     {  
@@ -101,10 +104,15 @@ void hanld_client(int listen_socket, int client_socket)
 int main()  
 {  
     int listen_socket = creat_socket();  
-      
-    int client_socket = wait_client(listen_socket);  
-      
-    hanld_client(listen_socket, client_socket);  
+
+    while(1)
+    {
+        int client_socket = wait_client(listen_socket);  
+
+        pthread_t id;  
+        pthread_create(&id, NULL, hanld_client, (void *)&client_socket);  //创建一个线程，来处理客户端。  
+        pthread_detach(id);   //把线程分离出去。  
+    }
       
     close(listen_socket);  
       

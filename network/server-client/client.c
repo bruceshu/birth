@@ -111,17 +111,19 @@ int main(int argc, char *argv[])
     printf("connect successfully!\n");
 
     char buf[INPUT_SIZE] = {0};
+    
+    printf("please input \"end\" to exit!");  
     while(1)
     {
-        printf("please input what you want to say：");  
+        printf("please input what you want to say:");  
         scanf("%s", buf);  
         write(client_socket, buf, strlen(buf));  
           
         int ret = read(client_socket, buf, strlen(buf));  
-        printf("buf = %s\n", buf);  
+        printf("recv from server:buf = %s\n", buf);  
 
         //当输入END时客户端退出
-        if(strncmp(buf, "END", 3) == 0)
+        if(strncmp(buf, "end", 3) == 0)
         {  
             break;  
         }  
@@ -133,9 +135,10 @@ int main(int argc, char *argv[])
 DETAIL:
     printf("==============================\n");
     printf("please input one paremeter,like this:\n");
-    //printf("./client 192.168.135.123:1234 or\n");    
-    printf("./client 192.168.135.123 or\n");
-    //printf("./client www.baidu.com");
+    printf("./client www.baidu.com:1234 or\n");    
+    printf("./client www.baidu.com or\n");
+    printf("./client 127.0.0.1:1234 or\n");    
+    printf("./client 127.0.0.1\n");
     printf("==============================\n");
     
     return 0;
