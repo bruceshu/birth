@@ -116,15 +116,22 @@ int main()
 {  
     int listen_socket = creat_socket(); 
 
-    while(count_client < 100)
+    while(1)
     {
-        int client_socket = wait_client(listen_socket);  
+        if (count_client < 100)
+        {
+            int client_socket = wait_client(listen_socket);  
 
-        pthread_t id;  
-        pthread_create(&id, NULL, hanld_client, (void *)&client_socket);  //创建一个线程，来处理客户端。  
-        pthread_detach(id);   //把线程分离出去。  
+            pthread_t id;  
+            pthread_create(&id, NULL, hanld_client, (void *)&client_socket);  //创建一个线程，来处理客户端。  
+            pthread_detach(id);   //把线程分离出去。  
+        }
+        else
+        {
+            sleep(50);
+        }
     }
-      
+
     close(listen_socket);  
       
     return 0;  
