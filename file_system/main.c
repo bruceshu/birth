@@ -16,6 +16,9 @@
 
 #include <pthread.h>
 
+#include "./../log_system/log.h"
+
+#define LOG_FILE_MODULE 1
 #define FILENAME "test"
 
 void *write_buf(void *para);
@@ -34,10 +37,10 @@ void main(int argc, char *argv[])
 
 	int fd = open(FILENAME, O_RDONLY, 0666);
 	if (fd < 0) {
-		printf("open file failed!\n");
+		debug_log(LOG_FILE_MODULE, LOG_INFO, "open file failed!\n");
 		exit(1);
 	}	
-	printf("fd is %d\n", fd);
+	debug_log(LOG_FILE_MODULE, LOG_INFO, "fd is %d\n", fd);
 	
 	pthread_join(write_t, NULL);
 	pthread_join(get_size_t, NULL);
@@ -47,10 +50,10 @@ void *write_buf(void *para)
 {
 	int fd1 = open(FILENAME, O_WRONLY|O_CREAT|O_TRUNC, 0666);
         if (fd1 < 0) {
-                printf("open test file failed!\n");
+                debug_log(LOG_FILE_MODULE, LOG_INFO,"open test file failed!\n");
                 exit(1);
         }
-        printf("fd1 is %d\n", fd1);
+        debug_log(LOG_FILE_MODULE, LOG_INFO, "fd1 is %d\n", fd1);
 
 	while(1) {
 		write(fd1, buf, strlen(buf));
@@ -64,18 +67,18 @@ void *get_file_size(void *para)
 	int ret;
 	int fd2 = open(FILENAME, O_RDONLY, 0666);
         if (fd2 < 0 ) {
-                printf("oopen test file failed!\n");
+                debug_log(LOG_FILE_MODULE, LOG_INFO, "open test file failed!\n");
                 exit(1);
         }
-        printf("fd2 is %d\n", fd2);
+        debug_log(LOG_FILE_MODULE, LOG_INFO, "fd2 is %d\n", fd2);
 
 	while(1) {
 		struct stat st;
 		ret = fstat(fd2, &st);	
 		if (ret < 0) {
-			printf("excute fstat failed!\n");
+			debug_log(LOG_FILE_MODULE, LOG_INFO, "excute fstat failed!\n");
 		}
-		printf("st.st_size is %d\n", st.st_size);
+		debug_log(LOG_FILE_MODULE, LOG_INFO, "st.st_size is %d\n", st.st_size);
 		sleep(2);
 	}
 }

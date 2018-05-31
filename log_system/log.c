@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "log.h"
 
@@ -16,7 +17,7 @@ void debug_log(int flag, int level, const char *fmt, ...)
 	char log_buffer[LOG_LINE_SIZE] = {0};
 	
 	//module switch	
-	if (flag) {
+	if (!flag) {
 		return;
 	}
 
@@ -28,8 +29,8 @@ void debug_log(int flag, int level, const char *fmt, ...)
 	strcpy(log_buffer, TAG);
 
 	va_start(vl, fmt);
-	snprintf(log_buffer + strlen(log_buffer), LOG_LINE_SIZE - strlen(log_buffer), fmt, vl);
+	vsnprintf(log_buffer + strlen(log_buffer), LOG_LINE_SIZE - strlen(log_buffer), fmt, vl);
 	va_end(vl);
 
-	pritnf("%s\n", log_buffer);
+	printf("%s\n", log_buffer);
 }

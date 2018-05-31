@@ -2,7 +2,7 @@
 #define LOG_H
 
 #define LOG_LINE_SIZE 1024
-#define TAG "bruce >>>"
+#define TAG "bruce >>> "
 
 #define LOG_FATAL    0
 #define LOG_ERROR    1
