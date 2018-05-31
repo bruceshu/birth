@@ -1,67 +1,82 @@
 #include <stdio.h>
 
+//close()
+#include <unistd.h>
 
+//open()
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
+//exit()
+#include <stdlib.h>
 
+//strlen()
+#include <string.h>
 
+#include <pthread.h>
 
+#define FILENAME "test"
 
-void download_thread(char *url, char *fileName)
+void *write_buf(void *para);
+void *get_file_size(void *para);
+
+char *buf = "bruceshu";
+
+void main(int argc, char *argv[])
 {
-	pthread_t download;
-	int ret;
-	int fd;
-	
-	char ip[16] = {0};
-	short port = 80
-	char fileNameTmp[256] = {0};
+	pthread_t write_t;
+	pthread_t get_size_t;
 
-	ret = parse_url(url, &domain, &port, fileNameTmp);
-	if (ret != OK) {
-		printf("parse url failed!\n");		
-		return;
-	}
+	pthread_create(&write_t, NULL, write_buf, NULL);	
+	sleep(3);
+	pthread_create(&get_size_t, NULL, get_file_size, NULL);	
 
-	ret = get_ip_addr(domain, ip);
-	if (ret != OK) {
-		printf("get ip addr failed!\n");
-		return;	
-	}
-
-	network_connect(ip, port, :);
-	fd = open(fileName, O_WRONLY|O_CREAT_OTRUNC, 0666);
+	int fd = open(FILENAME, O_RDONLY, 0666);
 	if (fd < 0) {
 		printf("open file failed!\n");
-		return;	
-	}
-
-	ret = pthread_create(&download, );
+		exit(1);
+	}	
+	printf("fd is %d\n", fd);
+	
+	pthread_join(write_t, NULL);
+	pthread_join(get_size_t, NULL);
 }
 
-
-void main (int argc, char *argv[])
+void *write_buf(void *para)
 {
-	if (argc != 2) {
-		printf("the num of para is wrong,you should input two para!");
-	}
+	int fd1 = open(FILENAME, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+        if (fd1 < 0) {
+                printf("open test file failed!\n");
+                exit(1);
+        }
+        printf("fd1 is %d\n", fd1);
 
-	char *url = strdup(argv[1]);
-	char fileName[256] = {0};
-
-	download_thread(url, fileName);
-
-	sleep(2);//sleep 单位是秒
-
-	int fd = open(fileName, "rb");
-	if (fd < 0) {
-		stop_download();
-		return;
-	}
-
-	int i = 0;
-	while(i < 10) {
-		get_file_size(fd);
-		i++;
+	while(1) {
+		write(fd1, buf, strlen(buf));
+		sync();
 		sleep(1);
 	}
 }
+
+void *get_file_size(void *para)
+{
+	int ret;
+	int fd2 = open(FILENAME, O_RDONLY, 0666);
+        if (fd2 < 0 ) {
+                printf("oopen test file failed!\n");
+                exit(1);
+        }
+        printf("fd2 is %d\n", fd2);
+
+	while(1) {
+		struct stat st;
+		ret = fstat(fd2, &st);	
+		if (ret < 0) {
+			printf("excute fstat failed!\n");
+		}
+		printf("st.st_size is %d\n", st.st_size);
+		sleep(2);
+	}
+}
+
