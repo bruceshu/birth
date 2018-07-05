@@ -79,6 +79,7 @@ void *get_file_size(void *para)
 			debug_log(LOG_FILE_MODULE, LOG_INFO, "excute fstat failed!\n");
 		}
 		debug_log(LOG_FILE_MODULE, LOG_INFO, "st.st_size is %d\n", st.st_size);
+        debug_log(LOG_FILE_MODULE, LOG_INFO, "st.st_mode is 0x%04x\n", st.st_mode);
 		sleep(2);
 	}
 }

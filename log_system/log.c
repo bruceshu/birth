@@ -1,3 +1,13 @@
+/*
+copyright bruceshu
+
+author:bruceshu
+date:2018-07-05
+description:
+
+*/
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -34,3 +44,9 @@ void debug_log(int flag, int level, const char *fmt, ...)
 
 	printf("%s\n", log_buffer);
 }
+
+const char *av_default_item_name(void *ptr)
+{
+    return (*(AVClass **) ptr)->class_name;
+}
+

@@ -53,7 +53,6 @@ int main(int argc, char const *argv[])
     printf("PORT: %d\n", port);
     printf("FILENAME: %s\n\n", file_name);
 
-    //设置http请求头信息
     char header[1024] = {0};
     sprintf(header, \
             "GET %s HTTP/1.1\r\n"\
@@ -66,7 +65,6 @@ int main(int argc, char const *argv[])
 
     printf("the header of http is:\n%sthe length of header is:%d\n", header, (int) strlen(header));
 
-    //创建套接字
     int client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket < 0)
     {
@@ -74,14 +72,12 @@ int main(int argc, char const *argv[])
         exit(-1);
     }
 
-    //创建地址结构体
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(ip_addr);
     addr.sin_port = htons(port);
 
-    //连接服务器
     puts("3: Connect server...");
     int res = connect(client_socket, (struct sockaddr *) &addr, sizeof(addr));
     if (res == -1)
