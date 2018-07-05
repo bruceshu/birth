@@ -11,6 +11,8 @@ description:
 #ifndef LOG_H
 #define LOG_H
 
+#include "../libavutils/opt.h"
+
 #define LOG_LINE_SIZE 1024
 #define TAG "bruce >>> "
 

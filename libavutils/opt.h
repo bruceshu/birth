@@ -12,6 +12,9 @@ description:
 #define OPT_H
 
 #include "common.h"
+#include "rational.h"
+
+#include <stdlib.h>
 
 enum AVOptionType{
     AV_OPT_TYPE_FLAGS,
