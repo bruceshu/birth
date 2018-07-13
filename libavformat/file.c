@@ -42,16 +42,15 @@ static int file_open(URLContext *url_ctx, const char *filename, int flags)
         return AVERROR(errno);
     file_ctx->fd = fd;
 
-    url_ctx->is_streamed = !fstat(fd, &st) && S_ISFIFO(st.st_mode);
+    //不知道is_streamed有什么作用，当前注释掉
+    //url_ctx->is_streamed = !fstat(fd, &st) && S_ISFIFO(st.st_mode);
 
     /* Buffer writes more than the default 32k to improve throughput especially with networked file systems */
-    if (!url_ctx->is_streamed && flags & AVIO_FLAG_WRITE)
-        url_ctx->min_packet_size = url_ctx->max_packet_size = 262144;
+    //!url_ctx->is_streamed && flags & AVIO_FLAG_WRITE)
+    //  url_ctx->min_packet_size = url_ctx->max_packet_size = 262144;
 
     return 0;
 }
-
-
 
 #define OFFSET(x) offsetof(FileContext, x)
 #define D AV_OPT_FLAG_DECODING_PARAM

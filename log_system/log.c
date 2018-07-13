@@ -45,7 +45,7 @@ void debug_log(int flag, int level, const char *fmt, ...)
 	printf("%s\n", log_buffer);
 }
 
-const char *av_default_item_name(void *ptr)
+const char *default_item_name(void *ptr)
 {
     return (*(AVClass **) ptr)->class_name;
 }

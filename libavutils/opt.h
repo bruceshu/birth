@@ -37,7 +37,7 @@ enum AVOptionType{
 
 typedef struct AVOption {
     const char *name;
-    const char *help;
+    //const char *help;
     int offset;
     enum AVOptionType type;
 

@@ -22,13 +22,13 @@ description:
 #define LOG_TRACE    5
 
 typedef struct AVClass {
-    const char *name;
+    const char *class_name;
     const char* (*item_name)(void *av_class);
     const AVOption *option;
 }AVClass;
 
 void set_log_level(int level);
 void debug_log(int flag, int level, const char *fmt, ...);
-const char *av_default_item_name(void *ptr);
+const char *default_item_name(void *ptr);
 
 #endif
