@@ -1,5 +1,34 @@
 
 
+#define RTSP_FLAG_FILTER_SRC  0x1    /**< Filter incoming UDP packets -receive packets only from the right source address and port. */
+#define RTSP_FLAG_LISTEN      0x2    /**< Wait for incoming connections. */
+#define RTSP_FLAG_CUSTOM_IO   0x4    /**< Do all IO via the AVIOContext. */
+#define RTSP_FLAG_RTCP_TO_SOURCE 0x8 /**< Send RTCP packets to the source address of received packets. */
+#define RTSP_FLAG_PREFER_TCP  0x10   /**< Try RTP via TCP first if possible. */
+
+#define RTSP_DEFAULT_PORT   554
+#define RTSPS_DEFAULT_PORT  322
+#define RTSP_MAX_TRANSPORTS 8
+#define RTSP_TCP_MAX_PACKET_SIZE 1472
+#define RTSP_DEFAULT_NB_AUDIO_CHANNELS 1
+#define RTSP_DEFAULT_AUDIO_SAMPLERATE 44100
+#define RTSP_RTP_PORT_MIN 5000
+#define RTSP_RTP_PORT_MAX 65000
+
+enum RTSPMethod {
+    DESCRIBE,
+    ANNOUNCE,
+    OPTIONS,
+    SETUP,
+    PLAY,
+    PAUSE,
+    TEARDOWN,
+    GET_PARAMETER,
+    SET_PARAMETER,
+    REDIRECT,
+    RECORD,
+    UNKNOWN = -1,
+};
 
 
 typedef struct RTSPState {

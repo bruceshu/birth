@@ -124,12 +124,12 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
     int err;
 
     if ((flags & AVIO_FLAG_READ) && !pstUrlProt->url_read) {
-        //av_log(NULL, AV_LOG_ERROR, "Impossible to open the '%s' protocol for reading\n", up->name);
+        av_log(NULL, AV_LOG_ERROR, "Impossible to open the '%s' protocol for reading\n", pstUrlProt->name);
         return -1;
     }
     
     if ((flags & AVIO_FLAG_WRITE) && !pstUrlProt->url_write) {
-        //av_log(NULL, AV_LOG_ERROR, "Impossible to open the '%s' protocol for writing\n", up->name);
+        av_log(NULL, AV_LOG_ERROR, "Impossible to open the '%s' protocol for writing\n", pstUrlProt->name);
         return -1;
     }
     
@@ -422,5 +422,70 @@ int url_write(URLContext *pstUrlCtx, const unsigned char *buf, int size)
 
     return retry_transfer_wrapper(pstUrlCtx, (unsigned char *)buf, size, size,
                                   (int (*)(struct URLContext *, uint8_t *, int))pstUrlCtx->pstUrlProt->url_write);
+}
+
+int ffurl_alloc(URLContext **puc, const char *filename, int flags, const AVIOInterruptCB *int_cb)
+{
+    const URLProtocol *p = NULL;
+
+    p = url_find_protocol(filename);
+    if (p)
+       return url_alloc_for_protocol(puc, p, filename, flags, int_cb);
+
+    *puc = NULL;
+    if (av_strstart(filename, "https:", NULL))
+        av_log(NULL, AV_LOG_WARNING, "https protocol not found, recompile FFmpeg with "
+                                     "openssl, gnutls "
+                                     "or securetransport enabled.\n");
+    return AVERROR_PROTOCOL_NOT_FOUND;
+}
+
+
+int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags,
+                         const AVIOInterruptCB *int_cb, AVDictionary **options,
+                         const char *whitelist, const char* blacklist,
+                         URLContext *parent)
+{
+    AVDictionary *tmp_opts = NULL;
+    AVDictionaryEntry *e;
+    int ret = ffurl_alloc(puc, filename, flags, int_cb);
+    if (ret < 0)
+        return ret;
+    if (parent)
+        av_opt_copy(*puc, parent);
+    if (options &&
+        (ret = av_opt_set_dict(*puc, options)) < 0)
+        goto fail;
+    if (options && (*puc)->prot->priv_data_class &&
+        (ret = av_opt_set_dict((*puc)->priv_data, options)) < 0)
+        goto fail;
+
+    if (!options)
+        options = &tmp_opts;
+
+    av_assert0(!whitelist ||
+               !(e=av_dict_get(*options, "protocol_whitelist", NULL, 0)) ||
+               !strcmp(whitelist, e->value));
+    av_assert0(!blacklist ||
+               !(e=av_dict_get(*options, "protocol_blacklist", NULL, 0)) ||
+               !strcmp(blacklist, e->value));
+
+    if ((ret = av_dict_set(options, "protocol_whitelist", whitelist, 0)) < 0)
+        goto fail;
+
+    if ((ret = av_dict_set(options, "protocol_blacklist", blacklist, 0)) < 0)
+        goto fail;
+
+    if ((ret = av_opt_set_dict(*puc, options)) < 0)
+        goto fail;
+
+    ret = ffurl_connect(*puc, options);
+
+    if (!ret)
+        return 0;
+fail:
+    ffurl_close(*puc);
+    *puc = NULL;
+    return ret;
 }
 
