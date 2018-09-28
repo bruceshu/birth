@@ -14,6 +14,9 @@
 
 #define MAX_PROBE_PACKETS 2500
 
+#define SPACE_CHARS " \t\r\n"
+
+
 
 
 #endif

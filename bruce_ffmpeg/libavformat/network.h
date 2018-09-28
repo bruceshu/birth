@@ -7,6 +7,13 @@
 *********************************/
 
 
+#ifndef INET_ADDRSTRLEN
+#define INET_ADDRSTRLEN 16
+#endif
+
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN INET_ADDRSTRLEN
+#endif
 
 
 /* getaddrinfo constants */

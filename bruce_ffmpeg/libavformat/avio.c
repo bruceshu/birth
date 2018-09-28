@@ -1,3 +1,10 @@
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-09-28
+ * Description:
+ 
+*********************************/
 
 
 
@@ -362,7 +369,8 @@ fail:
 }
 
 
-static inline int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size))
+static inline int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, 
+                                    int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size))
 {
     int ret, len;
     int fast_retries = 5;
@@ -424,6 +432,34 @@ int url_write(URLContext *pstUrlCtx, const unsigned char *buf, int size)
                                   (int (*)(struct URLContext *, uint8_t *, int))pstUrlCtx->pstUrlProt->url_write);
 }
 
+int ffurl_write(URLContext *h, const unsigned char *buf, int size)
+{
+    if (!(h->flags & AVIO_FLAG_WRITE))
+        return AVERROR(EIO);
+    /* avoid sending too big packets */
+    if (h->max_packet_size && size > h->max_packet_size)
+        return AVERROR(EIO);
+
+    return retry_transfer_wrapper(h, (unsigned char *)buf, size, size,
+                                  (int (*)(struct URLContext *, uint8_t *, int))
+                                  h->prot->url_write);
+}
+
+int ffurl_get_file_handle(URLContext *h)
+{
+    if (!h || !h->prot || !h->prot->url_get_file_handle)
+        return -1;
+    return h->prot->url_get_file_handle(h);
+}
+
+
+int ffurl_read_complete(URLContext *pstUrlCtx, unsigned char *buf, int size)
+{
+    if (!(pstUrlCtx->flags & AVIO_FLAG_READ))
+        return AVERROR(EIO);
+    return retry_transfer_wrapper(pstUrlCtx, buf, size, size, pstUrlCtx->pstProt->url_read);
+}
+
 int ffurl_alloc(URLContext **puc, const char *filename, int flags, const AVIOInterruptCB *int_cb)
 {
     const URLProtocol *p = NULL;
@@ -438,6 +474,66 @@ int ffurl_alloc(URLContext **puc, const char *filename, int flags, const AVIOInt
                                      "openssl, gnutls "
                                      "or securetransport enabled.\n");
     return AVERROR_PROTOCOL_NOT_FOUND;
+}
+
+int ffurl_connect(URLContext *uc, AVDictionary **options)
+{
+    int err;
+    AVDictionary *tmp_opts = NULL;
+    AVDictionaryEntry *e;
+
+    if (!options)
+        options = &tmp_opts;
+
+    // Check that URLContext was initialized correctly and lists are matching if set
+    av_assert0(!(e=av_dict_get(*options, "protocol_whitelist", NULL, 0)) ||
+               (uc->protocol_whitelist && !strcmp(uc->protocol_whitelist, e->value)));
+    av_assert0(!(e=av_dict_get(*options, "protocol_blacklist", NULL, 0)) ||
+               (uc->protocol_blacklist && !strcmp(uc->protocol_blacklist, e->value)));
+
+    if (uc->protocol_whitelist && av_match_list(uc->prot->name, uc->protocol_whitelist, ',') <= 0) {
+        av_log(uc, AV_LOG_ERROR, "Protocol '%s' not on whitelist '%s'!\n", uc->prot->name, uc->protocol_whitelist);
+        return AVERROR(EINVAL);
+    }
+
+    if (uc->protocol_blacklist && av_match_list(uc->prot->name, uc->protocol_blacklist, ',') > 0) {
+        av_log(uc, AV_LOG_ERROR, "Protocol '%s' on blacklist '%s'!\n", uc->prot->name, uc->protocol_blacklist);
+        return AVERROR(EINVAL);
+    }
+
+    if (!uc->protocol_whitelist && uc->prot->default_whitelist) {
+        av_log(uc, AV_LOG_DEBUG, "Setting default whitelist '%s'\n", uc->prot->default_whitelist);
+        uc->protocol_whitelist = av_strdup(uc->prot->default_whitelist);
+        if (!uc->protocol_whitelist) {
+            return AVERROR(ENOMEM);
+        }
+    } else if (!uc->protocol_whitelist)
+        av_log(uc, AV_LOG_DEBUG, "No default whitelist set\n"); // This should be an error once all declare a default whitelist
+
+    if ((err = av_dict_set(options, "protocol_whitelist", uc->protocol_whitelist, 0)) < 0)
+        return err;
+    if ((err = av_dict_set(options, "protocol_blacklist", uc->protocol_blacklist, 0)) < 0)
+        return err;
+
+    err =
+        uc->prot->url_open2 ? uc->prot->url_open2(uc,
+                                                  uc->filename,
+                                                  uc->flags,
+                                                  options) :
+        uc->prot->url_open(uc, uc->filename, uc->flags);
+
+    av_dict_set(options, "protocol_whitelist", NULL, 0);
+    av_dict_set(options, "protocol_blacklist", NULL, 0);
+
+    if (err)
+        return err;
+    uc->is_connected = 1;
+    /* We must be careful here as ffurl_seek() could be slow,
+     * for example for http */
+    if ((uc->flags & AVIO_FLAG_WRITE) || !strcmp(uc->prot->name, "file"))
+        if (!uc->is_streamed && ffurl_seek(uc, 0, SEEK_SET) < 0)
+            uc->is_streamed = 1;
+    return 0;
 }
 
 

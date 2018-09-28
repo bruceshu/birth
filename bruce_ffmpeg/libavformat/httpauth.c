@@ -1,7 +1,59 @@
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-09-28
+ * Description:
+ 
+*********************************/
+
+char *ff_http_auth_create_response(HTTPAuthState *state, const char *auth,
+                                   const char *path, const char *method)
+{
+    char *authstr = NULL;
+
+    /* Clear the stale flag, we assume the auth is ok now. It is reset
+     * by the server headers if there's a new issue. */
+    state->stale = 0;
+    if (!auth || !strchr(auth, ':'))
+        return NULL;
+
+    if (state->auth_type == HTTP_AUTH_BASIC) {
+        int auth_b64_len, len;
+        char *ptr, *decoded_auth = ff_urldecode(auth);
+
+        if (!decoded_auth)
+            return NULL;
+
+        auth_b64_len = AV_BASE64_SIZE(strlen(decoded_auth));
+        len = auth_b64_len + 30;
+
+        authstr = av_malloc(len);
+        if (!authstr) {
+            av_free(decoded_auth);
+            return NULL;
+        }
+
+        snprintf(authstr, len, "Authorization: Basic ");
+        ptr = authstr + strlen(authstr);
+        av_base64_encode(ptr, auth_b64_len, decoded_auth, strlen(decoded_auth));
+        av_strlcat(ptr, "\r\n", len - (ptr - authstr));
+        av_free(decoded_auth);
+    } else if (state->auth_type == HTTP_AUTH_DIGEST) {
+        char *username = ff_urldecode(auth), *password;
+
+        if (!username)
+            return NULL;
+
+        if ((password = strchr(username, ':'))) {
+            *password++ = 0;
+            authstr = make_digest_auth(state, username, password, path, method);
+        }
+        av_free(username);
+    }
+    return authstr;
+}
 
 
-
-#if 0
 char *url_decode(const char *url)
 {
     int s = 0, d = 0, url_len = 0;
@@ -209,4 +261,3 @@ char *http_auth_create_response(HTTPAuthState *state, const char *auth, const ch
     }
     return authstr;
 }
-#endif

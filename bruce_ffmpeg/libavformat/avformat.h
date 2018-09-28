@@ -243,13 +243,33 @@ typedef struct AVFormatContext {
      */
     AVStream **streams;
 
+#if FF_API_FORMAT_FILENAME
     /**
      * input or output filename
      *
      * - demuxing: set by avformat_open_input()
      * - muxing: may be set by the caller before avformat_write_header()
+     *
+     * @deprecated Use url instead.
      */
+    attribute_deprecated
     char filename[1024];
+#endif
+
+    /**
+     * input or output URL. Unlike the old filename field, this field has no
+     * length restriction.
+     *
+     * - demuxing: set by avformat_open_input(), initialized to an empty
+     *             string if url parameter was NULL in avformat_open_input().
+     * - muxing: may be set by the caller before calling avformat_write_header()
+     *           (or avformat_init_output() if that is called first) to a string
+     *           which is freeable by av_free(). Set to an empty string if it
+     *           was NULL in avformat_init_output().
+     *
+     * Freed by libavformat in avformat_free_context().
+     */
+    char *url;
 
     /**
      * Position of the first frame of the component, in
@@ -302,15 +322,17 @@ typedef struct AVFormatContext {
  * This flag is mainly intended for testing.
  */
 #define AVFMT_FLAG_BITEXACT         0x0400
-#define AVFMT_FLAG_MP4A_LATM    0x8000 ///< Enable RTP MP4A-LATM payload
+#if FF_API_LAVF_MP4A_LATM
+#define AVFMT_FLAG_MP4A_LATM    0x8000 ///< Deprecated, does nothing.
+#endif
 #define AVFMT_FLAG_SORT_DTS    0x10000 ///< try to interleave outputted packets by dts (using this flag can slow demuxing down)
 #define AVFMT_FLAG_PRIV_OPT    0x20000 ///< Enable use of private options by delaying codec open (this could be made default once all code is converted)
 #if FF_API_LAVF_KEEPSIDE_FLAG
-#define AVFMT_FLAG_KEEP_SIDE_DATA 0x40000 ///< Don't merge side data but keep it separate. Deprecated, will be the default.
+#define AVFMT_FLAG_KEEP_SIDE_DATA 0x40000 ///< Deprecated, does nothing.
 #endif
 #define AVFMT_FLAG_FAST_SEEK   0x80000 ///< Enable fast, but inaccurate seeks for some formats
 #define AVFMT_FLAG_SHORTEST   0x100000 ///< Stop muxing when the shortest stream stops.
-#define AVFMT_FLAG_AUTO_BSF   0x200000 ///< Wait for packet data before writing a header, and add bitstream filters as requested by the muxer
+#define AVFMT_FLAG_AUTO_BSF   0x200000 ///< Add bitstream filters as requested by the muxer
 
     /**
      * Maximum size of the data read from input for determining
@@ -713,7 +735,7 @@ typedef struct AVFormatContext {
      */
     char *protocol_whitelist;
 
-    /*
+    /**
      * A callback for opening new IO streams.
      *
      * Whenever a muxer or a demuxer needs to open an IO stream (typically from
@@ -754,7 +776,15 @@ typedef struct AVFormatContext {
      * - decoding: set by user
      */
     int max_streams;
+
+    /**
+     * Skip duration calcuation in estimate_timings_from_pts.
+     * - encoding: unused
+     * - decoding: set by user
+     */
+    int skip_estimate_duration_from_pts;
 } AVFormatContext;
+
 
 
 
