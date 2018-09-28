@@ -40,6 +40,7 @@ int av_strstart(const char *str, const char *pfx, const char **ptr)
     }
     if (!*pfx && ptr)
         *ptr = str;
+    
     return !*pfx;
 }
 
