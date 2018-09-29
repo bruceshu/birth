@@ -409,3 +409,64 @@ typedef struct RTSPMessageHeader {
     char content_type[64];
 } RTSPMessageHeader;
 
+typedef struct RTSPSource {
+    char addr[128]; /**< Source-specific multicast include source IP address (from SDP content) */
+} RTSPSource;
+
+typedef struct SDPParseState {
+    struct sockaddr_storage default_ip;
+    char delayed_fmtp[2048];
+    int default_ttl;
+    int skip_media;  ///< set if an unknown m= line occurs
+    int seen_rtpmap;
+    int seen_fmtp;
+    int nb_default_include_source_addrs; /**< Number of source-specific multicast include source IP address (from SDP content) */
+    int nb_default_exclude_source_addrs; /**< Number of source-specific multicast exclude source IP address (from SDP content) */
+    struct RTSPSource **default_include_source_addrs; /**< Source-specific multicast include source IP address (from SDP content) */
+    struct RTSPSource **default_exclude_source_addrs; /**< Source-specific multicast exclude source IP address (from SDP content) */
+} SDPParseState;
+
+typedef struct RTSPStream {
+    URLContext *rtp_handle;   /**< RTP stream handle (if UDP) */
+    void *transport_priv; /**< RTP/RDT parse context if input, RTP AVFormatContext if output */
+
+    /** corresponding stream index, if any. -1 if none (MPEG2TS case) */
+    int stream_index;
+
+    /** interleave IDs; copies of RTSPTransportField->interleaved_min/max
+     * for the selected transport. Only used for TCP. */
+    int interleaved_min, interleaved_max;
+
+    char control_url[1024];   /**< url for this stream (from SDP) */
+
+    /** The following are used only in SDP, not RTSP */
+    //@{
+    int sdp_port;             /**< port (from SDP content) */
+    struct sockaddr_storage sdp_ip; /**< IP address (from SDP content) */
+    int nb_include_source_addrs; /**< Number of source-specific multicast include source IP addresses (from SDP content) */
+    struct RTSPSource **include_source_addrs; /**< Source-specific multicast include source IP addresses (from SDP content) */
+    int nb_exclude_source_addrs; /**< Number of source-specific multicast exclude source IP addresses (from SDP content) */
+    struct RTSPSource **exclude_source_addrs; /**< Source-specific multicast exclude source IP addresses (from SDP content) */
+    int sdp_ttl;              /**< IP Time-To-Live (from SDP content) */
+    int sdp_payload_type;     /**< payload type */
+    //@}
+
+    /** The following are used for dynamic protocols (rtpdec_*.c/rdt.c) */
+    //@{
+    /** handler structure */
+    RTPDynamicProtocolHandler *dynamic_handler;
+
+    /** private data associated with the dynamic protocol */
+    PayloadContext *dynamic_protocol_context;
+    //@}
+
+    /** Enable sending RTCP feedback messages according to RFC 4585 */
+    int feedback;
+
+    /** SSRC for this stream, to allow identifying RTCP packets before the first RTP packet */
+    uint32_t ssrc;
+
+    char crypto_suite[40];
+    char crypto_params[100];
+} RTSPStream;
+

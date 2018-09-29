@@ -96,3 +96,18 @@ void av_freep(void *arg)
     memcpy(arg, &(void *){ NULL }, sizeof(val));
     ff_free(val);
 }
+
+void av_dynarray_add(void *tab_ptr, int *nb_ptr, void *elem)
+{
+    void **tab;
+    memcpy(&tab, tab_ptr, sizeof(tab));
+
+    FF_DYNARRAY_ADD(INT_MAX, sizeof(*tab), tab, *nb_ptr, {
+        tab[*nb_ptr] = elem;
+        memcpy(tab_ptr, &tab, sizeof(tab));
+    }, {
+        *nb_ptr = 0;
+        av_freep(tab_ptr);
+    });
+}
+
