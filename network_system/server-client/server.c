@@ -12,6 +12,7 @@
 
 unsigned short count_client = 0;
 pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;
+int flag_socket = 0;
 
 
 int creat_socket()
@@ -77,30 +78,25 @@ int wait_client(int listen_socket)
 void *hanld_client(void * arg)   
 {  
     char buf[BUFF_SIZE] = {0};  
-    int client_socket = *(int *)(arg);
-    
+    int client_socket = *(int *)arg;
+
     while(1)  
     {  
-        int ret = read(client_socket, buf, BUFF_SIZE-1);  
-        if(ret == -1)  
-        {  
+        ret = recv(client_socket, buf, BUFF_SIZE-1, 0);
+        if(ret == -1) {  
             printf("read from client socket failed!\n");
             break;  
-        }  
-        if(ret == 0)  
-        {  
+        } else if(ret == 0) {  
             printf("client said nothing!\n");
-        }  
+        }
+        
         buf[ret] = '\0';
-         
         printf("client %d said:%s\n", client_socket, buf);
         
-        write(client_socket, buf, ret);
-
-        if(strncmp(buf, "end", 3) == 0)  
+        if(strncmp(buf, "end", 3) == 0)
         {  
             break;  
-        }  
+        }
     }  
 
     pthread_mutex_lock(&mutex);
@@ -123,12 +119,12 @@ int main()
             int client_socket = wait_client(listen_socket);  
 
             pthread_t id;  
-            pthread_create(&id, NULL, hanld_client, (void *)&client_socket);  //创建一个线程，来处理客户端。  
+            pthread_create(&id, NULL, hanld_client, (void *)&client_socket);
             pthread_detach(id);   //把线程分离出去。  
         }
         else
         {
-            sleep(50);
+            sleep(5); //单位是秒
         }
     }
 

@@ -113,26 +113,15 @@ int main(int argc, char *argv[])
     printf("please input \"end\" to exit!\n");  
     while(1)
     {
-        printf("what do you want to say:");  
-        scanf("%s", buf);  
-        write(client_socket, buf, strlen(buf));  
-          
-        int ret = read(client_socket, buf, strlen(buf));
-        if(ret == -1)  
-        {  
-            printf("read from client socket failed!\n");
-            break;  
-        }  
-        if(ret == 0)  
-        {  
-            printf("server said nothing!\n");
-        }  
+        printf("what do you want to say:")
+        gets("%s", buf);
+        send(client_socket, buf, strlen(buf), 0);  
 
         //当输入END时客户端退出
         if(strncmp(buf, "end", 3) == 0)
         {  
             break;  
-        }  
+        }
     }
 
     close(client_socket);
