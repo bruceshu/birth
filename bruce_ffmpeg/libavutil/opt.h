@@ -40,7 +40,6 @@ enum AVOptionType{
 
 typedef struct AVOption {
     const char *name;
-    //const char *help;
     int offset;
     enum AVOptionType type;
 
@@ -65,6 +64,19 @@ typedef struct AVOption {
 #define AV_OPT_FLAG_FILTERING_PARAM (1<<16)
     const char *unit;
 }AVOption;
+
+typedef struct AVOptionRange {
+    const char *str;
+    double value_min, value_max;
+    double component_min, component_max;
+    int is_range;
+} AVOptionRange;
+
+typedef struct AVOptionRanges {
+    AVOptionRange **range;
+    int nb_ranges;
+    int nb_components;
+} AVOptionRanges;
 
 
 

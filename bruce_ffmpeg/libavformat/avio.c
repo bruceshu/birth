@@ -536,6 +536,39 @@ int ffurl_connect(URLContext *uc, AVDictionary **options)
     return 0;
 }
 
+int ff_check_interrupt(AVIOInterruptCB *cb)
+{
+    if (cb && cb->callback)
+        return cb->callback(cb->opaque);
+    return 0;
+}
+
+int ffurl_closep(URLContext **hh)
+{
+    URLContext *h= *hh;
+    int ret = 0;
+    if (!h)
+        return 0;
+
+    if (h->is_connected && h->pstProt->url_close)
+        ret = h->pstProt->url_close(h);
+#if CONFIG_NETWORK
+    if (h->pstProt->flags & URL_PROTOCOL_FLAG_NETWORK) {
+        ff_network_close();
+    }
+#endif
+
+    if (h->pstProt->privDataSize) {
+        if (h->pstProt->pstPrivDataClass)
+            av_opt_free(h->pstPrivData);
+        av_freep(&h->pstPrivData);
+    }
+    
+    av_opt_free(h);
+    av_freep(hh);
+    return ret;
+}
+
 
 int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags,
                          const AVIOInterruptCB *int_cb, AVDictionary **options,
@@ -584,4 +617,5 @@ fail:
     *puc = NULL;
     return ret;
 }
+
 

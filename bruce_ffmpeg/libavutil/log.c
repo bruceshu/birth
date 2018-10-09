@@ -135,5 +135,7 @@ void av_vlog(void* avcl, int level, const char *fmt, va_list vl)
         log_callback(avcl, level, fmt, vl);
 }
 
-
-
+const char *av_default_item_name(void *ptr)
+{
+    return (*(AVClass **) ptr)->class_name;
+}

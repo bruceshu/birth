@@ -1,7 +1,13 @@
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-10-09
+ * Description:
+ 
+*********************************/
 
 
 
-#define HAVE_WINSOCK2_H 0
 
 int ff_socket_nonblock(int socket, int enable)
 {
@@ -15,7 +21,4 @@ int ff_socket_nonblock(int socket, int enable)
         return fcntl(socket, F_SETFL, fcntl(socket, F_GETFL) & ~O_NONBLOCK);
 #endif /* HAVE_WINSOCK2_H */
 }
-
-
-
 

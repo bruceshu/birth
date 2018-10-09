@@ -7,13 +7,16 @@
 *********************************/
 
 
+#define URL_PROTOCOL_FLAG_NESTED_SCHEME 1 /*< The protocol name can be the first part of a nested protocol scheme */
+#define URL_PROTOCOL_FLAG_NETWORK       2 /*< The protocol uses network */
+
 
 typedef struct URLProtocol {
-    const char *pName;
+    const char *name;
     const AVClass *pstPrivDataClass;
-    int privDataSize;
+    int priv_data_size;
     int flags;
-    const char *pDefaultWhitelist;
+    const char *default_whitelist;
     
     int     (*url_open)( URLContext *pstUrlCtx, const char *pUrl, int flags);
     int     (*url_open2)(URLContext *pstUrlCtx, const char *pUrl, int flags, AVDictionary **ppstOptions);
@@ -40,10 +43,10 @@ typedef struct URLProtocol {
     //int (*url_read_pause)(URLContext *h, int pause);
     //int64_t (*url_read_seek)(URLContext *h, int stream_index, int64_t timestamp, int flags);
 
-    //int (*url_get_file_handle)(URLContext *h);
+    int (*url_get_file_handle)(URLContext *pstUrlCtx);
     //int (*url_get_multi_file_handle)(URLContext *h, int **handles, int *numhandles);
-    //int (*url_get_short_seek)(URLContext *h);
-    //int (*url_shutdown)(URLContext *h, int flags);
+    int (*url_get_short_seek)(URLContext *pstUrlCtx);
+    int (*url_shutdown)(URLContext *pstUrlCtx, int flags);
 
     
     //int (*url_check)(URLContext *h, int mask);
@@ -59,7 +62,7 @@ typedef struct URLContext {
     const AVClass *pstClass;    /**< information for av_log(). Set by url_open(). */
     const struct URLProtocol *pstProt;
     void *pstPrivData;
-    char *pFileName;             /**< specified URL */
+    char *filename;             /**< specified URL */
     int flags;
     int max_packet_size;        /**< if non zero, the stream is packetized with this max packet size */
     int is_streamed;            /**< true if streamed (no seek possible), default = false */
