@@ -52,6 +52,7 @@ int main(int argc, char * argv[])
         return -1;
     }
 
+    printf("socket bind successfully!\n");
     handle_udp_msg(server_fd);
 
     close(server_fd);
