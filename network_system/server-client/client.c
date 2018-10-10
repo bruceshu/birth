@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     while(1)
     {
         printf("what do you want to say:");
-        gets("%s", buf);
+        gets(buf);
         send(client_socket, buf, strlen(buf), 0);  
 
         //当输入END时客户端退出
