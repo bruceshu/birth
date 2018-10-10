@@ -79,6 +79,7 @@ void *hanld_client(void * arg)
 {  
     char buf[BUFF_SIZE] = {0};  
     int client_socket = *(int *)arg;
+    int ret;
 
     while(1)  
     {  
@@ -88,6 +89,7 @@ void *hanld_client(void * arg)
             break;  
         } else if(ret == 0) {  
             printf("client said nothing!\n");
+            break;
         }
         
         buf[ret] = '\0';
