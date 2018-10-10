@@ -626,3 +626,16 @@ int ffurl_read(URLContext *h, unsigned char *buf, int size)
    return retry_transfer_wrapper(h, buf, size, 1, h->pstProt->url_read);
 }
 
+int ffurl_handshake(URLContext *c)
+{
+    int ret;
+    if (c->pstProt->url_handshake) {
+        ret = c->pstProt->url_handshake(c);
+        if (ret)
+            return ret;
+    }
+    
+    c->is_connected = 1;
+    return 0;
+}
+
