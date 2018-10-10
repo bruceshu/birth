@@ -129,4 +129,24 @@ err_out:
     return AVERROR(ENOMEM);
 }
 
+int av_dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags)
+{
+    char valuestr[22];
+    snprintf(valuestr, sizeof(valuestr), "%"PRId64, value);
+    flags &= ~AV_DICT_DONT_STRDUP_VAL;
+    return av_dict_set(pm, key, valuestr, flags);
+}
+
+int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
+{
+    AVDictionaryEntry *t = NULL;
+
+    while ((t = av_dict_get(src, "", t, AV_DICT_IGNORE_SUFFIX))) {
+        int ret = av_dict_set(dst, t->key, t->value, flags);
+        if (ret < 0)
+            return ret;
+    }
+
+    return 0;
+}
 

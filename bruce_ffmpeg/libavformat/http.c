@@ -7,7 +7,7 @@
 *********************************/
 
 
-
+#include "http.h"
 
 int ff_http_averror(int status_code, int default_averror)
 {
@@ -25,4 +25,779 @@ int ff_http_averror(int status_code, int default_averror)
     else
         return default_averror;
 }
+
+static int http_handshake(URLContext *c)
+{
+    int ret, err, new_location;
+    HTTPContext *ch = c->pstPrivData;
+    URLContext *cl = ch->hd;
+    switch (ch->handshake_step) {
+        case LOWER_PROTO:
+            av_log(c, AV_LOG_TRACE, "Lower protocol\n");
+            if ((ret = ffurl_handshake(cl)) > 0)
+                return 2 + ret;
+            if (ret < 0)
+                return ret;
+            ch->handshake_step = READ_HEADERS;
+            ch->is_connected_server = 1;
+            return 2;
+        case READ_HEADERS:
+            av_log(c, AV_LOG_TRACE, "Read headers\n");
+            if ((err = http_read_header(c, &new_location)) < 0) {
+                handle_http_errors(c, err);
+                return err;
+            }
+            ch->handshake_step = WRITE_REPLY_HEADERS;
+            return 1;
+        case WRITE_REPLY_HEADERS:
+            av_log(c, AV_LOG_TRACE, "Reply code: %d\n", ch->reply_code);
+            if ((err = http_write_reply(c, ch->reply_code)) < 0)
+                return err;
+            ch->handshake_step = FINISH;
+            return 1;
+        case FINISH:
+            return 0;
+        default:
+            return AVERROR(EINVAL);
+    }
+}
+
+static int http_listen(URLContext *h, const char *uri, int flags, AVDictionary **options) {
+    HTTPContext *s = h->pstPrivData;
+    int ret;
+    int port;
+    char proto[10],hostname[1024];
+    char lower_url[100];
+    const char *lower_proto = "tcp";
+    
+    av_url_split(proto, sizeof(proto), NULL, 0, hostname, sizeof(hostname), &port, NULL, 0, uri);
+    if (!strcmp(proto, "https"))
+        lower_proto = "tls";
+    
+    ff_url_join(lower_url, sizeof(lower_url), lower_proto, NULL, hostname, port, NULL);
+    if ((ret = av_dict_set_int(options, "listen", s->listen, 0)) < 0)
+        goto fail;
+
+    ret = ffurl_open_whitelist(&s->hd, lower_url, AVIO_FLAG_READ_WRITE, &h->interrupt_callback, options,
+                                        h->protocol_whitelist, h->protocol_blacklist, h);
+    if (ret < 0)
+        goto fail;
+    
+    s->handshake_step = LOWER_PROTO;
+    if (s->listen == HTTP_SINGLE) { /* single client */
+        s->reply_code = 200;
+        do {
+            ret = http_handshake(h);
+        }while (ret > 0);
+    }
+    
+fail:
+    av_dict_free(&s->chained_options);
+    return ret;
+}
+
+static int has_header(const char *str, const char *header)
+{
+    if (!str)
+        return 0;
+    
+    /* header + 2 to skip over CRLF prefix. (make sure you have one!) */
+    return av_stristart(str, header + 2, NULL) || av_stristr(str, header);
+}
+
+static int http_getc(HTTPContext *s)
+{
+    int len;
+    if (s->buf_ptr >= s->buf_end) {
+        len = ffurl_read(s->hd, s->buffer, BUFFER_SIZE);
+        if (len < 0) {
+            return len;
+        } else if (len == 0) {
+            return AVERROR_EOF;
+        } else {
+            s->buf_ptr = s->buffer;
+            s->buf_end = s->buffer + len;
+        }
+    }
+    return *s->buf_ptr++;
+}
+
+static int http_get_line(HTTPContext *s, char *line, int line_size)
+{
+    int ch;
+    char *q;
+
+    q = line;
+    for (;;) {
+        ch = http_getc(s);
+        if (ch < 0)
+            return ch;
+        
+        if (ch == '\n') {
+            /* process line */
+            if (q > line && q[-1] == '\r')
+                q--;
+            *q = '\0';
+
+            return 0;
+        } else {
+            if ((q - line) < line_size - 1)
+                *q++ = ch;
+        }
+    }
+}
+
+static int check_http_code(URLContext *h, int http_code, const char *end)
+{
+    HTTPContext *s = h->pstPrivData;
+    /* error codes are 4xx and 5xx, but regard 401 as a success, so we
+     * don't abort until all headers have been parsed. */
+    if (http_code >= 400 && http_code < 600 &&
+        (http_code != 401 || s->auth_state.auth_type != HTTP_AUTH_NONE) &&
+        (http_code != 407 || s->proxy_auth_state.auth_type != HTTP_AUTH_NONE)) {
+        end += strspn(end, SPACE_CHARS);
+        av_log(h, AV_LOG_WARNING, "HTTP error %d %s\n", http_code, end);
+        return ff_http_averror(http_code, AVERROR(EIO));
+    }
+    return 0;
+}
+
+static void parse_content_range(URLContext *h, const char *p)
+{
+    HTTPContext *s = h->pstPrivData;
+    const char *slash;
+
+    if (!strncmp(p, "bytes ", 6)) {
+        p += 6;
+        s->off = strtoull(p, NULL, 10);
+        if ((slash = strchr(p, '/')) && strlen(slash) > 0)
+            s->filesize = strtoull(slash + 1, NULL, 10);
+    }
+    if (s->seekable == -1 && (!s->is_akamai || s->filesize != 2147483647))
+        h->is_streamed = 0; /* we _can_ in fact seek */
+}
+
+static int parse_cookie(HTTPContext *s, const char *p, AVDictionary **cookies)
+{
+    char *eql, *name;
+
+    // duplicate the cookie name (dict will dupe the value)
+    if (!(eql = strchr(p, '='))) 
+        return AVERROR(EINVAL);
+    
+    if (!(name = av_strndup(p, eql - p))) 
+        return AVERROR(ENOMEM);
+
+    // add the cookie to the dictionary
+    av_dict_set(cookies, name, eql, AV_DICT_DONT_STRDUP_KEY);
+
+    return 0;
+}
+
+static int parse_icy(HTTPContext *s, const char *tag, const char *p)
+{
+    int len = 4 + strlen(p) + strlen(tag);
+    int is_first = !s->icy_metadata_headers;
+    int ret;
+
+    av_dict_set(&s->metadata, tag, p, 0);
+
+    if (s->icy_metadata_headers)
+        len += strlen(s->icy_metadata_headers);
+
+    if ((ret = av_reallocp(&s->icy_metadata_headers, len)) < 0)
+        return ret;
+
+    if (is_first)
+        *s->icy_metadata_headers = '\0';
+
+    av_strlcatf(s->icy_metadata_headers, len, "%s: %s\n", tag, p);
+
+    return 0;
+}
+
+static int parse_content_encoding(URLContext *h, const char *p)
+{
+    if (!av_strncasecmp(p, "gzip", 4) || !av_strncasecmp(p, "deflate", 7)) {
+#if 0 //CONFIG_ZLIB
+        HTTPContext *s = h->priv_data;
+
+        s->compressed = 1;
+        inflateEnd(&s->inflate_stream);
+        if (inflateInit2(&s->inflate_stream, 32 + 15) != Z_OK) {
+            av_log(h, AV_LOG_WARNING, "Error during zlib initialisation: %s\n",
+                   s->inflate_stream.msg);
+            return AVERROR(ENOSYS);
+        }
+        if (zlibCompileFlags() & (1 << 17)) {
+            av_log(h, AV_LOG_WARNING,
+                   "Your zlib was compiled without gzip support.\n");
+            return AVERROR(ENOSYS);
+        }
+#else
+        av_log(h, AV_LOG_WARNING, "Compressed (%s) content, need zlib with gzip support\n", p);
+        return AVERROR(ENOSYS);
+#endif /* CONFIG_ZLIB */
+    } else if (!av_strncasecmp(p, "identity", 8)) {
+        // The normal, no-encoding case (although servers shouldn't include
+        // the header at all if this is the case).
+    } else {
+        av_log(h, AV_LOG_WARNING, "Unknown content coding: %s\n", p);
+    }
+    
+    return 0;
+}
+
+static int process_line(URLContext *h, char *line, int line_count, int *new_location)
+{
+    HTTPContext *s = h->pstPrivData;
+    const char *auto_method =  h->flags & AVIO_FLAG_READ ? "POST" : "GET";
+    char *tag, *p, *end, *method, *resource, *version;
+    int ret;
+
+    /* end of header */
+    if (line[0] == '\0') {
+        s->end_header = 1;
+        return 0;
+    }
+
+    p = line;
+    if (line_count == 0) {
+        if (s->is_connected_server) {
+            // HTTP method
+            method = p;
+            while (*p && !av_isspace(*p))
+                p++;
+            *(p++) = '\0';
+            
+            av_log(h, AV_LOG_TRACE, "Received method: %s\n", method);
+            if (s->method) {
+                if (av_strcasecmp(s->method, method)) {
+                    av_log(h, AV_LOG_ERROR, "Received and expected HTTP method do not match. (%s expected, %s received)\n", s->method, method);
+                    return ff_http_averror(400, AVERROR(EIO));
+                }
+            } else {
+                // use autodetected HTTP method to expect
+                av_log(h, AV_LOG_TRACE, "Autodetected %s HTTP method\n", auto_method);
+                if (av_strcasecmp(auto_method, method)) {
+                    av_log(h, AV_LOG_ERROR, "Received and autodetected HTTP method did not match "
+                           "(%s autodetected %s received)\n", auto_method, method);
+                    return ff_http_averror(400, AVERROR(EIO));
+                }
+                
+                if (!(s->method = av_strdup(method)))
+                    return AVERROR(ENOMEM);
+            }
+
+            // HTTP resource
+            while (av_isspace(*p))
+                p++;
+            
+            resource = p;
+            while (!av_isspace(*p))
+                p++;
+            *(p++) = '\0';
+            
+            av_log(h, AV_LOG_TRACE, "Requested resource: %s\n", resource);
+            if (!(s->resource = av_strdup(resource)))
+                return AVERROR(ENOMEM);
+
+            // HTTP version
+            while (av_isspace(*p))
+                p++;
+            version = p;
+            
+            while (*p && !av_isspace(*p))
+                p++;
+            *p = '\0';
+            
+            if (av_strncasecmp(version, "HTTP/", 5)) {
+                av_log(h, AV_LOG_ERROR, "Malformed HTTP version string.\n");
+                return ff_http_averror(400, AVERROR(EIO));
+            }
+            
+            av_log(h, AV_LOG_TRACE, "HTTP version string: %s\n", version);
+        } else {
+            while (!av_isspace(*p) && *p != '\0')
+                p++;
+            while (av_isspace(*p))
+                p++;
+            s->http_code = strtol(p, &end, 10);
+
+            av_log(h, AV_LOG_TRACE, "http_code=%d\n", s->http_code);
+
+            if ((ret = check_http_code(h, s->http_code, end)) < 0)
+                return ret;
+        }
+    } else {
+        while (*p != '\0' && *p != ':')
+            p++;
+        if (*p != ':')
+            return 1;
+
+        *p  = '\0';
+        tag = line;
+        p++;
+        while (av_isspace(*p))
+            p++;
+        if (!av_strcasecmp(tag, "Location")) {
+            if ((ret = parse_location(s, p)) < 0)
+                return ret;
+            *new_location = 1;
+        } else if (!av_strcasecmp(tag, "Content-Length") && s->filesize == UINT64_MAX) {
+            s->filesize = strtoull(p, NULL, 10);
+        } else if (!av_strcasecmp(tag, "Content-Range")) {
+            parse_content_range(h, p);
+        } else if (!av_strcasecmp(tag, "Accept-Ranges") && !strncmp(p, "bytes", 5) && s->seekable == -1) {
+            h->is_streamed = 0;
+        } else if (!av_strcasecmp(tag, "Transfer-Encoding") && !av_strncasecmp(p, "chunked", 7)) {
+            s->filesize  = UINT64_MAX;
+            s->chunksize = 0;
+        } else if (!av_strcasecmp(tag, "WWW-Authenticate")) {
+            //ff_http_auth_handle_header(&s->auth_state, tag, p);
+        } else if (!av_strcasecmp(tag, "Authentication-Info")) {
+            //ff_http_auth_handle_header(&s->auth_state, tag, p);
+        } else if (!av_strcasecmp(tag, "Proxy-Authenticate")) {
+            //ff_http_auth_handle_header(&s->proxy_auth_state, tag, p);
+        } else if (!av_strcasecmp(tag, "Connection")) {
+            if (!strcmp(p, "close"))
+                s->willclose = 1;
+        } else if (!av_strcasecmp(tag, "Server")) {
+            if (!av_strcasecmp(p, "AkamaiGHost")) {
+                s->is_akamai = 1;
+            } else if (!av_strncasecmp(p, "MediaGateway", 12)) {
+                s->is_mediagateway = 1;
+            }
+        } else if (!av_strcasecmp(tag, "Content-Type")) {
+            av_free(s->mime_type);
+            s->mime_type = av_strdup(p);
+        } else if (!av_strcasecmp(tag, "Set-Cookie")) {
+            if (parse_cookie(s, p, &s->cookie_dict))
+                av_log(h, AV_LOG_WARNING, "Unable to parse '%s'\n", p);
+        } else if (!av_strcasecmp(tag, "Icy-MetaInt")) {
+            s->icy_metaint = strtoull(p, NULL, 10);
+        } else if (!av_strncasecmp(tag, "Icy-", 4)) {
+            if ((ret = parse_icy(s, tag, p)) < 0)
+                return ret;
+        } else if (!av_strcasecmp(tag, "Content-Encoding")) {
+            if ((ret = parse_content_encoding(h, p)) < 0)
+                return ret;
+        }
+    }
+    
+    return 1;
+}
+
+static int cookie_string(AVDictionary *dict, char **cookies)
+{
+    AVDictionaryEntry *e = NULL;
+    int len = 1;
+
+    // determine how much memory is needed for the cookies string
+    while (e = av_dict_get(dict, "", e, AV_DICT_IGNORE_SUFFIX))
+        len += strlen(e->key) + strlen(e->value) + 1;
+
+    // reallocate the cookies
+    e = NULL;
+    if (*cookies) 
+        av_free(*cookies);
+    
+    *cookies = av_malloc(len);
+    if (!*cookies) 
+        return AVERROR(ENOMEM);
+    
+    *cookies[0] = '\0';
+
+    // write out the cookies
+    while (e = av_dict_get(dict, "", e, AV_DICT_IGNORE_SUFFIX))
+        av_strlcatf(*cookies, len, "%s%s\n", e->key, e->value);
+
+    return 0;
+}
+
+static int http_read_header(URLContext *h, int *new_location)
+{
+    HTTPContext *s = h->pstPrivData;
+    char line[MAX_URL_SIZE];
+    int err = 0;
+
+    s->chunksize = UINT64_MAX;
+
+    for (;;) {
+        if ((err = http_get_line(s, line, sizeof(line))) < 0)
+            return err;
+
+        av_log(h, AV_LOG_TRACE, "header='%s'\n", line);
+
+        err = process_line(h, line, s->line_count, new_location);
+        if (err < 0)
+            return err;
+        if (err == 0)
+            break;
+        s->line_count++;
+    }
+
+    if (s->seekable == -1 && s->is_mediagateway && s->filesize == 2000000000)
+        h->is_streamed = 1; /* we can in fact _not_ seek */
+
+    // add any new cookies into the existing cookie string
+    cookie_string(s->cookie_dict, &s->cookies);
+    av_dict_free(&s->cookie_dict);
+
+    return err;
+}
+
+static int http_connect(URLContext *h, const char *path, const char *local_path, const char *hoststr, const char *auth, const char *proxyauth, int *new_location)
+{
+    HTTPContext *s = h->pstPrivData;
+    int post, err;
+    char headers[HTTP_HEADERS_SIZE] = "";
+    char *authstr = NULL, *proxyauthstr = NULL;
+    uint64_t off = s->off;
+    uint64_t filesize = s->filesize;
+    int len = 0;
+    const char *method;
+    int send_expect_100 = 0;
+    int ret;
+
+    /* send http header */
+    post = h->flags & AVIO_FLAG_WRITE;
+
+    if (s->post_data) {
+        /* force POST method and disable chunked encoding when
+         * custom HTTP post data is set */
+        post            = 1;
+        s->chunked_post = 0;
+    }
+
+    if (s->method)
+        method = s->method;
+    else
+        method = post ? "POST" : "GET";
+
+    authstr      = ff_http_auth_create_response(&s->auth_state, auth, local_path, method);
+    proxyauthstr = ff_http_auth_create_response(&s->proxy_auth_state, proxyauth, local_path, method);
+    
+    if (post && !s->post_data) {
+        send_expect_100 = s->send_expect_100;
+        /* The user has supplied authentication but we don't know the auth type,
+         * send Expect: 100-continue to get the 401 response including the
+         * WWW-Authenticate header, or an 100 continue if no auth actually
+         * is needed. */
+        if (auth && *auth && s->auth_state.auth_type == HTTP_AUTH_NONE && s->http_code != 401)
+            send_expect_100 = 1;
+    }
+
+#if 0 //FF_API_HTTP_USER_AGENT
+    if (strcmp(s->user_agent_deprecated, DEFAULT_USER_AGENT)) {
+        av_log(s, AV_LOG_WARNING, "the user-agent option is deprecated, please use user_agent option\n");
+        s->user_agent = av_strdup(s->user_agent_deprecated);
+    }
+#endif
+
+    /* set default headers if needed */
+    if (!has_header(s->headers, "\r\nUser-Agent: "))
+        len += av_strlcatf(headers + len, sizeof(headers) - len, "User-Agent: %s\r\n", s->user_agent);
+    
+    if (!has_header(s->headers, "\r\nAccept: "))
+        len += av_strlcpy(headers + len, "Accept: */*\r\n", sizeof(headers) - len);
+    
+    // Note: we send this on purpose even when s->off is 0 when we're probing,
+    // since it allows us to detect more reliably if a (non-conforming)
+    // server supports seeking by analysing the reply headers.
+    if (!has_header(s->headers, "\r\nRange: ") && !post && (s->off > 0 || s->end_off || s->seekable == -1)) {
+        len += av_strlcatf(headers + len, sizeof(headers) - len, "Range: bytes=%"PRIu64"-", s->off);
+        if (s->end_off)
+            len += av_strlcatf(headers + len, sizeof(headers) - len, "%"PRId64, s->end_off - 1);
+        len += av_strlcpy(headers + len, "\r\n", sizeof(headers) - len);
+    }
+    
+    if (send_expect_100 && !has_header(s->headers, "\r\nExpect: "))
+        len += av_strlcatf(headers + len, sizeof(headers) - len, "Expect: 100-continue\r\n");
+
+    if (!has_header(s->headers, "\r\nConnection: ")) {
+        if (s->multiple_requests)
+            len += av_strlcpy(headers + len, "Connection: keep-alive\r\n", sizeof(headers) - len);
+        else
+            len += av_strlcpy(headers + len, "Connection: close\r\n", sizeof(headers) - len);
+    }
+
+    if (!has_header(s->headers, "\r\nHost: "))
+        len += av_strlcatf(headers + len, sizeof(headers) - len, "Host: %s\r\n", hoststr);
+    
+    if (!has_header(s->headers, "\r\nContent-Length: ") && s->post_data)
+        len += av_strlcatf(headers + len, sizeof(headers) - len, "Content-Length: %d\r\n", s->post_datalen);
+
+    if (!has_header(s->headers, "\r\nContent-Type: ") && s->content_type)
+        len += av_strlcatf(headers + len, sizeof(headers) - len, "Content-Type: %s\r\n", s->content_type);
+    
+    if (!has_header(s->headers, "\r\nCookie: ") && s->cookies) {
+        char *cookies = NULL;
+        if (!get_cookies(s, &cookies, path, hoststr) && cookies) {
+            len += av_strlcatf(headers + len, sizeof(headers) - len, "Cookie: %s\r\n", cookies);
+            av_free(cookies);
+        }
+    }
+    
+    if (!has_header(s->headers, "\r\nIcy-MetaData: ") && s->icy)
+        len += av_strlcatf(headers + len, sizeof(headers) - len, "Icy-MetaData: %d\r\n", 1);
+
+    /* now add in custom headers */
+    if (s->headers)
+        av_strlcpy(headers + len, s->headers, sizeof(headers) - len);
+
+    ret = snprintf(s->buffer, sizeof(s->buffer),
+             "%s %s HTTP/1.1\r\n"
+             "%s"
+             "%s"
+             "%s"
+             "%s%s"
+             "\r\n",
+             method,
+             path,
+             post && s->chunked_post ? "Transfer-Encoding: chunked\r\n" : "",
+             headers,
+             authstr ? authstr : "",
+             proxyauthstr ? "Proxy-" : "", proxyauthstr ? proxyauthstr : "");
+
+    av_log(h, AV_LOG_DEBUG, "request: %s\n", s->buffer);
+
+    if (strlen(headers) + 1 == sizeof(headers) || ret >= sizeof(s->buffer)) {
+        av_log(h, AV_LOG_ERROR, "overlong headers\n");
+        err = AVERROR(EINVAL);
+        goto done;
+    }
+
+    if ((err = ffurl_write(s->hd, s->buffer, strlen(s->buffer))) < 0)
+        goto done;
+
+    if (s->post_data)
+        if ((err = ffurl_write(s->hd, s->post_data, s->post_datalen)) < 0)
+            goto done;
+
+    /* init input buffer */
+    s->buf_ptr          = s->buffer;
+    s->buf_end          = s->buffer;
+    s->line_count       = 0;
+    s->off              = 0;
+    s->icy_data_read    = 0;
+    s->filesize         = UINT64_MAX;
+    s->willclose        = 0;
+    s->end_chunked_post = 0;
+    s->end_header       = 0;
+    if (post && !s->post_data && !send_expect_100) {
+        /* Pretend that it did work. We didn't read any header yet, since
+         * we've still to send the POST data, but the code calling this
+         * function will check http_code after we return. */
+        s->http_code = 200;
+        err = 0;
+        goto done;
+    }
+
+    /* wait for header */
+    err = http_read_header(h, new_location);
+    if (err < 0)
+        goto done;
+
+    if (*new_location)
+        s->off = off;
+
+    /* Some buggy servers may missing 'Content-Range' header for range request */
+    if (off > 0 && s->off <= 0 && (off + s->filesize == filesize)) {
+        av_log(NULL, AV_LOG_WARNING, "try to fix missing 'Content-Range' at server side (%"PRId64",%"PRId64") => (%"PRId64",%"PRId64")",
+               s->off, s->filesize, off, filesize);
+        s->off = off;
+        s->filesize = filesize;
+    }
+
+    err = (off == s->off) ? 0 : -1;
+done:
+    av_freep(&authstr);
+    av_freep(&proxyauthstr);
+    return err;
+}
+
+static int http_open_cnx_internal(URLContext *h, AVDictionary **options)
+{
+    const char *path, *proxy_path, *lower_proto = "tcp", *local_path;
+    char hostname[1024], hoststr[1024], proto[10];
+    char auth[1024], proxyauth[1024] = "";
+    char path1[MAX_URL_SIZE];
+    char buf[1024], urlbuf[MAX_URL_SIZE];
+    int port, use_proxy, err, location_changed = 0;
+    char prev_location[4096];
+    HTTPContext *s = h->pstPrivData;
+
+    lower_proto = s->tcp_hook;
+    av_url_split(proto, sizeof(proto), auth, sizeof(auth), hostname, sizeof(hostname), &port, path1, sizeof(path1), s->location);
+    ff_url_join(hoststr, sizeof(hoststr), NULL, NULL, hostname, port, NULL);
+
+    proxy_path = s->http_proxy ? s->http_proxy : getenv("http_proxy");
+    use_proxy  = !ff_http_match_no_proxy(getenv("no_proxy"), hostname) && proxy_path && av_strstart(proxy_path, "http://", NULL);
+
+    if (!strcmp(proto, "https")) {
+        lower_proto = "tls";
+        use_proxy   = 0;
+        if (port < 0)
+            port = 443;
+    }
+    
+    if (port < 0)
+        port = 80;
+
+    if (path1[0] == '\0')
+        path = "/";
+    else
+        path = path1;
+    
+    local_path = path;
+    if (use_proxy) {
+        /* Reassemble the request URL without auth string - we don't
+         * want to leak the auth to the proxy. */
+        ff_url_join(urlbuf, sizeof(urlbuf), proto, NULL, hostname, port, "%s", path1);
+        path = urlbuf;
+        av_url_split(NULL, 0, proxyauth, sizeof(proxyauth),
+                     hostname, sizeof(hostname), &port, NULL, 0, proxy_path);
+    }
+
+    ff_url_join(buf, sizeof(buf), lower_proto, NULL, hostname, port, NULL);
+    if (!s->hd) {
+        av_dict_set_int(options, "ijkapplication", (int64_t)(intptr_t)s->app_ctx, 0);
+        err = ffurl_open_whitelist(&s->hd, buf, AVIO_FLAG_READ_WRITE, &h->interrupt_callback, options,
+                                   h->protocol_whitelist, h->protocol_blacklist, h);
+        if (err < 0)
+            return err;
+    }
+
+    av_strlcpy(prev_location, s->location, sizeof(prev_location));
+    err = http_connect(h, path, local_path, hoststr, auth, proxyauth, &location_changed);
+    if (err < 0)
+        return err;
+
+    return location_changed;
+}
+
+static int http_open_cnx(URLContext *h, AVDictionary **options)
+{
+    HTTPAuthType cur_auth_type, cur_proxy_auth_type;
+    HTTPContext *s = h->pstPrivData;
+    int location_changed, attempts = 0, redirects = 0;
+    
+redo:
+    av_dict_copy(options, s->chained_options, 0);
+
+    cur_auth_type       = s->auth_state.auth_type;
+    cur_proxy_auth_type = s->auth_state.auth_type;
+
+    location_changed = http_open_cnx_internal(h, options);
+    if (location_changed < 0)
+        goto fail;
+
+    attempts++;
+    if (s->http_code == 401) {
+        if ((cur_auth_type == HTTP_AUTH_NONE || s->auth_state.stale) && s->auth_state.auth_type != HTTP_AUTH_NONE && attempts < 4) 
+        {
+            ffurl_closep(&s->hd);
+            goto redo;
+        } else {
+            goto fail;
+        }
+    }
+    
+    if (s->http_code == 407) {
+        if ((cur_proxy_auth_type == HTTP_AUTH_NONE || s->proxy_auth_state.stale) && s->proxy_auth_state.auth_type != HTTP_AUTH_NONE 
+                                                                                 && attempts < 4) 
+        {
+            ffurl_closep(&s->hd);
+            goto redo;
+        } else {
+            goto fail;
+        }
+    }
+    
+    if ((s->http_code == 301 || s->http_code == 302 || s->http_code == 303 || s->http_code == 307) && location_changed == 1) {
+        /* url moved, get next */
+        ffurl_closep(&s->hd);
+        if (redirects++ >= MAX_REDIRECTS)
+            return AVERROR(EIO);
+        
+        /* Restart the authentication process with the new target, which
+         * might use a different auth mechanism. */
+        memset(&s->auth_state, 0, sizeof(s->auth_state));
+        attempts         = 0;
+        location_changed = 0;
+        goto redo;
+    }
+    
+    return 0;
+
+fail:
+    if (s->hd)
+        ffurl_closep(&s->hd);
+    
+    if (location_changed < 0)
+        return location_changed;
+    
+    return ff_http_averror(s->http_code, AVERROR(EIO));
+}
+
+static int http_open(URLContext *h, const char *uri, int flags, AVDictionary **options)
+{
+    HTTPContext *s = h->pstPrivData;
+    int ret;
+
+    if( s->seekable == 1 )
+        h->is_streamed = 0;
+    else
+        h->is_streamed = 1;
+
+    s->filesize = UINT64_MAX;
+    s->location = av_strdup(uri);
+    if (!s->location)
+        return AVERROR(ENOMEM);
+    
+    if (options)
+        av_dict_copy(&s->chained_options, *options, 0);
+
+    if (s->headers) {
+        int len = strlen(s->headers);
+        if (len < 2 || strcmp("\r\n", s->headers + len - 2)) {
+            av_log(h, AV_LOG_WARNING, "No trailing CRLF found in HTTP header.\n");
+            ret = av_reallocp(&s->headers, len + 3);
+            if (ret < 0)
+                return ret;
+            s->headers[len]     = '\r';
+            s->headers[len + 1] = '\n';
+            s->headers[len + 2] = '\0';
+        }
+    }
+
+    if (s->listen) {
+        return http_listen(h, uri, flags, options);
+    }
+    ret = http_open_cnx(h, options);
+    if (ret < 0)
+        av_dict_free(&s->chained_options);
+    
+    return ret;
+}
+
+
+const URLProtocol ff_http_protocol = {
+    .name                = "http",
+    .url_open2           = http_open,
+    //.url_accept          = http_accept,
+    //.url_handshake       = http_handshake,
+    .url_read            = http_read,
+    //.url_write           = http_write,
+    //.url_seek            = http_seek,
+    .url_close           = http_close,
+    .url_get_file_handle = http_get_file_handle,
+    .url_get_short_seek  = http_get_short_seek,
+    .url_shutdown        = http_shutdown,
+    .priv_data_size      = sizeof(HTTPContext),
+    .priv_data_class     = &http_context_class,
+    .flags               = URL_PROTOCOL_FLAG_NETWORK,
+    //.default_whitelist   = "http,https,tls,rtp,tcp,udp,crypto,httpproxy"
+};
 

@@ -369,7 +369,7 @@ fail:
 }
 
 
-static inline int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, 
+static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, 
                                     int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size))
 {
     int ret, len;
@@ -380,11 +380,14 @@ static inline int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, in
     while (len < size_min) {
         /*if (ff_check_interrupt(&h->interrupt_callback))
             return AVERROR_EXIT;*/
+            
         ret = transfer_func(pstUrlCtx, buf + len, size - len);
         if (ret == AVERROR(EINTR))
             continue;
+        
         if (pstUrlCtx->flags & AVIO_FLAG_NONBLOCK)
             return ret;
+        
         if (ret == AVERROR(EAGAIN)) {
             ret = 0;
             if (fast_retries) {
@@ -405,6 +408,7 @@ static inline int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, in
             fast_retries = FFMAX(fast_retries, 2);
             wait_since = 0;
         }
+        
         len += ret;
     }
     
@@ -436,13 +440,12 @@ int ffurl_write(URLContext *h, const unsigned char *buf, int size)
 {
     if (!(h->flags & AVIO_FLAG_WRITE))
         return AVERROR(EIO);
+    
     /* avoid sending too big packets */
     if (h->max_packet_size && size > h->max_packet_size)
         return AVERROR(EIO);
 
-    return retry_transfer_wrapper(h, (unsigned char *)buf, size, size,
-                                  (int (*)(struct URLContext *, uint8_t *, int))
-                                  h->prot->url_write);
+    return retry_transfer_wrapper(h, (unsigned char *)buf, size, size, (int (*)(struct URLContext *, uint8_t *, int))h->prot->url_write);
 }
 
 int ffurl_get_file_handle(URLContext *h)
@@ -570,10 +573,7 @@ int ffurl_closep(URLContext **hh)
 }
 
 
-int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags,
-                         const AVIOInterruptCB *int_cb, AVDictionary **options,
-                         const char *whitelist, const char* blacklist,
-                         URLContext *parent)
+int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options, const char *whitelist, const char* blacklist, URLContext *parent)
 {
     AVDictionary *tmp_opts = NULL;
     AVDictionaryEntry *e;
@@ -618,4 +618,11 @@ fail:
     return ret;
 }
 
+int ffurl_read(URLContext *h, unsigned char *buf, int size)
+{
+   if (!(h->flags & AVIO_FLAG_READ))
+       return AVERROR(EIO);
+   
+   return retry_transfer_wrapper(h, buf, size, 1, h->pstProt->url_read);
+}
 
