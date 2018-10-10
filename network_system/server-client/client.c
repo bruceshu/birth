@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     printf("please input \"end\" to exit!\n");  
     while(1)
     {
-        printf("what do you want to say:")
+        printf("what do you want to say:");
         gets("%s", buf);
         send(client_socket, buf, strlen(buf), 0);  
 
