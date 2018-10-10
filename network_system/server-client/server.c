@@ -88,7 +88,7 @@ void *hanld_client(void * arg)
             printf("read from client socket failed!\n");
             break;  
         } else if(ret == 0) {  
-            printf("client said nothing!\n");
+            printf("client %d said nothing!\n", client_socket);
             break;
         }
         
