@@ -450,11 +450,10 @@ int ffurl_write(URLContext *h, const unsigned char *buf, int size)
 
 int ffurl_get_file_handle(URLContext *h)
 {
-    if (!h || !h->prot || !h->prot->url_get_file_handle)
+    if (!h || !h->pstProt || !h->pstProt->url_get_file_handle)
         return -1;
-    return h->prot->url_get_file_handle(h);
+    return h->pstProt->url_get_file_handle(h);
 }
-
 
 int ffurl_read_complete(URLContext *pstUrlCtx, unsigned char *buf, int size)
 {
@@ -637,5 +636,10 @@ int ffurl_handshake(URLContext *c)
     
     c->is_connected = 1;
     return 0;
+}
+
+int ffurl_close(URLContext *h)
+{
+    return ffurl_closep(&h);
 }
 

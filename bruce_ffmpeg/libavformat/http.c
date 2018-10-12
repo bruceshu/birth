@@ -710,53 +710,39 @@ static int http_open_cnx_internal(URLContext *h, AVDictionary **options)
     int port, use_proxy, err, location_changed = 0;
     char prev_location[4096];
     HTTPContext *s = h->pstPrivData;
-
     lower_proto = s->tcp_hook;
     av_url_split(proto, sizeof(proto), auth, sizeof(auth), hostname, sizeof(hostname), &port, path1, sizeof(path1), s->location);
     ff_url_join(hoststr, sizeof(hoststr), NULL, NULL, hostname, port, NULL);
-
-    proxy_path = s->http_proxy ? s->http_proxy : getenv("http_proxy");
-    use_proxy  = !ff_http_match_no_proxy(getenv("no_proxy"), hostname) && proxy_path && av_strstart(proxy_path, "http://", NULL);
-
     if (!strcmp(proto, "https")) {
         lower_proto = "tls";
         use_proxy   = 0;
         if (port < 0)
             port = 443;
     }
-    
     if (port < 0)
         port = 80;
-
     if (path1[0] == '\0')
         path = "/";
     else
         path = path1;
-    
     local_path = path;
     if (use_proxy) {
-        /* Reassemble the request URL without auth string - we don't
-         * want to leak the auth to the proxy. */
+        /* Reassemble the request URL without auth string - we don't want to leak the auth to the proxy. */
         ff_url_join(urlbuf, sizeof(urlbuf), proto, NULL, hostname, port, "%s", path1);
         path = urlbuf;
-        av_url_split(NULL, 0, proxyauth, sizeof(proxyauth),
-                     hostname, sizeof(hostname), &port, NULL, 0, proxy_path);
+        av_url_split(NULL, 0, proxyauth, sizeof(proxyauth), hostname, sizeof(hostname), &port, NULL, 0, proxy_path);
     }
-
     ff_url_join(buf, sizeof(buf), lower_proto, NULL, hostname, port, NULL);
     if (!s->hd) {
-        av_dict_set_int(options, "ijkapplication", (int64_t)(intptr_t)s->app_ctx, 0);
         err = ffurl_open_whitelist(&s->hd, buf, AVIO_FLAG_READ_WRITE, &h->interrupt_callback, options,
                                    h->protocol_whitelist, h->protocol_blacklist, h);
         if (err < 0)
             return err;
     }
-
     av_strlcpy(prev_location, s->location, sizeof(prev_location));
     err = http_connect(h, path, local_path, hoststr, auth, proxyauth, &location_changed);
     if (err < 0)
         return err;
-
     return location_changed;
 }
 
@@ -865,6 +851,228 @@ static int http_open(URLContext *h, const char *uri, int flags, AVDictionary **o
     return ret;
 }
 
+static int http_buf_read(URLContext *h, uint8_t *buf, int size)
+{
+    HTTPContext *s = h->pstPrivData;
+    int len;
+
+    if (s->chunksize != UINT64_MAX) {
+        if (!s->chunksize) {
+            char line[32];
+            int err;
+
+            do {
+                err = http_get_line(s, line, sizeof(line));
+                if (err < 0)
+                    return err;
+            } while (!*line);    /* skip CR LF from last chunk */
+
+            s->chunksize = strtoull(line, NULL, 16);
+
+            av_log(h, AV_LOG_TRACE, "Chunked encoding data size: %"PRIu64"'\n", s->chunksize);
+
+            if (!s->chunksize) {
+                return 0;
+            } else if (s->chunksize == UINT64_MAX) {
+                av_log(h, AV_LOG_ERROR, "Invalid chunk size %"PRIu64"\n", s->chunksize);
+                return AVERROR(EINVAL);
+            }
+        }
+        
+        size = FFMIN(size, s->chunksize);
+    }
+
+    /* read bytes from input buffer first */
+    len = s->buf_end - s->buf_ptr;
+    if (len > 0) {
+        if (len > size)
+            len = size;
+        memcpy(buf, s->buf_ptr, len);
+        s->buf_ptr += len;
+    } else {
+        uint64_t target_end = s->end_off ? s->end_off : s->filesize;
+        if ((!s->willclose || s->chunksize == UINT64_MAX) && s->off >= target_end)
+            return AVERROR_EOF;
+
+        len = size;
+        if (s->filesize > 0 && s->filesize != UINT64_MAX && s->filesize != 2147483647) {
+            int64_t unread = s->filesize - s->off;
+            if (len > unread)
+                len = (int)unread;
+        }
+        if (len > 0)
+            len = ffurl_read(s->hd, buf, len);
+        if (!len && (!s->willclose || s->chunksize == UINT64_MAX) && s->off < target_end) {
+            av_log(h, AV_LOG_ERROR,
+                   "Stream ends prematurely at %"PRIu64", should be %"PRIu64"\n",
+                   s->off, target_end
+                  );
+            return AVERROR(EIO);
+        }
+    }
+    if (len > 0) {
+        s->off += len;
+        if (s->chunksize > 0 && s->chunksize != UINT64_MAX) {
+            av_assert0(s->chunksize >= len);
+            s->chunksize -= len;
+        }
+    }
+    return len;
+}
+
+static int64_t http_seek_internal(URLContext *h, int64_t off, int whence, int force_reconnect)
+{
+    HTTPContext *s = h->pstPrivData;
+    URLContext *old_hd = s->hd;
+    uint64_t old_off = s->off;
+    uint8_t old_buf[BUFFER_SIZE];
+    int old_buf_size, ret;
+    AVDictionary *options = NULL;
+
+    if (whence == AVSEEK_SIZE)
+        return s->filesize;
+    
+    else if (!force_reconnect && ((whence == SEEK_CUR && off == 0) || (whence == SEEK_SET && off == s->off))) {
+        return s->off;
+    } else if ((s->filesize == UINT64_MAX && whence == SEEK_END)) {
+        return AVERROR(ENOSYS);
+    }
+
+    if (whence == SEEK_CUR) {
+        off += s->off;
+    } else if (whence == SEEK_END) {
+        off += s->filesize;
+    } else if (whence != SEEK_SET) {
+        return AVERROR(EINVAL);
+    }
+    
+    if (off < 0)
+        return AVERROR(EINVAL);
+    
+    s->off = off;
+
+    if (s->off && h->is_streamed)
+        return AVERROR(ENOSYS);
+
+    /* we save the old context in case the seek fails */
+    old_buf_size = s->buf_end - s->buf_ptr;
+    memcpy(old_buf, s->buf_ptr, old_buf_size);
+    s->hd = NULL;
+
+    if ((ret = http_open_cnx(h, &options)) < 0) {
+        av_dict_free(&options);
+        memcpy(s->buffer, old_buf, old_buf_size);
+        s->buf_ptr = s->buffer;
+        s->buf_end = s->buffer + old_buf_size;
+        s->hd      = old_hd;
+        s->off     = old_off;
+        return ret;
+    }
+
+    av_dict_free(&options);
+    ffurl_close(old_hd);
+    return off;
+}
+
+static int store_icy(URLContext *h, int size)
+{
+#if 0
+    HTTPContext *s = h->pstPrivData;
+    /* until next metadata packet */
+    uint64_t remaining;
+
+    if (s->icy_metaint < s->icy_data_read)
+        return AVERROR_INVALIDDATA;
+    remaining = s->icy_metaint - s->icy_data_read;
+
+    if (!remaining) {
+        /* The metadata packet is variable sized. It has a 1 byte header
+         * which sets the length of the packet (divided by 16). If it's 0,
+         * the metadata doesn't change. After the packet, icy_metaint bytes
+         * of normal data follows. */
+        uint8_t ch;
+        int len = http_read_stream_all(h, &ch, 1);
+        if (len < 0)
+            return len;
+        if (ch > 0) {
+            char data[255 * 16 + 1];
+            int ret;
+            len = ch * 16;
+            ret = http_read_stream_all(h, data, len);
+            if (ret < 0)
+                return ret;
+            data[len + 1] = 0;
+            if ((ret = av_opt_set(s, "icy_metadata_packet", data, 0)) < 0)
+                return ret;
+            update_metadata(s, data);
+        }
+        s->icy_data_read = 0;
+        remaining        = s->icy_metaint;
+    }
+
+    return FFMIN(size, remaining);
+#endif
+}
+
+static int http_read_stream(URLContext *h, uint8_t *buf, int size)
+{
+    HTTPContext *s = h->pstPrivData;
+    int err, new_location, read_ret;
+    int64_t seek_ret;
+
+    if (!s->hd)
+        return AVERROR_EOF;
+
+    if (s->end_chunked_post && !s->end_header) {
+        err = http_read_header(h, &new_location);
+        if (err < 0)
+            return err;
+    }
+
+#if 0 //CONFIG_ZLIB
+    if (s->compressed)
+        return http_buf_read_compressed(h, buf, size);
+#endif /* CONFIG_ZLIB */
+
+    read_ret = http_buf_read(h, buf, size);
+    if (   (read_ret  < 0 && s->reconnect        && (!h->is_streamed || s->reconnect_streamed) && s->filesize > 0 && s->off < s->filesize)
+        || (read_ret == 0 && s->reconnect_at_eof && (!h->is_streamed || s->reconnect_streamed))) {
+        uint64_t target = h->is_streamed ? 0 : s->off;
+
+        if (s->reconnect_delay > s->reconnect_delay_max)
+            return AVERROR(EIO);
+
+        av_log(h, AV_LOG_INFO, "Will reconnect at %"PRIu64" error=%s.\n", s->off, av_err2str(read_ret));
+        av_usleep(1000U*1000*s->reconnect_delay);
+        s->reconnect_delay = 1 + 2*s->reconnect_delay;
+        seek_ret = http_seek_internal(h, target, SEEK_SET, 1);
+        if (seek_ret != target) {
+            av_log(h, AV_LOG_ERROR, "Failed to reconnect at %"PRIu64".\n", target);
+            return read_ret;
+        }
+
+        read_ret = http_buf_read(h, buf, size);
+    } else
+        s->reconnect_delay = 0;
+
+    return read_ret;
+}
+
+static int http_read(URLContext *h, uint8_t *buf, int size)
+{
+    HTTPContext *s = h->pstPrivData;
+
+    if (s->icy_metaint > 0) {
+        size = store_icy(h, size);
+        if (size < 0)
+            return size;
+    }
+
+    size = http_read_stream(h, buf, size);
+    if (size > 0)
+        s->icy_data_read += size;
+    return size;
+}
 
 const URLProtocol ff_http_protocol = {
     .name                = "http",

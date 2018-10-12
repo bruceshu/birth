@@ -59,6 +59,16 @@ description:
 #define AVERROR_HTTP_OTHER_4XX     FFERRTAG(0xF8,'4','X','X')
 #define AVERROR_HTTP_SERVER_ERROR  FFERRTAG(0xF8,'5','X','X')
 
+static inline char *av_make_error_string(char *errbuf, size_t errbuf_size, int errnum)
+{
+    av_strerror(errnum, errbuf, errbuf_size);
+    return errbuf;
+}
+
+#define av_err2str(errnum) av_make_error_string((char[AV_ERROR_MAX_STRING_SIZE]){0}, AV_ERROR_MAX_STRING_SIZE, errnum)
+
+
+
 #define AV_ERROR_MAX_STRING_SIZE 64
 
 struct error_entry {
