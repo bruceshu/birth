@@ -5,3 +5,4 @@ SRC_PATH:=$(SRC_PATH:.%=..%)
 endif
 
 CONFIG_AVFORMAT=yes
+CONFIG_HTTP_PROTOCOL=yes
