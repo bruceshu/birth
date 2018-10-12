@@ -1,7 +1,8 @@
-objects = main.o fun1.o fun2.o fun3.o
+out:$(subst .c,.o,$(wildcard *.c))
+	gcc -o $@ $^
 
-out : $(objects)
-	gcc -o out $(objects)
+$.o:%.c
+	gcc -o $@ $<
 
 .PHONY : clean
 clean :
