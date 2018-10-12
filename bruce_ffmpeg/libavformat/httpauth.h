@@ -7,6 +7,8 @@
 *********************************/
 
 
+#ifndef HTTPAUTH_H
+#define HTTPAUTH_H
 
 
 
@@ -51,3 +53,4 @@ typedef struct HTTPAuthState {
     int stale;
 } HTTPAuthState;
 
+#endif

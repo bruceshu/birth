@@ -6,6 +6,9 @@
  
 *********************************/
 
+#ifndef HTTP_H
+#define HTTP_H
+
 #include "url.h"
 #include "httpauth.h"
 
@@ -109,3 +112,4 @@ typedef struct HTTPContext {
     char *tcp_hook;
 } HTTPContext;
 
+#endif

@@ -7,7 +7,8 @@
 *********************************/
 
 
-
+#ifndef LOG_H
+#define LOG_H
 
 /**
  * Print no output.
@@ -253,3 +254,4 @@ typedef struct AVInputFormat {
     int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
 } AVInputFormat;
 
+#endif

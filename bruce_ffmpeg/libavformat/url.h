@@ -6,6 +6,10 @@
  
 *********************************/
 
+#ifndef URL_H
+#define URL_H
+
+#include "libavutil/log.h"
 
 #define URL_PROTOCOL_FLAG_NESTED_SCHEME 1 /*< The protocol name can be the first part of a nested protocol scheme */
 #define URL_PROTOCOL_FLAG_NETWORK       2 /*< The protocol uses network */
@@ -60,7 +64,7 @@ typedef struct URLProtocol {
 
 typedef struct URLContext {
     const AVClass *pstClass;    /**< information for av_log(). Set by url_open(). */
-    const struct URLProtocol *pstProt;
+    const URLProtocol *pstProt;
     void *pstPrivData;
     char *filename;             /**< specified URL */
     int flags;
@@ -74,3 +78,4 @@ typedef struct URLContext {
     int min_packet_size;        /**< if non zero, the stream is packetized with this min packet size */
 } URLContext;
 
+#endif
