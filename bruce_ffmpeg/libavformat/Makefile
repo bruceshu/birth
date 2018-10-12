@@ -1,8 +1,6 @@
 NAME = avformat
 DESC = ffmpeg container format library
 
-include ./../ffbuild/config.mak
-
 HEADERS = avformat.h \
 		  avio.h \
 		  url.h \
@@ -19,7 +17,4 @@ OBJS-$(CONFIG_NETWORK) += network.o
 # protocols I/O
 OBJS-$(CONFIG_HTTP_PROTOCOL) += http.o httpauth.o
 
-all : $(OBJS-yes) $(OBJS)
 
-%.o : %.c
-	gcc -o $@ $< 

@@ -38,7 +38,10 @@ $(foreach D,$(FFLIBS-yes),$(eval $(call DOSUBDIR,lib$(D))))
 #给AVPROGS-yes中的字符串后面加后缀
 #AVPROGS := $(AVPROGS-yes:%=%$(ProgsSuf)$(ExeSuf))
 
+all : $(OBJS-yes) $(OBJS)
 
+%.o : lib$(NAME)/%.c
+	gcc -o $@ $< 
 
 #all : all-yes
 
