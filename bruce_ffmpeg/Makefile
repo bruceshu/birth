@@ -29,7 +29,7 @@ include $(SRC_PATH)/$(1)/Makefile
 -include $(SRC_PATH)/$(1)/$(ARCH)/Makefile
 -include $(SRC_PATH)/$(1)/$(INTRINSTICS)/Makefile
 include $(SRC_PATH)/ffbuild/library.mak
-end
+endef
 
 $(foreach D,$(FFLIBS-yes),$(eval $(call DOSUBDIR,lib$(D))))
 
