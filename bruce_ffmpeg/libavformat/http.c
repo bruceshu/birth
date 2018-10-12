@@ -8,6 +8,7 @@
 
 
 #include "http.h"
+#include "error.h"
 
 int ff_http_averror(int status_code, int default_averror)
 {
