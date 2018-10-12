@@ -6,10 +6,10 @@
  
 *********************************/
 
-#include "log.h"
 #include "url.h"
 #include "httpauth.h"
 
+#include "libavutil/log.h"
 #include "libavutil/dict.h"
 
 #define BUFFER_SIZE   4096
