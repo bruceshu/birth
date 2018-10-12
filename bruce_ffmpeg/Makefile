@@ -5,6 +5,7 @@ include ffbuild/config.mak
 vpath %.c $(SRC_PATH)
 vpath %.h $(SRC_PATH)
 
+echo $(SRC_PATH)
 #AVPROGS-yes ffmpeg ffplay ffprobe ffserver
 #AVPROGS-$(CONFIG_FFMPEG) += ffmpeg
 #AVPROGS-$(CONFIG_FFPLAY) += ffplay
@@ -31,7 +32,9 @@ include $(SRC_PATH)/$(1)/Makefile
 include $(SRC_PATH)/ffbuild/library.mak
 endef
 
-$(foreach D,$(FFLIBS-yes),$(eval $(call DOSUBDIR,lib$(D))))
+echo $(FFLIBS-yes)
+
+echo $(foreach D,$(FFLIBS-yes),$(eval $(call DOSUBDIR,lib$(D))))
 
 #include $(SRC_PATH)/fftools/Makefile
 
@@ -40,7 +43,7 @@ $(foreach D,$(FFLIBS-yes),$(eval $(call DOSUBDIR,lib$(D))))
 
 all : $(OBJS-yes) $(OBJS)
 
-%.o : lib$(NAME)/%.c
+%.o : %.c
 	gcc -o $@ $< 
 
 #all : all-yes

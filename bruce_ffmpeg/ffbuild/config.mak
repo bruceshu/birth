@@ -1,8 +1,22 @@
 
 SRC_PATH=.
+SRC_LINK=.
 ifndef MAIN_MAKEFILE
 SRC_PATH:=$(SRC_PATH:.%=..%)
 endif
+
+
+
+
+ARCH=x86
+CC=gcc
+CXX=g++
+AR=ar
+
+
+
+
+
 
 CONFIG_AVFORMAT=yes
 CONFIG_HTTP_PROTOCOL=yes
