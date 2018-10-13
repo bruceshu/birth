@@ -55,7 +55,7 @@ $(foreach P,$(FFLIBS),$(eval $(call DOSUBDIR,lib$(P))))
 #uninstall-data:
 #	$(RM) -r "$(DATADIR)"
 	
-clean:
+clean::
 	$(RM) $(OBJS-yes) $(OBJS)
 	
 .PHONY: clean
