@@ -10,6 +10,7 @@
 #define URL_H
 
 #include "libavutil/log.h"
+#include "libavutil/dict.h"
 
 #include "avio.h"
 
