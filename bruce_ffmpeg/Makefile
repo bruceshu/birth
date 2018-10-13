@@ -26,7 +26,15 @@ include $(SRC_PATH)/ffbuild/common.mak
 $(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
 $(warning main_makefile FFLIBS=$(FFLIBS))
 
+SUBDIR_VARS := CLEANFILES FFLIBS OBJS   
+			   
+define RESET
+$(1) :=
+$(1)-yes :=
+endef
+
 define DOSUBDIR
+$(foreach V,$(SUBDIR_VARS),$(eval $(call RESET,$(V))))
 SUBDIR := $(1)/
 include $(SRC_PATH)/$(1)/Makefile
 -include $(SRC_PATH)/$(1)/$(ARCH)/Makefile

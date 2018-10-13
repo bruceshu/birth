@@ -6,6 +6,9 @@
  
 *********************************/
 
+
+#include <stddef.h>
+
 #include "url.h"
 #include "avio.h"
 
@@ -27,7 +30,7 @@ static void *urlcontext_child_next(void *obj, void *prev)
     return NULL;
 }
 
-#if 0 编译测试暂时屏蔽
+#if 0 //编译测试暂时屏蔽
 #define OFFSET(x) offsetof(URLContext,x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 #define D AV_OPT_FLAG_DECODING_PARAM

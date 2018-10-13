@@ -11,9 +11,26 @@
 
 #include "libavutil/log.h"
 
+#include "avio.h"
+
 #define URL_PROTOCOL_FLAG_NESTED_SCHEME 1 /*< The protocol name can be the first part of a nested protocol scheme */
 #define URL_PROTOCOL_FLAG_NETWORK       2 /*< The protocol uses network */
 
+typedef struct URLContext {
+    const AVClass *pstClass;    /**< information for av_log(). Set by url_open(). */
+    const struct URLProtocol *pstUrlProt;
+    void *pstPrivData;
+    char *filename;             /**< specified URL */
+    int flags;
+    int max_packet_size;        /**< if non zero, the stream is packetized with this max packet size */
+    int is_streamed;            /**< true if streamed (no seek possible), default = false */
+    int is_connected;
+    AVIOInterruptCB interrupt_callback;
+    int64_t rw_timeout;         /**< maximum time to wait for (network) read/write operation completion, in mcs */
+    const char *protocol_whitelist;
+    const char *protocol_blacklist;
+    int min_packet_size;        /**< if non zero, the stream is packetized with this min packet size */
+} URLContext;
 
 typedef struct URLProtocol {
     const char *url_name;
@@ -60,21 +77,5 @@ typedef struct URLProtocol {
     //int (*url_delete)(URLContext *h);
     //int (*url_move)(URLContext *h_src, URLContext *h_dst);
 } URLProtocol;
-
-typedef struct URLContext {
-    const AVClass *pstClass;    /**< information for av_log(). Set by url_open(). */
-    const URLProtocol *pstUrlProt;
-    void *pstPrivData;
-    char *filename;             /**< specified URL */
-    int flags;
-    int max_packet_size;        /**< if non zero, the stream is packetized with this max packet size */
-    int is_streamed;            /**< true if streamed (no seek possible), default = false */
-    int is_connected;
-    AVIOInterruptCB interrupt_callback;
-    int64_t rw_timeout;         /**< maximum time to wait for (network) read/write operation completion, in mcs */
-    const char *protocol_whitelist;
-    const char *protocol_blacklist;
-    int min_packet_size;        /**< if non zero, the stream is packetized with this min packet size */
-} URLContext;
 
 #endif
