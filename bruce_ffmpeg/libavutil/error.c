@@ -7,9 +7,13 @@
 *********************************/
 
 
+#include "error.h"
+#include "common.h"
+
 #define HAVE_STRERROR_R 1
 
-
+#define ERROR_TAG(tag) AVERROR_##tag, #tag
+#define EERROR_TAG(tag) AVERROR(tag), #tag
 static const struct error_entry error_entries[] = {
     { ERROR_TAG(BSF_NOT_FOUND),      "Bitstream filter not found"                     },
     { ERROR_TAG(BUG),                "Internal bug, should not have happened"         },

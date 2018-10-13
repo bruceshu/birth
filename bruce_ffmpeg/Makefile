@@ -5,7 +5,7 @@ include ffbuild/config.mak
 vpath %.c $(SRC_PATH)
 vpath %.h $(SRC_PATH)
 
-$(echo $(SRC_PATH))
+$(warning main makefile $(SRC_PATH))
 
 
 #目标编译的库名称
@@ -31,7 +31,7 @@ include $(SRC_PATH)/$(1)/Makefile
 include $(SRC_PATH)/ffbuild/library.mak
 endef
 
-$(echo $(FFLIBS-yes))
+$(warning main makefile $(FFLIBS-yes))
 
 $(foreach P,$(FFLIBS),$(eval $(call DOSUBDIR,lib$(P))))
 
