@@ -1,11 +1,11 @@
-/*
-copyright bruceshu
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-10-09
+ * Description:
+ 
+*********************************/
 
-author:bruceshu
-date:2018-07-05
-description:
-
-*/
 
 
 #ifndef COMMON_H
@@ -22,6 +22,16 @@ description:
 #define FFMAX3(a,b,c) FFMAX(FFMAX(a,b),c)
 #define FFMIN(a,b) ((a) > (b) ? (b) : (a))
 #define FFMIN3(a,b,c) FFMIN(FFMIN(a,b),c)
+
+typedef signed char int8_t;
+typedef unsigned char uint8_t;
+typedef short int16_t;
+typedef unsigned short uint16_t;.
+typedef __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+
 
 
 #endif

@@ -1,11 +1,11 @@
-/*
-copyright bruceshu
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-10-09
+ * Description:
+ 
+*********************************/
 
-author:bruceshu
-date:2018-07-05
-description:
-
-*/
 
 
 #ifndef ERROR_H

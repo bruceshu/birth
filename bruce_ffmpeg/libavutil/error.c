@@ -10,6 +10,7 @@
 
 #include "error.h"
 #include "common.h"
+#include "avstring.h"
 
 #define HAVE_STRERROR_R 1
 
@@ -86,33 +87,6 @@ static const struct error_entry error_entries[] = {
     { EERROR_TAG(EXDEV),             "Cross-device link" },
 #endif
 };
-
-
-int ff_strerror(int errnum, char *errbuf, size_t errbuf_size)
-{
-    int ret = 0, i;
-    const struct error_entry *entry = NULL;
-
-    for (i = 0; i < FF_ARRAY_ELEMS(error_entries); i++) {
-        if (errnum == error_entries[i].num) {
-            entry = &error_entries[i];
-            break;
-        }
-    }
-    if (entry) {
-        strlcpy(errbuf, entry->str, FFMIN(errbuf_size, strlen(entry->str) + 1));
-    } else {
-#if HAVE_STRERROR_R
-        ret = AVERROR(strerror_r(AVUNERROR(errnum), errbuf, errbuf_size));
-#else
-        ret = -1;
-#endif
-        if (ret < 0)
-            snprintf(errbuf, errbuf_size, "Error number %d occurred", errnum);
-    }
-
-    return ret;
-}
 
 int av_strerror(int errnum, char *errbuf, size_t errbuf_size)
 {

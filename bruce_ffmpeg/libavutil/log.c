@@ -7,7 +7,7 @@
 *********************************/
 
 
-#include <stdlib.h>
+#include <stdarg.h>
 
 #include "log.h"
 
@@ -16,9 +16,8 @@
 
 static int av_log_level = AV_LOG_INFO;
 
-
-static void format_line(void *avcl, int level, const char *fmt, va_list vl,
-                        AVBPrint part[4], int *print_prefix, int type[2])
+#if 0 //待后续研究ffmpeg日志系统
+static void format_line(void *avcl, int level, const char *fmt, va_list vl, AVBPrint part[4], int *print_prefix, int type[2])
 {
     AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
     av_bprint_init(part+0, 0, 1);
@@ -113,8 +112,9 @@ end:
     pthread_mutex_unlock(&mutex);
 #endif
 }
+#endif
 
-static void (*av_log_callback)(void*, int, const char*, va_list) = av_log_default_callback;
+static void (*av_log_callback)(void*, int, const char*, va_list) = NULL; //av_log_default_callback;
 
 void av_log(void* avcl, int level, const char *fmt, ...)
 {

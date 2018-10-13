@@ -14,8 +14,6 @@ description:
 #include "common.h"
 #include "rational.h"
 
-#include <stdlib.h>
-
 enum AVOptionType{
     AV_OPT_TYPE_FLAGS,
     AV_OPT_TYPE_INT,
@@ -77,7 +75,5 @@ typedef struct AVOptionRanges {
     int nb_ranges;
     int nb_components;
 } AVOptionRanges;
-
-
 
 #endif
