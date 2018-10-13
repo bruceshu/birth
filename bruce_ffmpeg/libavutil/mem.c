@@ -10,6 +10,9 @@
 #include <stddef.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "mem.h"
 
 #define HAVE_ALIGNED_MALLOC 0
 

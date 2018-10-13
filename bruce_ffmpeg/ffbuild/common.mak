@@ -1,5 +1,6 @@
 
 
+$(warning common_mak SUBDIR=$(SUBDIR))
 
 ifndef SUBDIR
 
@@ -19,7 +20,10 @@ endef
 
 COMPILE_C = $(call COMPILE,CC)
 
-$(warning common_mak begin to compile)
+$(warning common_mak ALLFFLIBS=$(ALLFFLIBS))
+
+$(warning common_mak COMPILE_C=$(COMPILE_C))
+
 
 %.o: %.c
 	$(COMPILE_C)
