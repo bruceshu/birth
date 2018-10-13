@@ -1,10 +1,21 @@
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-10-12
+ * Description:
+ 
+*********************************/
 
+
+#include <stddef.h>
+#include <limits.h>
 
 #define HAVE_ALIGNED_MALLOC 0
 
 static size_t max_alloc_size= INT_MAX;
 
-void max_alloc_set(size_t max){
+void max_alloc_set(size_t max)
+{
     max_alloc_size = max;
 }
 
@@ -26,7 +37,7 @@ void *av_malloc(size_t size)
 
 void *av_mallocz(size_t size)
 {
-    void *ptr = ff_malloc(size);
+    void *ptr = av_malloc(size);
     if (ptr)
         memset(ptr, 0, size);
     return ptr;
@@ -52,14 +63,14 @@ int av_reallocp(void *ptr, size_t size)
     void *val;
 
     if (!size) {
-        ff_freep(ptr);
+        av_freep(ptr);
         return 0;
     }
 
     memcpy(&val, ptr, sizeof(val));
     val = av_realloc(val, size);
     if (!val) {
-        ff_freep(ptr);
+        av_freep(ptr);
         return -1;
     }
 
@@ -94,9 +105,10 @@ void av_freep(void *arg)
 
     memcpy(&val, arg, sizeof(val));
     memcpy(arg, &(void *){ NULL }, sizeof(val));
-    ff_free(val);
+    av_free(val);
 }
 
+#if 0 //后续需要再添加
 void av_dynarray_add(void *tab_ptr, int *nb_ptr, void *elem)
 {
     void **tab;
@@ -110,4 +122,4 @@ void av_dynarray_add(void *tab_ptr, int *nb_ptr, void *elem)
         av_freep(tab_ptr);
     });
 }
-
+#endif

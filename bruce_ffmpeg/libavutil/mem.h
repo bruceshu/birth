@@ -7,8 +7,10 @@
 *********************************/
 
 
+#ifndef MEM_H
+#define MEM_H
 
-
+#if 0 //后续研究
 #if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1110 || defined(__SUNPRO_C)
     #define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v
     #define DECLARE_ASM_CONST(n,t,v)    const t __attribute__ ((aligned (n))) v
@@ -32,4 +34,15 @@
     #define DECLARE_ALIGNED(n,t,v)      t v
     #define DECLARE_ASM_CONST(n,t,v)    static const t v
 #endif
+#endif
 
+void max_alloc_set(size_t max);
+void *av_malloc(size_t size);
+void *av_mallocz(size_t size);
+void *av_realloc(void *ptr, size_t size);
+int av_reallocp(void *ptr, size_t size);
+char *av_strdup(const char *s);
+void av_free(void *ptr);
+void av_freep(void *arg);
+
+#endif
