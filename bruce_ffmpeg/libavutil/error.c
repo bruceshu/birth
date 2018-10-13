@@ -6,6 +6,7 @@
  
 *********************************/
 
+#include <stddef.h>
 
 #include "error.h"
 #include "common.h"
