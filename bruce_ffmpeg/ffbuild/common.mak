@@ -19,6 +19,8 @@ endef
 
 COMPILE_C = $(call COMPILE,CC)
 
+$(warning common_mak begin to compile)
+
 %.o: %.c
 	$(COMPILE_C)
 	

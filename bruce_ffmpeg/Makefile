@@ -5,7 +5,7 @@ include ffbuild/config.mak
 vpath %.c $(SRC_PATH)
 vpath %.h $(SRC_PATH)
 
-$(warning main makefile $(SRC_PATH))
+$(warning main_makefile SRC_PATH=$(SRC_PATH))
 
 
 #目标编译的库名称
@@ -20,8 +20,12 @@ FFLIBS-$(CONFIG_AVFORMAT) += avformat
 
 FFLIBS := avutil
 
+$(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
+$(warning main_makefile FFLIBS=$(FFLIBS))
+
 #first so "all" becomes default target
 all : all-yes
+
 
 define DOSUBDIR
 SUBDIR := $(1)/
@@ -30,8 +34,6 @@ include $(SRC_PATH)/$(1)/Makefile
 -include $(SRC_PATH)/$(1)/$(INTRINSTICS)/Makefile
 include $(SRC_PATH)/ffbuild/library.mak
 endef
-
-$(warning main makefile $(FFLIBS-yes))
 
 $(foreach P,$(FFLIBS),$(eval $(call DOSUBDIR,lib$(P))))
 

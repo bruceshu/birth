@@ -9,6 +9,7 @@
 
 #include <stddef.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #define HAVE_ALIGNED_MALLOC 0
 
