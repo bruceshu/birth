@@ -21,7 +21,6 @@ OBJS = error.o \
 	   
 OBJS-$(CONFIG_CUDA) += hwcontext_cuda.o
 
-
 OBJS += $(COMPAT_OBJS:%=../compat/%)
 
 $(warning $(NAME)_makefile $(OBJS))

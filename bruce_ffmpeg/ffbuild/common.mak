@@ -9,8 +9,6 @@ CPPFLAGS   := $(IFLAGS) $(CPPFLAGS)
 CFLAGS     += $(ECFLAGS)
 CCFLAGS     := $(CPPFLAGS) $(CFLAGS)
 
-
-
 ALLFFLIBS = avcodec avdevice avfilter avformat avresample avutil postproc swscale swresample
 
 define COMPILE
@@ -21,9 +19,7 @@ endef
 COMPILE_C = $(call COMPILE,CC)
 
 $(warning common_mak ALLFFLIBS=$(ALLFFLIBS))
-
 $(warning common_mak COMPILE_C=$(COMPILE_C))
-
 
 %.o: %.c
 	$(COMPILE_C)
@@ -32,4 +28,24 @@ endif
 
 include $(SRC_PATH)/ffbuild/arch.mak
 
+
+OBJS      += $(OBJS-yes)
+SLIBOBJS  += $(SLIBOBJS-yes)
+FFLIBS    := $($(NAME)_FFLIBS) $(FFLIBS-yes) $(FFLIBS)
+
+#LDLIBS       = $(FFLIBS:%=%$(BUILDSUF))
+
 OBJS      := $(sort $(OBJS:%=$(SUBDIR)%))
+SLIBOBJS  := $(sort $(SLIBOBJS:%=$(SUBDIR)%))
+
+#HOSTOBJS  := $(HOSTPROGS:%=$(SUBDIR)%.o)
+#HEADERS   += $(HEADERS-yes)
+
+
+define RULES
+clean::
+	$(RM) $(HOSTPROGS)
+endef
+
+$(eval $(RULES))
+

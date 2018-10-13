@@ -22,13 +22,15 @@ $(warning library.mak $(OBJS))
 #LIBOBJS := $(OBJS) $(SUBDIR)%.h.o $(TESTOBJS)
 #$(LIBOBJS) $(LIBOBJS:.o=.s) $(LIBOBJS:.o=.i):   CPPFLAGS += -DHAVE_AV_CONFIG_H
 
-$(warning library.mak begin to compile $(SUBDIR)$(LIBNAME))
+$(warning library.mak compile begin $(SUBDIR)$(LIBNAME))
 
 $(SUBDIR)$(LIBNAME): $(OBJS)
 	$(RM) $@
 	$(AR) $(ARFLAGS) $(AR_O) $^
 	$(RANLIB) $@
 
+$(warning library.mak compile end $(SUBDIR)$(LIBNAME))
+	
 install-headers: install-lib$(NAME)-headers install-lib$(NAME)-pkgconfig
 
 install-libs-$(CONFIG_STATIC): install-lib$(NAME)-static
@@ -90,25 +92,25 @@ install-lib$(NAME)-pkgconfig: $(SUBDIR)lib$(FULLNAME).pc
 	$(Q)mkdir -p "$(PKGCONFIGDIR)"
 	$$(INSTALL) -m 644 $$^ "$(PKGCONFIGDIR)"
 
-uninstall-libs::
-	-$(RM) "$(SHLIBDIR)/$(SLIBNAME_WITH_MAJOR)" \
-	       "$(SHLIBDIR)/$(SLIBNAME)"            \
-	       "$(SHLIBDIR)/$(SLIBNAME_WITH_VERSION)"
-	-$(RM)  $(SLIB_INSTALL_EXTRA_SHLIB:%="$(SHLIBDIR)/%")
-	-$(RM)  $(SLIB_INSTALL_EXTRA_LIB:%="$(LIBDIR)/%")
-	-$(RM) "$(LIBDIR)/$(LIBNAME)"
+#uninstall-libs::
+#	-$(RM) "$(SHLIBDIR)/$(SLIBNAME_WITH_MAJOR)" \
+#	       "$(SHLIBDIR)/$(SLIBNAME)"            \
+#	       "$(SHLIBDIR)/$(SLIBNAME_WITH_VERSION)"
+#	-$(RM)  $(SLIB_INSTALL_EXTRA_SHLIB:%="$(SHLIBDIR)/%")
+#	-$(RM)  $(SLIB_INSTALL_EXTRA_LIB:%="$(LIBDIR)/%")
+#	-$(RM) "$(LIBDIR)/$(LIBNAME)"
 
-uninstall-headers::
-	$(RM) $(addprefix "$(INCINSTDIR)/",$(HEADERS) $(BUILT_HEADERS))
-	-rmdir "$(INCINSTDIR)"
+#uninstall-headers::
+#	$(RM) $(addprefix "$(INCINSTDIR)/",$(HEADERS) $(BUILT_HEADERS))
+#	-rmdir "$(INCINSTDIR)"
 
-uninstall-pkgconfig::
-	$(RM) "$(PKGCONFIGDIR)/lib$(FULLNAME).pc"
+#uninstall-pkgconfig::
+#	$(RM) "$(PKGCONFIGDIR)/lib$(FULLNAME).pc"
 endef
 
 $(eval $(RULES))
 
-$(TOOLS):     $(DEP_LIBS) $(SUBDIR)$($(CONFIG_SHARED:yes=S)LIBNAME)
-$(TESTPROGS): $(DEP_LIBS) $(SUBDIR)$(LIBNAME)
+#$(TOOLS):     $(DEP_LIBS) $(SUBDIR)$($(CONFIG_SHARED:yes=S)LIBNAME)
+#$(TESTPROGS): $(DEP_LIBS) $(SUBDIR)$(LIBNAME)
 
-testprogs: $(TESTPROGS)
+#testprogs: $(TESTPROGS)

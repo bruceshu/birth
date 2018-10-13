@@ -1,22 +1,34 @@
 
+
+prefix=/usr/local
+LIBDIR=$(DESTDIR)${prefix}/lib
+SHLIBDIR=$(DESTDIR)${prefix}/lib
+
+
 SRC_PATH=.
 SRC_LINK=.
 ifndef MAIN_MAKEFILE
 SRC_PATH:=$(SRC_PATH:.%=..%)
 endif
 
-
+BUILDSUF=
+LIBPREF=lib
+FULLNAME=$(NAME)$(BUILDSUF)
+LIBSUF=.a
+LIBNAME=$(LIBPREF)$(FULLNAME)$(LIBSUF)
 
 
 ARCH=x86
 CC=gcc
 CXX=g++
 AR=ar
+ARFLAGS=rcD
+AR_O=$@
+RANLIB=ranlib -D
 
+LIB_INSTALL_EXTRA_CMD=$$(RANLIB) "$(LIBDIR)/$(LIBNAME)"
 
-
-
-
+INSTALL=install
 
 CONFIG_AVFORMAT=yes
 CONFIG_HTTP_PROTOCOL=yes
