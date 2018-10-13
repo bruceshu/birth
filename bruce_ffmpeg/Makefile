@@ -5,12 +5,8 @@ include ffbuild/config.mak
 vpath %.c $(SRC_PATH)
 vpath %.h $(SRC_PATH)
 
-echo $(SRC_PATH)
-#AVPROGS-yes ffmpeg ffplay ffprobe ffserver
-#AVPROGS-$(CONFIG_FFMPEG) += ffmpeg
-#AVPROGS-$(CONFIG_FFPLAY) += ffplay
-#AVPROGS-$(CONFIG_FFPROBE) += ffprobe
-#AVPROGS-$(CONFIG_FFSERVER) += ffserver
+$(echo $(SRC_PATH))
+
 
 #目标编译的库名称
 #FFLIBS-$(CONFIG_AVDEVICE) += avdevice
@@ -24,6 +20,9 @@ FFLIBS-$(CONFIG_AVFORMAT) += avformat
 
 FFLIBS := avutil
 
+#first so "all" becomes default target
+all : all-yes
+
 define DOSUBDIR
 SUBDIR := $(1)/
 include $(SRC_PATH)/$(1)/Makefile
@@ -32,19 +31,15 @@ include $(SRC_PATH)/$(1)/Makefile
 include $(SRC_PATH)/ffbuild/library.mak
 endef
 
-echo $(FFLIBS-yes)
+$(echo $(FFLIBS-yes))
 
-echo $(foreach D,$(FFLIBS-yes),$(eval $(call DOSUBDIR,lib$(D))))
+$(foreach P,$(FFLIBS),$(eval $(call DOSUBDIR,lib$(P))))
 
 #include $(SRC_PATH)/fftools/Makefile
 
-#给AVPROGS-yes中的字符串后面加后缀
-#AVPROGS := $(AVPROGS-yes:%=%$(ProgsSuf)$(ExeSuf))
 
-all : $(OBJS-yes) $(OBJS)
 
-%.o : %.c
-	gcc -o $@ $< 
+
 
 #all : all-yes
 
@@ -60,7 +55,7 @@ all : $(OBJS-yes) $(OBJS)
 #uninstall-data:
 #	$(RM) -r "$(DATADIR)"
 	
-clean::
+clean:
 	$(RM) $(OBJS-yes) $(OBJS)
 	
 .PHONY: clean
