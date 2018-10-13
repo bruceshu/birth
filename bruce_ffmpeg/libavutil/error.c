@@ -7,7 +7,7 @@
 *********************************/
 
 #include <stddef.h>
-#include <string.h>
+#include <stdio.h>
 
 #include "error.h"
 #include "common.h"

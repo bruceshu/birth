@@ -8,6 +8,7 @@
 
 
 #include <stdarg.h>
+#include <stddef.h>
 
 #include "log.h"
 
@@ -116,6 +117,13 @@ end:
 
 static void (*av_log_callback)(void*, int, const char*, va_list) = NULL; //av_log_default_callback;
 
+static void av_vlog(void* avcl, int level, const char *fmt, va_list vl)
+{
+    void (*log_callback)(void*, int, const char*, va_list) = av_log_callback;
+    if (log_callback)
+        log_callback(avcl, level, fmt, vl);
+}
+
 void av_log(void* avcl, int level, const char *fmt, ...)
 {
     AVClass* avc = avcl ? *(AVClass **) avcl : NULL;
@@ -128,12 +136,7 @@ void av_log(void* avcl, int level, const char *fmt, ...)
     va_end(vl);
 }
 
-void av_vlog(void* avcl, int level, const char *fmt, va_list vl)
-{
-    void (*log_callback)(void*, int, const char*, va_list) = av_log_callback;
-    if (log_callback)
-        log_callback(avcl, level, fmt, vl);
-}
+
 
 const char *av_default_item_name(void *ptr)
 {

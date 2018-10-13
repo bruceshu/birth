@@ -104,4 +104,7 @@ typedef struct AVClass {
     int (*query_ranges)(AVOptionRanges **, void *obj, const char *key, int flags);
 } AVClass;
 
+void av_log(void* avcl, int level, const char *fmt, ...);
+
+
 #endif
