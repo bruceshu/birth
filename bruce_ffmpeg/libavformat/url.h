@@ -16,7 +16,7 @@
 
 
 typedef struct URLProtocol {
-    const char *name;
+    const char *url_name;
     const AVClass *pstPrivDataClass;
     int priv_data_size;
     int flags;
@@ -61,10 +61,9 @@ typedef struct URLProtocol {
     //int (*url_move)(URLContext *h_src, URLContext *h_dst);
 } URLProtocol;
 
-
 typedef struct URLContext {
     const AVClass *pstClass;    /**< information for av_log(). Set by url_open(). */
-    const URLProtocol *pstProt;
+    const URLProtocol *pstUrlProt;
     void *pstPrivData;
     char *filename;             /**< specified URL */
     int flags;

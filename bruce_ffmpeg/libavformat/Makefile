@@ -17,4 +17,4 @@ OBJS-$(CONFIG_NETWORK) += network.o
 # protocols I/O
 OBJS-$(CONFIG_HTTP_PROTOCOL) += http.o httpauth.o
 
-
+$(warning $(NAME)_makefile $(OBJS))

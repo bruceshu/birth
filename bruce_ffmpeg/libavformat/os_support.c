@@ -7,6 +7,7 @@
 *********************************/
 
 
+#include "config.h"
 
 
 int ff_socket_nonblock(int socket, int enable)

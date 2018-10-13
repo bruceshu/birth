@@ -6,13 +6,15 @@
  
 *********************************/
 
+#include "url.h"
+#include "avio.h"
 
 
 static const char *urlcontext_to_name(void *ptr)
 {
     URLContext *pstUrlCtx = (URLContext *)ptr;
-    if (pstUrlCtx->prot)
-        return pstUrlCtx->prot->name;
+    if (pstUrlCtx->pstUrlProt)
+        return pstUrlCtx->pstUrlProt->url_name;
     else
         return "NULL";
 }
@@ -20,35 +22,12 @@ static const char *urlcontext_to_name(void *ptr)
 static void *urlcontext_child_next(void *obj, void *prev)
 {
     URLContext *pstUrlCtx = obj;
-    if (!prev && pstUrlCtx->priv_data && pstUrlCtx->prot->priv_data_class)
-        return pstUrlCtx->priv_data;
+    if (!prev && pstUrlCtx->pstPrivData && pstUrlCtx->pstUrlProt->pstPrivDataClass)
+        return pstUrlCtx->pstPrivData;
     return NULL;
 }
 
-const AVClass *urlcontext_child_class_next(const AVClass *prev)
-{
-    int i;
-
-    /* find the protocol that corresponds to prev */
-    for (i = 0; prev && url_protocols[i]; i++) {
-        if (url_protocols[i]->priv_data_class == prev) {
-            i++;
-            break;
-        }
-    }
-
-    /* find next protocol with priv options */
-    for (; url_protocols[i]; i++) {
-        if (url_protocols[i]->priv_data_class) {
-            return url_protocols[i]->priv_data_class;
-        }
-    }
-        
-    return NULL;
-}
-
-
-
+#if 0 编译测试暂时屏蔽
 #define OFFSET(x) offsetof(URLContext,x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 #define D AV_OPT_FLAG_DECODING_PARAM
@@ -65,13 +44,11 @@ const AVClass url_context_class = {
     .child_class_next = urlcontext_child_class_next,
 };
 
-
-
 int url_handshake(URLContext *pstUrlCtx)
 {
     int ret;
-    if (pstUrlCtx->prot->url_handshake) {
-        ret = pstUrlCtx->prot->url_handshake(pstUrlCtx);
+    if (pstUrlCtx->pstProt->url_handshake) {
+        ret = pstUrlCtx->pstProt->url_handshake(pstUrlCtx);
         if (ret)
             return ret;
     }
@@ -93,8 +70,8 @@ static const struct URLProtocol *url_find_protocol(const char *filename)
     size_t proto_len = strspn(filename, URL_SCHEME_CHARS);
     int i;
 
-    if (filename[proto_len] != ':' && (strncmp(filename, "subfile,", 8) || !strchr(filename + proto_len + 1, ':')) 
-        || is_dos_path(filename))
+    if (filename[proto_len] != ':' && (strncmp(filename, "subfile,", 8) || !strchr(filename + proto_len + 1, ':')))
+        //|| is_dos_path(filename))
         strcpy(proto_str, "file");
     else
         av_strlcpy(proto_str, filename, FFMIN(proto_len + 1, sizeof(proto_str)));
@@ -111,15 +88,15 @@ static const struct URLProtocol *url_find_protocol(const char *filename)
         const URLProtocol *up = protocols[i];
         
         if (!strcmp(proto_str, up->name)) {
-            ff_freep(&protocols);
+            av_freep(&protocols);
             return up;
         }
         if (up->flags & URL_PROTOCOL_FLAG_NESTED_SCHEME && !strcmp(proto_nested, up->name)) {
-            ff_freep(&protocols);
+            av_freep(&protocols);
             return up;
         }
     }
-    ff_freep(&protocols);
+    av_freep(&protocols);
 
     return NULL;
 }
@@ -146,7 +123,7 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
         goto fail;
     }
     
-    pstUrlCtx->av_class = &url_context_class;
+    pstUrlCtx->pstClass = &url_context_class;
     pstUrlCtx->filename = (char *)&pstUrlCtx[1];
     strcpy(pstUrlCtx->filename, filename);
     pstUrlCtx->pstUrlProt      = pstUrlProt;
@@ -154,17 +131,17 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
     pstUrlCtx->is_streamed     = 0; /* default = not streamed */
     pstUrlCtx->max_packet_size = 0; /* default: stream file */
     if (pstUrlProt->priv_data_size) {
-        pstUrlCtx->priv_data = av_mallocz(pstUrlProt->priv_data_size);
-        if (!pstUrlCtx->priv_data) {
+        pstUrlCtx->pstPrivData = av_mallocz(pstUrlProt->priv_data_size);
+        if (!pstUrlCtx->pstPrivData) {
             err = -1;
             goto fail;
         }
         
-        if (pstUrlProt->priv_data_class) {
+        if (pstUrlProt->pstPrivDataClass) {
             int proto_len= strlen(pstUrlProt->url_name);
             char *start = strchr(pstUrlCtx->filename, ',');
-            *(const AVClass **)pstUrlCtx->priv_data = pstUrlProt->priv_data_class;
-            av_opt_set_defaults(pstUrlCtx->priv_data);
+            *(const AVClass **)pstUrlCtx->pstPrivData = pstUrlProt->pstPrivDataClass;
+            av_opt_set_defaults(pstUrlCtx->pstPrivData);
             /*if(!strncmp(pstUrlProt->url_name, pstUrlCtx->filename, proto_len) && pstUrlCtx->filename + proto_len == start){
                 int ret= 0;
                 char *p= start;
@@ -214,7 +191,7 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
 fail:
     *ppstUrlCtx = NULL;
     if (pstUrlCtx)
-        av_freep(&pstUrlCtx->priv_data);
+        av_freep(&pstUrlCtx->pstPrivData);
     av_freep(&pstUrlCtx);
     return err;
 }
@@ -237,9 +214,9 @@ int64_t url_seek(URLContext *pstUrlCtx, int64_t pos, int whence)
 {
     int64_t ret;
 
-    if (!pstUrlCtx->prot->url_seek)
+    if (!pstUrlCtx->pstUrlProt->url_seek)
         return -1;
-    ret = pstUrlCtx->prot->url_seek(pstUrlCtx, pos, whence & ~AVSEEK_FORCE);
+    ret = pstUrlCtx->pstUrlProt->url_seek(pstUrlCtx, pos, whence & ~AVSEEK_FORCE);
     
     return ret;
 }
@@ -255,9 +232,9 @@ int url_closep(URLContext **ppstUrlCtx)
         ret = pstUrlCtx->pstUrlProt->url_close(pstUrlCtx);
 
     if (pstUrlCtx->pstUrlProt->priv_data_size) {
-        if (pstUrlCtx->pstUrlProt->priv_data_class)
-            av_opt_free(pstUrlCtx->priv_data);
-        av_freep(&pstUrlCtx->priv_data);
+        if (pstUrlCtx->pstUrlProt->pstPrivDataClass)
+            av_opt_free(pstUrlCtx->pstPrivData);
+        av_freep(&pstUrlCtx->pstPrivData);
     }
     
     av_opt_free(pstUrlCtx);
@@ -320,7 +297,7 @@ int url_connect(URLContext *pstUrlCtx, AVDictionary **options)
     pstUrlCtx->is_connected = 1;
     
     /* We must be careful here as ffurl_seek() could be slow, for example for http */
-    if ((pstUrlCtx->flags & AVIO_FLAG_WRITE) || !strcmp(pstUrlCtx->prot->name, "file")) {
+    if ((pstUrlCtx->flags & AVIO_FLAG_WRITE) || !strcmp(pstUrlCtx->pstUrlProt->url_name, "file")) {
         if (!pstUrlCtx->is_streamed && url_seek(pstUrlCtx, 0, SEEK_SET) < 0) {
             pstUrlCtx->is_streamed = 1;
         }
@@ -450,16 +427,16 @@ int ffurl_write(URLContext *h, const unsigned char *buf, int size)
 
 int ffurl_get_file_handle(URLContext *h)
 {
-    if (!h || !h->pstProt || !h->pstProt->url_get_file_handle)
+    if (!h || !h->pstUrlProt || !h->pstUrlProt->url_get_file_handle)
         return -1;
-    return h->pstProt->url_get_file_handle(h);
+    return h->pstUrlProt->url_get_file_handle(h);
 }
 
 int ffurl_read_complete(URLContext *pstUrlCtx, unsigned char *buf, int size)
 {
     if (!(pstUrlCtx->flags & AVIO_FLAG_READ))
         return AVERROR(EIO);
-    return retry_transfer_wrapper(pstUrlCtx, buf, size, size, pstUrlCtx->pstProt->url_read);
+    return retry_transfer_wrapper(pstUrlCtx, buf, size, size, pstUrlCtx->pstUrlProt->url_read);
 }
 
 int ffurl_alloc(URLContext **puc, const char *filename, int flags, const AVIOInterruptCB *int_cb)
@@ -493,19 +470,19 @@ int ffurl_connect(URLContext *uc, AVDictionary **options)
     av_assert0(!(e=av_dict_get(*options, "protocol_blacklist", NULL, 0)) ||
                (uc->protocol_blacklist && !strcmp(uc->protocol_blacklist, e->value)));
 
-    if (uc->protocol_whitelist && av_match_list(uc->prot->name, uc->protocol_whitelist, ',') <= 0) {
-        av_log(uc, AV_LOG_ERROR, "Protocol '%s' not on whitelist '%s'!\n", uc->prot->name, uc->protocol_whitelist);
+    if (uc->protocol_whitelist && av_match_list(uc->pstUrlProt->url_name, uc->protocol_whitelist, ',') <= 0) {
+        av_log(uc, AV_LOG_ERROR, "Protocol '%s' not on whitelist '%s'!\n", uc->pstUrlProt->url_name, uc->protocol_whitelist);
         return AVERROR(EINVAL);
     }
 
-    if (uc->protocol_blacklist && av_match_list(uc->prot->name, uc->protocol_blacklist, ',') > 0) {
-        av_log(uc, AV_LOG_ERROR, "Protocol '%s' on blacklist '%s'!\n", uc->prot->name, uc->protocol_blacklist);
+    if (uc->protocol_blacklist && av_match_list(uc->pstUrlProt->url_name, uc->protocol_blacklist, ',') > 0) {
+        av_log(uc, AV_LOG_ERROR, "Protocol '%s' on blacklist '%s'!\n", uc->pstUrlProt->url_name, uc->protocol_blacklist);
         return AVERROR(EINVAL);
     }
 
-    if (!uc->protocol_whitelist && uc->prot->default_whitelist) {
-        av_log(uc, AV_LOG_DEBUG, "Setting default whitelist '%s'\n", uc->prot->default_whitelist);
-        uc->protocol_whitelist = av_strdup(uc->prot->default_whitelist);
+    if (!uc->protocol_whitelist && uc->pstUrlProt->default_whitelist) {
+        av_log(uc, AV_LOG_DEBUG, "Setting default whitelist '%s'\n", uc->pstUrlProt->default_whitelist);
+        uc->protocol_whitelist = av_strdup(uc->pstUrlProt->default_whitelist);
         if (!uc->protocol_whitelist) {
             return AVERROR(ENOMEM);
         }
@@ -518,11 +495,8 @@ int ffurl_connect(URLContext *uc, AVDictionary **options)
         return err;
 
     err =
-        uc->prot->url_open2 ? uc->prot->url_open2(uc,
-                                                  uc->filename,
-                                                  uc->flags,
-                                                  options) :
-        uc->prot->url_open(uc, uc->filename, uc->flags);
+        uc->pstUrlProt->url_open2 ? uc->pstUrlProt->url_open2(uc, uc->filename, uc->flags, options) :
+        uc->pstUrlProt->url_open(uc, uc->filename, uc->flags);
 
     av_dict_set(options, "protocol_whitelist", NULL, 0);
     av_dict_set(options, "protocol_blacklist", NULL, 0);
@@ -552,16 +526,16 @@ int ffurl_closep(URLContext **hh)
     if (!h)
         return 0;
 
-    if (h->is_connected && h->pstProt->url_close)
-        ret = h->pstProt->url_close(h);
+    if (h->is_connected && h->pstUrlProt->url_close)
+        ret = h->pstUrlProt->url_close(h);
 #if CONFIG_NETWORK
-    if (h->pstProt->flags & URL_PROTOCOL_FLAG_NETWORK) {
+    if (h->pstUrlProt->flags & URL_PROTOCOL_FLAG_NETWORK) {
         ff_network_close();
     }
 #endif
 
-    if (h->pstProt->privDataSize) {
-        if (h->pstProt->pstPrivDataClass)
+    if (h->pstUrlProt->priv_data_size) {
+        if (h->pstUrlProt->pstPrivDataClass)
             av_opt_free(h->pstPrivData);
         av_freep(&h->pstPrivData);
     }
@@ -570,7 +544,6 @@ int ffurl_closep(URLContext **hh)
     av_freep(hh);
     return ret;
 }
-
 
 int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options, const char *whitelist, const char* blacklist, URLContext *parent)
 {
@@ -622,14 +595,22 @@ int ffurl_read(URLContext *h, unsigned char *buf, int size)
    if (!(h->flags & AVIO_FLAG_READ))
        return AVERROR(EIO);
    
-   return retry_transfer_wrapper(h, buf, size, 1, h->pstProt->url_read);
+   return retry_transfer_wrapper(h, buf, size, 1, h->pstUrlProt->url_read);
 }
+
+int ffurl_close(URLContext *h)
+{
+    return ffurl_closep(&h);
+}
+
+#endif
+
 
 int ffurl_handshake(URLContext *c)
 {
     int ret;
-    if (c->pstProt->url_handshake) {
-        ret = c->pstProt->url_handshake(c);
+    if (c->pstUrlProt->url_handshake) {
+        ret = c->pstUrlProt->url_handshake(c);
         if (ret)
             return ret;
     }
@@ -638,8 +619,5 @@ int ffurl_handshake(URLContext *c)
     return 0;
 }
 
-int ffurl_close(URLContext *h)
-{
-    return ffurl_closep(&h);
-}
+
 

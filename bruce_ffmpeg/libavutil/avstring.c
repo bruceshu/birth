@@ -25,39 +25,6 @@ int av_strstart(const char *str, const char *pfx, const char **ptr)
     return !*pfx;
 }
 
-size_t av_strlcat(char *dst, size_t size, const char *fmt, ...)
-{
-    size_t len = strlen(dst);
-    va_list vl;
-
-    va_start(vl, fmt);
-    len += vsnprintf(dst + len, size > len ? size - len : 0, fmt, vl);
-    va_end(vl);
-
-    return len;
-}
-
-size_t av_strlcpy(char *dst, const char *src, size_t size)
-{
-    size_t len = 0;
-    while (++len < size && *src)
-        *dst++ = *src++;
-    if (len <= size)
-        *dst = 0;
-    return len + strlen(src) - 1;
-}
-
-
-int av_strcasecmp(const char *a, const char *b)
-{
-    uint8_t c1, c2;
-    do {
-        c1 = av_tolower(*a++);
-        c2 = av_tolower(*b++);
-    } while (c1 && c1 == c2);
-    return c1 - c2;
-}
-
 int av_stristart(const char *str, const char *pfx, const char **ptr)
 {
     while (*pfx && av_toupper((unsigned)*pfx) == av_toupper((unsigned)*str)) {
@@ -94,6 +61,50 @@ size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...)
     return len;
 }
 
+size_t av_strlcat(char *dst, size_t size, const char *fmt, ...)
+{
+    size_t len = strlen(dst);
+    va_list vl;
+
+    va_start(vl, fmt);
+    len += vsnprintf(dst + len, size > len ? size - len : 0, fmt, vl);
+    va_end(vl);
+
+    return len;
+}
+
+size_t av_strlcpy(char *dst, const char *src, size_t size)
+{
+    size_t len = 0;
+    while (++len < size && *src)
+        *dst++ = *src++;
+    if (len <= size)
+        *dst = 0;
+    return len + strlen(src) - 1;
+}
+
+
+int av_strcasecmp(const char *a, const char *b)
+{
+    uint8_t c1, c2;
+    do {
+        c1 = av_tolower(*a++);
+        c2 = av_tolower(*b++);
+    } while (c1 && c1 == c2);
+    return c1 - c2;
+}
+
+int av_strncasecmp(const char *a, const char *b, size_t n)
+{
+    const char *end = a + n;
+    uint8_t c1, c2;
+    do {
+        c1 = av_tolower(*a++);
+        c2 = av_tolower(*b++);
+    } while (a < end && c1 && c1 == c2);
+    return c1 - c2;
+}
+
 char *av_strtok(char *s, const char *delim, char **saveptr)
 {
     char *tok;
@@ -123,14 +134,5 @@ char *av_strtok(char *s, const char *delim, char **saveptr)
     return tok;
 }
 
-int av_strncasecmp(const char *a, const char *b, size_t n)
-{
-    const char *end = a + n;
-    uint8_t c1, c2;
-    do {
-        c1 = av_tolower(*a++);
-        c2 = av_tolower(*b++);
-    } while (a < end && c1 && c1 == c2);
-    return c1 - c2;
-}
+
 

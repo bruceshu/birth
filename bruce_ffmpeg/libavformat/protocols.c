@@ -1,12 +1,16 @@
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-10-13
+ * Description:
+ 
+*********************************/
 
 
+#include "libavutil/common.h"
+#include "libavutil/mem.h"
 
-
-
-
-
-
-
+#include "url.h"
 
 //extern const URLProtocol ff_async_protocol;
 //extern const URLProtocol ff_bluray_protocol;
@@ -64,7 +68,27 @@ extern const URLProtocol ff_tcp_protocol;
 
 #include "libavformat/protocol_list.c"
 
+const AVClass *ff_urlcontext_child_class_next(const AVClass *prev)
+{
+    int i;
 
+    /* find the protocol that corresponds to prev */
+    for (i = 0; prev && url_protocols[i]; i++) {
+        if (url_protocols[i]->pstPrivDataClass == prev) {
+            i++;
+            break;
+        }
+    }
+
+    /* find next protocol with priv options */
+    for (; url_protocols[i]; i++) {
+        if (url_protocols[i]->pstPrivDataClass) {
+            return url_protocols[i]->pstPrivDataClass;
+        }
+    }
+        
+    return NULL;
+}
 
 const URLProtocol **ffurl_get_protocols(const char *whitelist, const char *blacklist)
 {

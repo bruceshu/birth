@@ -36,7 +36,18 @@ static inline int av_isxdigit(int c)
     return av_isdigit(c) || (c >= 'a' && c <= 'f');
 }
 
+int av_strstart(const char *str, const char *pfx, const char **ptr);
+int av_stristart(const char *str, const char *pfx, const char **ptr);
+char *av_stristr(const char *s1, const char *s2);
+
+size_t av_strlcat(char *dst, size_t size, const char *fmt, ...);
+size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...);
 size_t av_strlcpy(char *dst, const char *src, size_t size);
+
+int av_strcasecmp(const char *a, const char *b);
+int av_strncasecmp(const char *a, const char *b, size_t n);
+
+char *av_strtok(char *s, const char *delim, char **saveptr);
 
 
 #endif

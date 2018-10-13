@@ -37,13 +37,13 @@ install-libs-$(CONFIG_STATIC): install-lib$(NAME)-static
 install-libs-$(CONFIG_SHARED): install-lib$(NAME)-shared
 
 define RULES
-$(TOOLS):     THISLIB = $(FULLNAME:%=$(LD_LIB))
-$(TESTPROGS): THISLIB = $(SUBDIR)$(LIBNAME)
+#$(TOOLS):     THISLIB = $(FULLNAME:%=$(LD_LIB))
+#$(TESTPROGS): THISLIB = $(SUBDIR)$(LIBNAME)
 
 $(LIBOBJS): CPPFLAGS += -DBUILDING_$(NAME)
 
-$(TESTPROGS) $(TOOLS): %$(EXESUF): %.o
-	$$(LD) $(LDFLAGS) $(LDEXEFLAGS) $$(LD_O) $$(filter %.o,$$^) $$(THISLIB) $(FFEXTRALIBS) $$(EXTRALIBS-$$(*F)) $$(ELIBS)
+#$(TESTPROGS) $(TOOLS): %$(EXESUF): %.o
+#	$$(LD) $(LDFLAGS) $(LDEXEFLAGS) $$(LD_O) $$(filter %.o,$$^) $$(THISLIB) $(FFEXTRALIBS) $$(EXTRALIBS-$$(*F)) $$(ELIBS)
 
 $(SUBDIR)lib$(NAME).version: $(SUBDIR)version.h | $(SUBDIR)
 	$$(M) $$(SRC_PATH)/ffbuild/libversion.sh $(NAME) $$< > $$@

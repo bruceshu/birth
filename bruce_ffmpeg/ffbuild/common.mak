@@ -38,6 +38,8 @@ FFLIBS    := $($(NAME)_FFLIBS) $(FFLIBS-yes) $(FFLIBS)
 OBJS      := $(sort $(OBJS:%=$(SUBDIR)%))
 SLIBOBJS  := $(sort $(SLIBOBJS:%=$(SUBDIR)%))
 
+$(warning common_mak OBJS=$(OBJS))
+$(warning common_mak SLIBOBJS=$(SLIBOBJS))
 #HOSTOBJS  := $(HOSTPROGS:%=$(SUBDIR)%.o)
 #HEADERS   += $(HEADERS-yes)
 

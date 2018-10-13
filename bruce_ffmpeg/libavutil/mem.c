@@ -12,9 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "config.h"
 #include "mem.h"
-
-#define HAVE_ALIGNED_MALLOC 0
 
 static size_t max_alloc_size= INT_MAX;
 
@@ -47,8 +46,20 @@ void *av_mallocz(size_t size)
     return ptr;
 }
 
-//void **av_mallocz_array(int n_elem, int size)
+void **av_mallocz_array(int n_elem, size_t size)
+{
+    size_t new_size;
+    void **ret;
 
+    new_size = n_elem * size;
+
+    ret = (void **)av_mallocz(new_size);
+    if (!ret) {
+        return NULL;
+    }
+
+    return ret;
+}
 
 void *av_realloc(void *ptr, size_t size)
 {

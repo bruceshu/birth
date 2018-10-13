@@ -20,6 +20,9 @@ LIBNAME=$(LIBPREF)$(FULLNAME)$(LIBSUF)
 
 ARCH=x86
 CC=gcc
+CC_C=-c
+CC_E=-E -o $@
+CC_O=-o $@
 CXX=g++
 AR=ar
 ARFLAGS=rcD

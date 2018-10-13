@@ -7,10 +7,17 @@
 *********************************/
 
 
+#include <stdio.h>
+#include <netdb.h>
+#include <stdarg.h>
+#include <string.h>
 
+#include "config.h"
 
-int ff_url_join(char *str, int size, const char *proto, const char *authorization, 
-               const char *hostname, int port, const char *fmt, ...)
+#include "libavutil/avstring.h"
+#include "url.h"
+
+int ff_url_join(char *str, int size, const char *proto, const char *authorization, const char *hostname, int port, const char *fmt, ...)
 {
 #if CONFIG_NETWORK
     struct addrinfo hints = { 0 }, *ai;
