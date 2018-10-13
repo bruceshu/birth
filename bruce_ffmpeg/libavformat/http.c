@@ -7,8 +7,13 @@
 *********************************/
 
 
+#include "libavutil/error.h"
+#include "libavutil/mem.h"
+#include "libavutil/opt.h"
+
+#include "url.h"
 #include "http.h"
-#include "error.h"
+
 
 int ff_http_averror(int status_code, int default_averror)
 {
@@ -1076,7 +1081,7 @@ static int http_read(URLContext *h, uint8_t *buf, int size)
 }
 
 const URLProtocol ff_http_protocol = {
-    .name                = "http",
+    .url_name            = "http",
     .url_open2           = http_open,
     //.url_accept          = http_accept,
     //.url_handshake       = http_handshake,

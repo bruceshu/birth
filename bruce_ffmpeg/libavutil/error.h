@@ -7,9 +7,12 @@
 *********************************/
 
 
-
 #ifndef ERROR_H
 #define ERROR_H
+
+#include <errno.h>
+#include <stddef.h>
+
 
 #define AVERROR(e) (-(e))
 #define AVUNERROR(e) (-(e))

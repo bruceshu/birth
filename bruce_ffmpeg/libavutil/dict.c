@@ -7,22 +7,12 @@
 *********************************/
 
 
+#include <string.h>
 
-void av_dict_free(AVDictionary **ppstAVDict)
-{
-    AVDictionary *pstAVDict = *ppstAVDict;
+#include "avstring.h"
+#include "mem.h"
+#include "dict.h"
 
-    if (pstAVDict) {
-        while (pstAVDict->count--) {
-            av_freep(&pstAVDict->elems[pstAVDict->count].key);
-            av_freep(&pstAVDict->elems[pstAVDict->count].value);
-        }
-        
-        av_freep(&pstAVDict->elems);
-    }
-    
-    av_freep(ppstAVDict);
-}
 
 AVDictionaryEntry *av_dict_get(const AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags)
 {
@@ -88,8 +78,7 @@ int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags
         av_free(tag->key);
         *tag = m->elems[--m->count];
     } else if (copy_value) {
-        AVDictionaryEntry *tmp = av_realloc(m->elems,
-                                            (m->count + 1) * sizeof(*m->elems));
+        AVDictionaryEntry *tmp = av_realloc(m->elems, (m->count + 1) * sizeof(*m->elems));
         if (!tmp)
             goto err_out;
         m->elems = tmp;
@@ -148,5 +137,21 @@ int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
     }
 
     return 0;
+}
+
+void av_dict_free(AVDictionary **ppstAVDict)
+{
+    AVDictionary *pstAVDict = *ppstAVDict;
+
+    if (pstAVDict) {
+        while (pstAVDict->count--) {
+            av_freep(&pstAVDict->elems[pstAVDict->count].key);
+            av_freep(&pstAVDict->elems[pstAVDict->count].value);
+        }
+        
+        av_freep(&pstAVDict->elems);
+    }
+    
+    av_freep(ppstAVDict);
 }
 
