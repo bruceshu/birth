@@ -87,129 +87,12 @@ static const struct URLProtocol *url_find_protocol(const char *filename)
     return NULL;
 }
 
-
-
-
-
-
-
-
-
-int url_closep(URLContext **ppstUrlCtx)
-{
-    URLContext *pstUrlCtx = *ppstUrlCtx;
-    int ret = 0;
-    if (!pstUrlCtx)
-        return 0;     /* can happen when ffurl_open fails */
-
-    if (pstUrlCtx->is_connected && pstUrlCtx->pstUrlProt->url_close)
-        ret = pstUrlCtx->pstUrlProt->url_close(pstUrlCtx);
-
-    if (pstUrlCtx->pstUrlProt->priv_data_size) {
-        if (pstUrlCtx->pstUrlProt->pstPrivDataClass)
-            av_opt_free(pstUrlCtx->pstPrivData);
-        av_freep(&pstUrlCtx->pstPrivData);
-    }
-    
-    av_opt_free(pstUrlCtx);
-    av_freep(ppstUrlCtx);
-    
-    return ret;
-}
-
 int url_close(URLContext *pstUrlCtx)
 {
     return url_closep(&pstUrlCtx);
 }
 
 
-
-
-static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, 
-                                    int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size))
-{
-    int ret, len;
-    int fast_retries = 5;
-    int64_t wait_since = 0;
-
-    len = 0;
-    while (len < size_min) {
-        /*if (ff_check_interrupt(&h->interrupt_callback))
-            return AVERROR_EXIT;*/
-            
-        ret = transfer_func(pstUrlCtx, buf + len, size - len);
-        if (ret == AVERROR(EINTR))
-            continue;
-        
-        if (pstUrlCtx->flags & AVIO_FLAG_NONBLOCK)
-            return ret;
-        
-        if (ret == AVERROR(EAGAIN)) {
-            ret = 0;
-            if (fast_retries) {
-                fast_retries--;
-            } else {
-                if (pstUrlCtx->rw_timeout) {
-                    if (!wait_since)
-                        wait_since = av_gettime_relative();
-                    else if (av_gettime_relative() > wait_since + pstUrlCtx->rw_timeout)
-                        return AVERROR(EIO);
-                }
-                av_usleep(1000);
-            }
-        } else if (ret < 1)
-            return (ret < 0 && ret != AVERROR_EOF) ? ret : len;
-            
-        if (ret) {
-            fast_retries = FFMAX(fast_retries, 2);
-            wait_since = 0;
-        }
-        
-        len += ret;
-    }
-    
-    return len;
-}
-
-
-int url_read(URLContext *pstUrlCtx, unsigned char *buf, int size)
-{
-    if (!(pstUrlCtx->flags & AVIO_FLAG_READ))
-        return -1;
-    return retry_transfer_wrapper(pstUrlCtx, buf, size, 1, pstUrlCtx->pstUrlProt->url_read);
-}
-
-int url_write(URLContext *pstUrlCtx, const unsigned char *buf, int size)
-{
-    if (!(pstUrlCtx->flags & AVIO_FLAG_WRITE))
-        return -1;//AVERROR(EIO);
-    
-    /* avoid sending too big packets */
-    if (pstUrlCtx->max_packet_size && size > pstUrlCtx->max_packet_size)
-        return -1;//AVERROR(EIO);
-
-    return retry_transfer_wrapper(pstUrlCtx, (unsigned char *)buf, size, size,
-                                  (int (*)(struct URLContext *, uint8_t *, int))pstUrlCtx->pstUrlProt->url_write);
-}
-
-int ffurl_write(URLContext *h, const unsigned char *buf, int size)
-{
-    if (!(h->flags & AVIO_FLAG_WRITE))
-        return AVERROR(EIO);
-    
-    /* avoid sending too big packets */
-    if (h->max_packet_size && size > h->max_packet_size)
-        return AVERROR(EIO);
-
-    return retry_transfer_wrapper(h, (unsigned char *)buf, size, size, (int (*)(struct URLContext *, uint8_t *, int))h->prot->url_write);
-}
-
-int ffurl_get_file_handle(URLContext *h)
-{
-    if (!h || !h->pstUrlProt || !h->pstUrlProt->url_get_file_handle)
-        return -1;
-    return h->pstUrlProt->url_get_file_handle(h);
-}
 
 int ffurl_read_complete(URLContext *pstUrlCtx, unsigned char *buf, int size)
 {
@@ -457,7 +340,7 @@ int url_connect(URLContext *pstUrlCtx, AVDictionary **options)
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"                \
     "0123456789+-."
 
-static const struct URLProtocol *url_find_protocol(const char *filename)
+static const struct URLProtocol *ff_url_find_protocol(const char *filename)
 {
     const URLProtocol **protocols;
     char proto_str[128], proto_nested[128], *ptr;
@@ -503,7 +386,7 @@ static const AVOption options[] = {
     { NULL }
 };
 
-const AVClass url_context_class = {
+const AVClass ff_url_context_class = {
     .class_name       = "URLContext",
     .item_name        = urlcontext_to_name,
     .option           = options,
@@ -609,9 +492,9 @@ int url_alloc(URLContext **ppstUrlCtx, const char *filename, int flags, const AV
 {
     const URLProtocol *p = NULL;
 
-    p = url_find_protocol(filename);
+    p = ff_url_find_protocol(filename);
     if (p)
-       return url_alloc_for_protocol(ppstUrlCtx, p, filename, flags, int_cb);
+       return ff_url_alloc_for_protocol(ppstUrlCtx, p, filename, flags, int_cb);
 
     *ppstUrlCtx = NULL;
     
@@ -622,7 +505,7 @@ int url_open_whitelist(URLContext **ppstUrlCtx, const char *filename, int flags,
 {
     AVDictionary *tmp_opts = NULL;
     AVDictionaryEntry *e;
-    int ret = url_alloc(ppstUrlCtx, filename, flags, NULL);
+    int ret = ff_url_alloc(ppstUrlCtx, filename, flags, NULL);
     if (ret < 0)
         return ret;
     
@@ -655,7 +538,7 @@ fail:
     return ret;
 }
 
-int ffurl_handshake(URLContext *c)
+int url_handshake(URLContext *c)
 {
     int ret;
     if (c->pstUrlProt->url_handshake) {
@@ -668,5 +551,128 @@ int ffurl_handshake(URLContext *c)
     return 0;
 }
 
+typedef int (*transfer_func)(URLContext *pstUrlCtx, uint_t *buf, int size);
+static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, transfer_func func)
+{
+    int ret, len;
+    int fast_retries = 5;
+    int64_t wait_since = 0;
 
+    len = 0;
+    while (len < size_min) {
+        /*if (ff_check_interrupt(&h->interrupt_callback))
+            return AVERROR_EXIT;*/
+            
+        ret = func(pstUrlCtx, buf + len, size - len);
+        if (ret == AVERROR(EINTR))
+            continue;
+        
+        if (pstUrlCtx->flags & AVIO_FLAG_NONBLOCK)
+            return ret;
+        
+        if (ret == AVERROR(EAGAIN)) {
+            ret = 0;
+            if (fast_retries) {
+                fast_retries--;
+            } else {
+                if (pstUrlCtx->rw_timeout) {
+                    if (!wait_since)
+                        wait_since = av_gettime_relative();
+                    else if (av_gettime_relative() > wait_since + pstUrlCtx->rw_timeout)
+                        return AVERROR(EIO);
+                }
+                av_usleep(1000);
+            }
+        } else if (ret < 1)
+            return (ret < 0 && ret != AVERROR_EOF) ? ret : len;
+            
+        if (ret) {
+            fast_retries = FFMAX(fast_retries, 2);
+            wait_since = 0;
+        }
+        
+        len += ret;
+    }
+    
+    return len;
+}
+
+int url_read(URLContext *pstUrlCtx, unsigned char *buf, int size)
+{
+    if (!(pstUrlCtx->flags & AVIO_FLAG_READ))
+        return -1;
+    return retry_transfer_wrapper(pstUrlCtx, buf, size, 1, pstUrlCtx->pstUrlProt->url_read);
+}
+
+int url_write(URLContext *pstUrlCtx, const unsigned char *buf, int size)
+{
+    if (!(pstUrlCtx->flags & AVIO_FLAG_WRITE))
+        return AVERROR(EIO);
+    
+    /* avoid sending too big packets */
+    if (pstUrlCtx->max_packet_size && size > pstUrlCtx->max_packet_size)
+        return AVERROR(EIO);
+
+    return retry_transfer_wrapper(pstUrlCtx, (unsigned char *)buf, size, size, pstUrlCtx->pstUrlProt->url_write);
+}
+
+int url_get_file_handle(URLContext *pstUrlCtx)
+{
+    if (!pstUrlCtx || !pstUrlCtx->pstUrlProt || !pstUrlCtx->pstUrlProt->url_get_file_handle)
+        return AVERROR(ENOSYS);
+    
+    return pstUrlCtx->pstUrlProt->url_get_file_handle(pstUrlCtx);
+}
+
+int ffurl_get_multi_file_handle(URLContext *h, int **handles, int *numhandles)
+{
+    if (!h || !h->pstUrlProt)
+        return AVERROR(ENOSYS);
+    
+    if (!h->pstUrlProt->url_get_multi_file_handle) {
+        if (!h->pstUrlProt->url_get_file_handle)
+            return AVERROR(ENOSYS);
+        
+        *handles = av_malloc(sizeof(**handles));
+        if (!*handles)
+            return AVERROR(ENOMEM);
+        
+        *numhandles = 1;
+        *handles[0] = h->pstUrlProt->url_get_file_handle(h);
+        
+        return 0;
+    }
+    
+    return h->pstUrlProt->url_get_multi_file_handle(h, handles, numhandles);
+}
+
+int url_get_short_seek(URLContext *pstUrlCtx)
+{
+    if (!pstUrlCtx || !pstUrlCtx->pstUrlProt || !pstUrlCtx->pstUrlProt->url_get_short_seek)
+        return AVERROR(ENOSYS);
+    
+    return pstUrlCtx->pstUrlProt->url_get_short_seek(pstUrlCtx);
+}
+
+int url_closep(URLContext **ppstUrlCtx)
+{
+    URLContext *pstUrlCtx = *ppstUrlCtx;
+    int ret = 0;
+    if (!pstUrlCtx)
+        return 0;     /* can happen when ffurl_open fails */
+
+    if (pstUrlCtx->is_connected && pstUrlCtx->pstUrlProt->url_close)
+        ret = pstUrlCtx->pstUrlProt->url_close(pstUrlCtx);
+
+    if (pstUrlCtx->pstUrlProt->priv_data_size) {
+        if (pstUrlCtx->pstUrlProt->pstPrivDataClass)
+            opt_free(pstUrlCtx->pstPrivData);
+        av_freep(&pstUrlCtx->pstPrivData);
+    }
+    
+    opt_free(pstUrlCtx);
+    av_freep(ppstUrlCtx);
+    
+    return ret;
+}
 

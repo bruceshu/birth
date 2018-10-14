@@ -1,11 +1,11 @@
-/*
-copyright bruceshu
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-10-014
+ * Description:
+ 
+*********************************/
 
-author:bruceshu
-date:2018-07-05
-description:
-
-*/
 
 
 #ifndef OPT_H
@@ -51,15 +51,15 @@ typedef struct AVOption {
     double max;
 
     int flags;
-#define AV_OPT_FLAG_ENCODING_PARAM  1
-#define AV_OPT_FLAG_DECODING_PARAM  2
-#define AV_OPT_FLAG_METADATA        4
-#define AV_OPT_FLAG_AUDIO_PARAM     8
-#define AV_OPT_FLAG_VIDEO_PARAM     16
-#define AV_OPT_FLAG_SUBTITLE_PARAM  32
-#define AV_OPT_FLAG_EXPORT          64
-#define AV_OPT_FLAG_READONLY        128
-#define AV_OPT_FLAG_FILTERING_PARAM (1<<16)
+#define OPT_FLAG_ENCODING_PARAM  1
+#define OPT_FLAG_DECODING_PARAM  2
+#define OPT_FLAG_METADATA        4
+#define OPT_FLAG_AUDIO_PARAM     8
+#define OPT_FLAG_VIDEO_PARAM     16
+#define OPT_FLAG_SUBTITLE_PARAM  32
+#define OPT_FLAG_EXPORT          64
+#define OPT_FLAG_READONLY        128
+#define OPT_FLAG_FILTERING_PARAM (1<<16)
     const char *unit;
 }AVOption;
 

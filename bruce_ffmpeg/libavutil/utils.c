@@ -7,8 +7,10 @@
 *********************************/
 
 
+#include <string.h>
+#include <stdlib.h>
 
-
+#include "avstring.h"
 
 void av_url_split(char *proto, int proto_size, char *authorization, int authorization_size,
                  char *hostname, int hostname_size, int *port_ptr, char *path, int path_size, const char *url)
@@ -57,28 +59,26 @@ void av_url_split(char *proto, int proto_size, char *authorization, int authoriz
         /* authorization (user[:pass]@hostname) */
         at2 = p;
         while ((at = strchr(p, '@')) && at < ls) {
-            av_strlcpy(authorization, at2,
-                       FFMIN(authorization_size, at + 1 - at2));
+            av_strlcpy(authorization, at2, FFMIN(authorization_size, at + 1 - at2));
             p = at + 1; /* skip '@' */
         }
 
         if (*p == '[' && (brk = strchr(p, ']')) && brk < ls) {
             /* [host]:port */
-            av_strlcpy(hostname, p + 1,
-                       FFMIN(hostname_size, brk - p));
+            av_strlcpy(hostname, p + 1, FFMIN(hostname_size, brk - p));
             if (brk[1] == ':' && port_ptr)
                 *port_ptr = atoi(brk + 2);
         } else if ((col = strchr(p, ':')) && col < ls) {
-            av_strlcpy(hostname, p,
-                       FFMIN(col + 1 - p, hostname_size));
+            av_strlcpy(hostname, p, FFMIN(col + 1 - p, hostname_size));
             if (port_ptr)
                 *port_ptr = atoi(col + 1);
-        } else
-            av_strlcpy(hostname, p,
-                       FFMIN(ls + 1 - p, hostname_size));
+        } else {
+            av_strlcpy(hostname, p, FFMIN(ls + 1 - p, hostname_size));
+        }
     }
 }
 
+#if 0 //后续需要时再放开
  AVStream *avformat_new_stream(AVFormatContext *s, const AVCodec *c)
  {
      AVStream *st;
@@ -349,6 +349,7 @@ void av_url_split(char *proto, int proto_size, char *authorization, int authoriz
      *timeval = negative ? -t : t;
      return 0;
  }
+#endif
 
  int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info)
  {

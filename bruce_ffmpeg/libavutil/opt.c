@@ -7,11 +7,11 @@
 *********************************/
 
 
-int av_opt_set(void *obj, const char *name, const char *val, int search_flags)
+int opt_set(void *obj, const char *name, const char *val, int search_flags)
 {
     int ret = 0;
     void *dst, *target_obj;
-    const AVOption *o = av_opt_find2(obj, name, NULL, 0, search_flags, &target_obj);
+    const AVOption *o = opt_find2(obj, name, NULL, 0, search_flags, &target_obj);
     if (!o || !target_obj)
         return AVERROR_OPTION_NOT_FOUND;
     if (!val && (o->type != AV_OPT_TYPE_STRING &&
@@ -87,7 +87,7 @@ int av_opt_set(void *obj, const char *name, const char *val, int search_flags)
     return AVERROR(EINVAL);
 }
 
-const AVOption *av_opt_next(const void *obj, const AVOption *last)
+const AVOption *opt_next(const void *obj, const AVOption *last)
 {
     const AVClass *class_para;
     if (!obj)
@@ -103,18 +103,18 @@ const AVOption *av_opt_next(const void *obj, const AVOption *last)
     return NULL;
 }
 
-void av_opt_free(void *obj)
+void opt_free(void *obj)
 {
     const AVOption *o = NULL;
-    while ((o = av_opt_next(obj, o))) {
+    while ((o = opt_next(obj, o))) {
         switch (o->type) {
         case AV_OPT_TYPE_STRING:
         case AV_OPT_TYPE_BINARY:
-            ff_freep((uint8_t *)obj + o->offset);
+            av_freep((uint8_t *)obj + o->offset);
             break;
 
         case AV_OPT_TYPE_DICT:
-            av_dict_free((AVDictionary **)(((uint8_t *)obj) + o->offset));
+            dict_free((AVDictionary **)(((uint8_t *)obj) + o->offset));
             break;
 
         default:
@@ -297,7 +297,7 @@ static int set_string_binary(void *obj, const AVOption *o, const char *val, uint
 }
 
 
-void av_opt_set_defaults2(void *s, int mask, int flags)
+void opt_set_defaults2(void *s, int mask, int flags)
 {
     const AVOption *opt = NULL;
     while ((opt = av_opt_next(s, opt))) {
@@ -361,7 +361,7 @@ void av_opt_set_defaults2(void *s, int mask, int flags)
     }
 }
 
-void av_opt_set_defaults(void *s)
+void opt_set_defaults(void *s)
 {
     av_opt_set_defaults2(s, 0, 0);
 }

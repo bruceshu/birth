@@ -14,7 +14,7 @@
 #include "dict.h"
 
 
-AVDictionaryEntry *av_dict_get(const AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags)
+AVDictionaryEntry *dict_get(const AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags)
 {
     unsigned int i, j;
 
@@ -43,14 +43,14 @@ AVDictionaryEntry *av_dict_get(const AVDictionary *m, const char *key, const AVD
     return NULL;
 }
 
-int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags)
+int dict_set(AVDictionary **pm, const char *key, const char *value, int flags)
 {
     AVDictionary *m = *pm;
     AVDictionaryEntry *tag = NULL;
     char *oldval = NULL, *copy_key = NULL, *copy_value = NULL;
 
     if (!(flags & AV_DICT_MULTIKEY)) {
-        tag = av_dict_get(m, key, NULL, flags);
+        tag = dict_get(m, key, NULL, flags);
     }
     if (flags & AV_DICT_DONT_STRDUP_KEY)
         copy_key = (void *)key;
@@ -118,20 +118,20 @@ err_out:
     return AVERROR(ENOMEM);
 }
 
-int av_dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags)
+int dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags)
 {
     char valuestr[22];
     snprintf(valuestr, sizeof(valuestr), "%"PRId64, value);
     flags &= ~AV_DICT_DONT_STRDUP_VAL;
-    return av_dict_set(pm, key, valuestr, flags);
+    return dict_set(pm, key, valuestr, flags);
 }
 
-int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
+int dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
 {
     AVDictionaryEntry *t = NULL;
 
-    while ((t = av_dict_get(src, "", t, AV_DICT_IGNORE_SUFFIX))) {
-        int ret = av_dict_set(dst, t->key, t->value, flags);
+    while ((t = dict_get(src, "", t, AV_DICT_IGNORE_SUFFIX))) {
+        int ret = dict_set(dst, t->key, t->value, flags);
         if (ret < 0)
             return ret;
     }
@@ -139,7 +139,7 @@ int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
     return 0;
 }
 
-void av_dict_free(AVDictionary **ppstAVDict)
+void dict_free(AVDictionary **ppstAVDict)
 {
     AVDictionary *pstAVDict = *ppstAVDict;
 
