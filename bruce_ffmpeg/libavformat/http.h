@@ -80,7 +80,7 @@ typedef struct HTTPContext {
     char *icy_metadata_packet;
     AVDictionary *metadata;
     
-#if 0 //CONFIG_ZLIB
+#if CONFIG_ZLIB
     int compressed;
     z_stream inflate_stream;
     uint8_t *inflate_buffer;

@@ -87,10 +87,7 @@ static const struct URLProtocol *url_find_protocol(const char *filename)
     return NULL;
 }
 
-int url_close(URLContext *pstUrlCtx)
-{
-    return url_closep(&pstUrlCtx);
-}
+
 
 
 
@@ -340,7 +337,7 @@ int url_connect(URLContext *pstUrlCtx, AVDictionary **options)
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"                \
     "0123456789+-."
 
-static const struct URLProtocol *ff_url_find_protocol(const char *filename)
+static const struct URLProtocol *url_find_protocol(const char *filename)
 {
     const URLProtocol **protocols;
     char proto_str[128], proto_nested[128], *ptr;
@@ -357,7 +354,7 @@ static const struct URLProtocol *ff_url_find_protocol(const char *filename)
     if ((ptr = strchr(proto_nested, '+')))
         *ptr = '\0';
 
-    protocols = ffurl_get_protocols(NULL, NULL);
+    protocols = url_get_protocols(NULL, NULL);
     if (!protocols)
         return NULL;
     
@@ -386,7 +383,7 @@ static const AVOption options[] = {
     { NULL }
 };
 
-const AVClass ff_url_context_class = {
+const AVClass url_context_class = {
     .class_name       = "URLContext",
     .item_name        = urlcontext_to_name,
     .option           = options,
@@ -433,7 +430,7 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
             int proto_len= strlen(pstUrlProt->url_name);
             char *start = strchr(pstUrlCtx->filename, ',');
             *(const AVClass **)pstUrlCtx->pstPrivData = pstUrlProt->pstPrivDataClass;
-            av_opt_set_defaults(pstUrlCtx->pstPrivData);
+            opt_set_defaults(pstUrlCtx->pstPrivData);
             /*if(!strncmp(pstUrlProt->url_name, pstUrlCtx->filename, proto_len) && pstUrlCtx->filename + proto_len == start){
                 int ret= 0;
                 char *p= start;
@@ -492,9 +489,9 @@ int url_alloc(URLContext **ppstUrlCtx, const char *filename, int flags, const AV
 {
     const URLProtocol *p = NULL;
 
-    p = ff_url_find_protocol(filename);
+    p = url_find_protocol(filename);
     if (p)
-       return ff_url_alloc_for_protocol(ppstUrlCtx, p, filename, flags, int_cb);
+       return url_alloc_for_protocol(ppstUrlCtx, p, filename, flags, int_cb);
 
     *ppstUrlCtx = NULL;
     
@@ -505,12 +502,12 @@ int url_open_whitelist(URLContext **ppstUrlCtx, const char *filename, int flags,
 {
     AVDictionary *tmp_opts = NULL;
     AVDictionaryEntry *e;
-    int ret = ff_url_alloc(ppstUrlCtx, filename, flags, NULL);
+    int ret = url_alloc(ppstUrlCtx, filename, flags, NULL);
     if (ret < 0)
         return ret;
     
     if (parent) {
-        //av_opt_copy(*puc, parent);
+        opt_copy(*puc, parent);
     }
     
     /*
@@ -674,5 +671,10 @@ int url_closep(URLContext **ppstUrlCtx)
     av_freep(ppstUrlCtx);
     
     return ret;
+}
+
+int url_close(URLContext *pstUrlCtx)
+{
+    return url_closep(&pstUrlCtx);
 }
 

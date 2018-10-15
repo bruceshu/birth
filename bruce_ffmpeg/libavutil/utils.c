@@ -12,8 +12,7 @@
 
 #include "avstring.h"
 
-void av_url_split(char *proto, int proto_size, char *authorization, int authorization_size,
-                 char *hostname, int hostname_size, int *port_ptr, char *path, int path_size, const char *url)
+void url_split(char *proto, int proto_size, char *authorization, int authorization_size, char *hostname, int hostname_size, int *port_ptr, char *path, int path_size, const char *url)
 {
     const char *p, *ls, *ls2, *at, *at2, *col, *brk;
 

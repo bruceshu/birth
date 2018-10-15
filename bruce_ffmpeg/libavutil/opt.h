@@ -14,21 +14,26 @@
 #include "common.h"
 #include "rational.h"
 
-enum AVOptionType{
-    AV_OPT_TYPE_FLAGS,
-    AV_OPT_TYPE_INT,
-    AV_OPT_TYPE_INT64,
-    AV_OPT_TYPE_DOUBLE,
-    AV_OPT_TYPE_FLOAT,
-    AV_OPT_TYPE_STRING,
-    AV_OPT_TYPE_RATIONAL,
-    AV_OPT_TYPE_BINARY,
-    AV_OPT_TYPE_DICT,
-    AV_OPT_TYPE_UINT64,
-    AV_OPT_TYPE_CONST = 128,
-    AV_OPT_TYPE_IMAGE_SIZE = MKBETAG('S','I','Z','E'),
-    AV_OPT_TYPE_PIXEL_FMT  = MKBETAG('P','F','M','T'),
-    AV_OPT_TYPE_SAMPLE_FMT = MKBETAG('S','F','M','T'),
+#define AV_OPT_SEARCH_CHILDREN   (1 << 0)
+#define AV_OPT_SEARCH_FAKE_OBJ   (1 << 1)
+#define AV_OPT_ALLOW_NULL (1 << 2)
+#define AV_OPT_MULTI_COMPONENT_RANGE (1 << 12)
+
+enum OptionType{
+    OPT_TYPE_FLAGS,
+    OPT_TYPE_INT,
+    OPT_TYPE_INT64,
+    OPT_TYPE_DOUBLE,
+    OPT_TYPE_FLOAT,
+    OPT_TYPE_STRING,
+    OPT_TYPE_RATIONAL,
+    OPT_TYPE_BINARY,
+    OPT_TYPE_DICT,
+    OPT_TYPE_UINT64,
+    OPT_TYPE_CONST = 128,
+    OPT_TYPE_IMAGE_SIZE = MKBETAG('S','I','Z','E'),
+    OPT_TYPE_PIXEL_FMT  = MKBETAG('P','F','M','T'),
+    OPT_TYPE_SAMPLE_FMT = MKBETAG('S','F','M','T'),
     AV_OPT_TYPE_VIDEO_RATE = MKBETAG('V','R','A','T'),
     AV_OPT_TYPE_DURATION   = MKBETAG('D','U','R',' '),
     AV_OPT_TYPE_COLOR      = MKBETAG('C','O','L','R'),
@@ -75,5 +80,11 @@ typedef struct AVOptionRanges {
     int nb_ranges;
     int nb_components;
 } AVOptionRanges;
+
+int opt_set(void *obj, const char *name, const char *val, int search_flags);
+const AVOption *opt_next(const void *obj, const AVOption *last);
+void opt_set_defaults(void *s);
+void opt_set_defaults2(void *s, int mask, int flags);
+void opt_free(void *obj);
 
 #endif

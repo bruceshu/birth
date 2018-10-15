@@ -24,7 +24,7 @@
 //extern const URLProtocol ff_ftp_protocol;
 //extern const URLProtocol ff_gopher_protocol;
 //extern const URLProtocol ff_hls_protocol;
-extern const URLProtocol ff_http_protocol;
+extern const URLProtocol http_protocol;
 //extern const URLProtocol ff_httpproxy_protocol;
 //extern const URLProtocol ff_https_protocol;
 //extern const URLProtocol ff_icecast_protocol;
@@ -50,7 +50,7 @@ extern const URLProtocol ff_http_protocol;
 //extern const URLProtocol ff_srtp_protocol;
 //extern const URLProtocol ff_subfile_protocol;
 //extern const URLProtocol ff_tee_protocol;
-extern const URLProtocol ff_tcp_protocol;
+extern const URLProtocol tcp_protocol;
 //extern const URLProtocol ff_tls_gnutls_protocol;
 //extern const URLProtocol ff_tls_schannel_protocol;
 //extern const URLProtocol ff_tls_securetransport_protocol;
@@ -68,7 +68,7 @@ extern const URLProtocol ff_tcp_protocol;
 
 #include "libavformat/protocol_list.c"
 
-const AVClass *ff_urlcontext_child_class_next(const AVClass *prev)
+const AVClass *urlcontext_child_class_next(const AVClass *prev)
 {
     int i;
 
@@ -90,7 +90,7 @@ const AVClass *ff_urlcontext_child_class_next(const AVClass *prev)
     return NULL;
 }
 
-const URLProtocol **ffurl_get_protocols(const char *whitelist, const char *blacklist)
+const URLProtocol **url_get_protocols(const char *whitelist, const char *blacklist)
 {
     const URLProtocol **ret;
     int i;

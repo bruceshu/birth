@@ -6,7 +6,9 @@
  
 *********************************/
 
-char *ff_http_auth_create_response(HTTPAuthState *state, const char *auth, const char *path, const char *method)
+
+#if 0 //后续需要时再放开
+char *http_auth_create_response(HTTPAuthState *state, const char *auth, const char *path, const char *method)
 {
     char *authstr = NULL;
 
@@ -18,7 +20,7 @@ char *ff_http_auth_create_response(HTTPAuthState *state, const char *auth, const
 
     if (state->auth_type == HTTP_AUTH_BASIC) {
         int auth_b64_len, len;
-        char *ptr, *decoded_auth = ff_urldecode(auth);
+        char *ptr, *decoded_auth = url_decode(auth);
 
         if (!decoded_auth)
             return NULL;
@@ -38,7 +40,7 @@ char *ff_http_auth_create_response(HTTPAuthState *state, const char *auth, const
         av_strlcat(ptr, "\r\n", len - (ptr - authstr));
         av_free(decoded_auth);
     } else if (state->auth_type == HTTP_AUTH_DIGEST) {
-        char *username = ff_urldecode(auth), *password;
+        char *username = url_decode(auth), *password;
 
         if (!username)
             return NULL;
@@ -126,8 +128,8 @@ static char *make_digest_auth(HTTPAuthState *state, const char *username, const 
 
     /* Generate a client nonce. */
     for (i = 0; i < 2; i++)
-        cnonce_buf[i] = av_get_random_seed();
-    ff_data_to_hex(cnonce, (const uint8_t*) cnonce_buf, sizeof(cnonce_buf), 1);
+        cnonce_buf[i] = get_random_seed();
+    data_to_hex(cnonce, (const uint8_t*) cnonce_buf, sizeof(cnonce_buf), 1);
     cnonce[2*sizeof(cnonce_buf)] = 0;
 
     md5ctx = av_md5_alloc();
@@ -290,4 +292,4 @@ void ff_http_auth_handle_header(HTTPAuthState *state, const char *key, const cha
                            state);
     }
 }
-
+#endif
