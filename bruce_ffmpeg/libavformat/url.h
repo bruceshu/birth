@@ -79,7 +79,7 @@ typedef struct URLProtocol {
     //int (*url_move)(URLContext *h_src, URLContext *h_dst);
 } URLProtocol;
 
-const URLProtocol **ffurl_get_protocols(const char *whitelist, const char *blacklist);
+const URLProtocol **url_get_protocols(const char *whitelist, const char *blacklist);
 const AVClass *url_context_child_class_next(const AVClass *prev);
 
 

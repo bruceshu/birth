@@ -10,6 +10,17 @@
 #ifndef AVSTRING_H
 #define AVSTRING_H
 
+#include <stddef.h>
+
+static inline int av_isdigit(int c)
+{
+    return c >= '0' && c <= '9';
+}
+
+static inline int av_isgraph(int c)
+{
+    return c > 32 && c < 127;
+}
 
 static inline int av_isspace(int c)
 {

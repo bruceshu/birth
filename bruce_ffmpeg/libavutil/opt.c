@@ -182,7 +182,7 @@ static int set_string_binary(void *obj, const AVOption *o, const char *val, uint
     return 0;
 }
 
-void opt_set_defaults2(void *s, int mask, int flags)
+void av_opt_set_defaults2(void *s, int mask, int flags)
 {
     const AVOption *opt = NULL;
     while ((opt = opt_next(s, opt))) {
@@ -246,9 +246,9 @@ void opt_set_defaults2(void *s, int mask, int flags)
     }
 }
 
-void opt_set_defaults(void *s)
+void av_opt_set_defaults(void *s)
 {
-    opt_set_defaults2(s, 0, 0);
+    av_opt_set_defaults2(s, 0, 0);
 }
 
 const AVOption *av_opt_find2(void *obj, const char *name, const char *unit, int opt_flags, int search_flags, void **target_obj)

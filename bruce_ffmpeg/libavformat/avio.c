@@ -16,6 +16,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/mem.h"
 #include "libavutil/opt.h"
+#include "libavutil/time.h"
 
 #include "url.h"
 #include "avio.h"
@@ -454,7 +455,7 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
             int proto_len= strlen(pstUrlProt->url_name);
             char *start = strchr(pstUrlCtx->filename, ',');
             *(const AVClass **)pstUrlCtx->pstPrivData = pstUrlProt->pstPrivDataClass;
-            opt_set_defaults(pstUrlCtx->pstPrivData);
+            av_opt_set_defaults(pstUrlCtx->pstPrivData);
             /*if(!strncmp(pstUrlProt->url_name, pstUrlCtx->filename, proto_len) && pstUrlCtx->filename + proto_len == start){
                 int ret= 0;
                 char *p= start;
@@ -572,7 +573,7 @@ int url_handshake(URLContext *c)
     return 0;
 }
 
-typedef int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size);
+typedef int (*transfer_func)(URLContext *pstUrlCtx, const uint8_t *buf, int size);
 static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, transfer_func func)
 {
     int ret, len;
@@ -687,11 +688,11 @@ int url_closep(URLContext **ppstUrlCtx)
 
     if (pstUrlCtx->pstUrlProt->priv_data_size) {
         if (pstUrlCtx->pstUrlProt->pstPrivDataClass)
-            opt_free(pstUrlCtx->pstPrivData);
+            av_opt_free(pstUrlCtx->pstPrivData);
         av_freep(&pstUrlCtx->pstPrivData);
     }
     
-    opt_free(pstUrlCtx);
+    av_opt_free(pstUrlCtx);
     av_freep(ppstUrlCtx);
     
     return ret;

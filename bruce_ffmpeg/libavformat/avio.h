@@ -11,6 +11,9 @@ description:
 #ifndef AVIO_H
 #define AVIO_H
 
+#include "url.h"
+
+
 #define AVSEEK_SIZE 0x10000
 #define AVSEEK_FORCE 0x20000
 

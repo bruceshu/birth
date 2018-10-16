@@ -7,9 +7,10 @@
 *********************************/
 
 
-
 #ifndef COMMON_H
 #define COMMON_H
+
+#include <stdint.h>
 
 #define MKTAG(a,b,c,d) ((a) | ((b) << 8) | ((c) << 16) | ((unsigned)(d) << 24))
 #define MKBETAG(a,b,c,d) ((d) | ((c) << 8) | ((b) << 16) | ((unsigned)(a) << 24))
@@ -22,15 +23,6 @@
 #define FFMAX3(a,b,c) FFMAX(FFMAX(a,b),c)
 #define FFMIN(a,b) ((a) > (b) ? (b) : (a))
 #define FFMIN3(a,b,c) FFMIN(FFMIN(a,b),c)
-
-typedef signed char int8_t;
-typedef unsigned char uint8_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef long long int64_t;
-typedef unsigned long long uint64_t;
 
 
 
