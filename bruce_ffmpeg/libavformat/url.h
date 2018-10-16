@@ -58,7 +58,7 @@ typedef struct URLProtocol {
      * retry_transfer_wrapper in avio.c.
      */
     int     (*url_read)( URLContext *pstUrlCtx, unsigned char *pBuf, int size);
-    int     (*url_write)(URLContext *pstUrlCtx, const unsigned char *pBuf, int size);
+    int     (*url_write)(URLContext *pstUrlCtx, unsigned char *pBuf, int size);
     int64_t (*url_seek)( URLContext *pstUrlCtx, int64_t pos, int whence);
     int     (*url_close)(URLContext *pstUrlCtx);
     
@@ -82,7 +82,26 @@ typedef struct URLProtocol {
 const URLProtocol **url_get_protocols(const char *whitelist, const char *blacklist);
 const AVClass *url_context_child_class_next(const AVClass *prev);
 
-int url_close(URLContext *pstUrlCtx);
+void url_split(char *proto, int proto_size, char *authorization, int authorization_size, 
+    char *hostname, int hostname_size, int *port_ptr, char *path, int path_size, const char *url);
+int url_join(char *str, int size, const char *proto, const char *authorization, 
+    const char *hostname, int port, const char *fmt, ...);
+void make_absolute_url(char *buf, int size, const char *base, const char *rel);
 
+
+
+int url_open_whitelist(URLContext **ppstUrlCtx, const char *filename, int flags, AVDictionary **options, URLContext *parent);
+int url_handshake(URLContext *c);
+int url_write(URLContext *pstUrlCtx, const unsigned char *buf, int size);
+int url_read(URLContext *pstUrlCtx, unsigned char *buf, int size);
+int url_get_file_handle(URLContext *pstUrlCtx);
+int url_get_multi_file_handle(URLContext *h, int **handles, int *numhandles);
+int url_get_short_seek(URLContext *pstUrlCtx);
+
+
+
+
+
+int url_close(URLContext *pstUrlCtx);
 
 #endif

@@ -43,6 +43,7 @@ void **av_mallocz_array(int n_elem, size_t size);
 void *av_realloc(void *ptr, size_t size);
 int av_reallocp(void *ptr, size_t size);
 char *av_strdup(const char *s);
+char *av_strndup(const char *s, size_t len);
 void av_free(void *ptr);
 void av_freep(void *arg);
 

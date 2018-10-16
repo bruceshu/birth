@@ -7,13 +7,20 @@
 *********************************/
 
 
+#include <stdio.h>
+#include <string.h>
+
 #include "libavutil/error.h"
+#include "libavutil/assert.h"
 #include "libavutil/mem.h"
 #include "libavutil/opt.h"
+#include "libavutil/dict.h"
+#include "libavutil/avstring.h"
+#include "libavutil/time.h"
 
 #include "url.h"
 #include "http.h"
-
+#include "internal.h"
 
 int http_averror(int status_code, int default_averror)
 {
@@ -114,6 +121,38 @@ static void handle_http_errors(URLContext *h, int error)
 {
     av_assert0(error < 0);
     http_write_reply(h, error);
+}
+
+static int http_read_header(URLContext *h, int *new_location)
+{
+    HTTPContext *s = h->pstPrivData;
+    char line[MAX_URL_SIZE];
+    int err = 0;
+
+    s->chunksize = UINT64_MAX;
+
+    for (;;) {
+        if ((err = http_get_line(s, line, sizeof(line))) < 0)
+            return err;
+
+        av_log(h, AV_LOG_TRACE, "header='%s'\n", line);
+
+        err = process_line(h, line, s->line_count, new_location);
+        if (err < 0)
+            return err;
+        if (err == 0)
+            break;
+        s->line_count++;
+    }
+
+    if (s->seekable == -1 && s->is_mediagateway && s->filesize == 2000000000)
+        h->is_streamed = 1; /* we can in fact _not_ seek */
+
+    // add any new cookies into the existing cookie string
+    cookie_string(s->cookie_dict, &s->cookies);
+    av_dict_free(&s->cookie_dict);
+
+    return err;
 }
 
 static int http_handshake(URLContext *c)
@@ -514,38 +553,6 @@ static int cookie_string(AVDictionary *dict, char **cookies)
         av_strlcatf(*cookies, len, "%s%s\n", e->key, e->value);
 
     return 0;
-}
-
-static int http_read_header(URLContext *h, int *new_location)
-{
-    HTTPContext *s = h->pstPrivData;
-    char line[MAX_URL_SIZE];
-    int err = 0;
-
-    s->chunksize = UINT64_MAX;
-
-    for (;;) {
-        if ((err = http_get_line(s, line, sizeof(line))) < 0)
-            return err;
-
-        av_log(h, AV_LOG_TRACE, "header='%s'\n", line);
-
-        err = process_line(h, line, s->line_count, new_location);
-        if (err < 0)
-            return err;
-        if (err == 0)
-            break;
-        s->line_count++;
-    }
-
-    if (s->seekable == -1 && s->is_mediagateway && s->filesize == 2000000000)
-        h->is_streamed = 1; /* we can in fact _not_ seek */
-
-    // add any new cookies into the existing cookie string
-    cookie_string(s->cookie_dict, &s->cookies);
-    av_dict_free(&s->cookie_dict);
-
-    return err;
 }
 
 static int get_cookies(HTTPContext *s, char **cookies, const char *path, const char *domain)
@@ -1258,45 +1265,45 @@ static int http_get_short_seek(URLContext *pstUrlCtx)
 }
 
 #define OFFSET(para) offsetof(HTTPContext, para)
-#define D OPT_FLAG_DECODING_PARAM
-#define E OPT_FLAG_ENCODING_PARAM
+#define D AV_OPT_FLAG_DECODING_PARAM
+#define E AV_OPT_FLAG_ENCODING_PARAM
 #define DEFAULT_USER_AGENT "Lavf/" AV_STRINGIFY(LIBAVFORMAT_VERSION)
 
 static const AVOption http_options[] = {
-    { "seekable", "control seekability of connection", OFFSET(seekable), AV_OPT_TYPE_BOOL, { .i64 = -1 }, -1, 1, D },
-    { "chunked_post", "use chunked transfer-encoding for posts", OFFSET(chunked_post), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, E },
-    { "http_proxy", "set HTTP proxy to tunnel through", OFFSET(http_proxy), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
-    { "headers", "set custom HTTP headers, can override built in default headers", OFFSET(headers), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
-    { "content_type", "set a specific content type for the POST messages", OFFSET(content_type), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
-    { "user_agent", "override User-Agent header", OFFSET(user_agent), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D },
-    { "referer", "override referer header", OFFSET(referer), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D },
+    { "seekable", OFFSET(seekable), AV_OPT_TYPE_BOOL, { .i64 = -1 }, -1, 1, D },
+    { "chunked_post", OFFSET(chunked_post), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, E },
+    { "http_proxy", OFFSET(http_proxy), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
+    { "headers", OFFSET(headers), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
+    { "content_type", OFFSET(content_type), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
+    { "user_agent", OFFSET(user_agent), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D },
+    { "referer", OFFSET(referer), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D },
 #if FF_API_HTTP_USER_AGENT
-    { "user-agent", "use the \"user_agent\" option instead", OFFSET(user_agent_deprecated), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D|AV_OPT_FLAG_DEPRECATED },
+    { "user-agent", OFFSET(user_agent_deprecated), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D|AV_OPT_FLAG_DEPRECATED },
 #endif
-    { "multiple_requests", "use persistent connections", OFFSET(multiple_requests), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D | E },
-    { "post_data", "set custom HTTP post data", OFFSET(post_data), AV_OPT_TYPE_BINARY, .flags = D | E },
-    { "mime_type", "export the MIME type", OFFSET(mime_type), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT | AV_OPT_FLAG_READONLY },
-    { "http_version", "export the http response version", OFFSET(http_version), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT | AV_OPT_FLAG_READONLY },
-    { "cookies", "set cookies to be sent in applicable future requests, use newline delimited Set-Cookie HTTP field value syntax", OFFSET(cookies), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D },
-    { "icy", "request ICY metadata", OFFSET(icy), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, D },
-    { "icy_metadata_headers", "return ICY metadata headers", OFFSET(icy_metadata_headers), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT },
-    { "icy_metadata_packet", "return current ICY metadata packet", OFFSET(icy_metadata_packet), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT },
-    { "metadata", "metadata read from the bitstream", OFFSET(metadata), AV_OPT_TYPE_DICT, {0}, 0, 0, AV_OPT_FLAG_EXPORT },
-    { "auth_type", "HTTP authentication type", OFFSET(auth_state.auth_type), AV_OPT_TYPE_INT, { .i64 = HTTP_AUTH_NONE }, HTTP_AUTH_NONE, HTTP_AUTH_BASIC, D | E, "auth_type"},
-    { "none", "No auth method set, autodetect", 0, AV_OPT_TYPE_CONST, { .i64 = HTTP_AUTH_NONE }, 0, 0, D | E, "auth_type"},
-    { "basic", "HTTP basic authentication", 0, AV_OPT_TYPE_CONST, { .i64 = HTTP_AUTH_BASIC }, 0, 0, D | E, "auth_type"},
-    { "send_expect_100", "Force sending an Expect: 100-continue header for POST", OFFSET(send_expect_100), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, E },
-    { "location", "The actual location of the data received", OFFSET(location), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
-    { "offset", "initial byte offset", OFFSET(off), AV_OPT_TYPE_INT64, { .i64 = 0 }, 0, INT64_MAX, D },
-    { "end_offset", "try to limit the request to bytes preceding this offset", OFFSET(end_off), AV_OPT_TYPE_INT64, { .i64 = 0 }, 0, INT64_MAX, D },
-    { "method", "Override the HTTP method or set the expected HTTP method from a client", OFFSET(method), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
-    { "reconnect", "auto reconnect after disconnect before EOF", OFFSET(reconnect), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D },
-    { "reconnect_at_eof", "auto reconnect at EOF", OFFSET(reconnect_at_eof), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D },
-    { "reconnect_streamed", "auto reconnect streamed / non seekable streams", OFFSET(reconnect_streamed), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D },
-    { "reconnect_delay_max", "max reconnect delay in seconds after which to give up", OFFSET(reconnect_delay_max), AV_OPT_TYPE_INT, { .i64 = 120 }, 0, UINT_MAX/1000/1000, D },
-    { "listen", "listen on HTTP", OFFSET(listen), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 2, D | E },
-    { "resource", "The resource requested by a client", OFFSET(resource), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, E },
-    { "reply_code", "The http status code to return to a client", OFFSET(reply_code), AV_OPT_TYPE_INT, { .i64 = 200}, INT_MIN, 599, E},
+    { "multiple_requests", OFFSET(multiple_requests), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D | E },
+    { "post_data", OFFSET(post_data), AV_OPT_TYPE_BINARY, .flags = D | E },
+    { "mime_type", OFFSET(mime_type), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT | AV_OPT_FLAG_READONLY },
+    { "http_version", OFFSET(http_version), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT | AV_OPT_FLAG_READONLY },
+    { "cookies", OFFSET(cookies), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D },
+    { "icy", OFFSET(icy), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, D },
+    { "icy_metadata_headers", OFFSET(icy_metadata_headers), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT },
+    { "icy_metadata_packet", OFFSET(icy_metadata_packet), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT },
+    { "metadata", OFFSET(metadata), AV_OPT_TYPE_DICT, {0}, 0, 0, AV_OPT_FLAG_EXPORT },
+    { "auth_type", OFFSET(auth_state.auth_type), AV_OPT_TYPE_INT, { .i64 = HTTP_AUTH_NONE }, HTTP_AUTH_NONE, HTTP_AUTH_BASIC, D | E, "auth_type"},
+    { "none", 0, AV_OPT_TYPE_CONST, { .i64 = HTTP_AUTH_NONE }, 0, 0, D | E, "auth_type"},
+    { "basic", 0, AV_OPT_TYPE_CONST, { .i64 = HTTP_AUTH_BASIC }, 0, 0, D | E, "auth_type"},
+    { "send_expect_100", OFFSET(send_expect_100), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, E },
+    { "location", OFFSET(location), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
+    { "offset", OFFSET(off), AV_OPT_TYPE_INT64, { .i64 = 0 }, 0, INT64_MAX, D },
+    { "end_offset", OFFSET(end_off), AV_OPT_TYPE_INT64, { .i64 = 0 }, 0, INT64_MAX, D },
+    { "method", OFFSET(method), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
+    { "reconnect", OFFSET(reconnect), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D },
+    { "reconnect_at_eof", OFFSET(reconnect_at_eof), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D },
+    { "reconnect_streamed", OFFSET(reconnect_streamed), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D },
+    { "reconnect_delay_max", OFFSET(reconnect_delay_max), AV_OPT_TYPE_INT, { .i64 = 120 }, 0, UINT_MAX/1000/1000, D },
+    { "listen", OFFSET(listen), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 2, D | E },
+    { "resource", OFFSET(resource), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, E },
+    { "reply_code", OFFSET(reply_code), AV_OPT_TYPE_INT, { .i64 = 200}, INT_MIN, 599, E},
     { NULL }
 };
 
@@ -1305,7 +1312,7 @@ static const AVClass flavor ## _context_class = {   \
     .class_name = # flavor,                         \
     .item_name  = av_default_item_name,             \
     .option     = http_options,                     \
-    .version    = LIBAVUTIL_VERSION_INT,            \
+    .version    = LIBAVFORMAT_VERSION_INT,          \
 }
 
 HTTP_CLASS(http);
