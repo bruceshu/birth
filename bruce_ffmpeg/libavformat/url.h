@@ -96,6 +96,8 @@ int url_open_whitelist(URLContext **ppstUrlCtx, const char *filename, int flags,
 int url_handshake(URLContext *c);
 int url_write(URLContext *pstUrlCtx, const unsigned char *buf, int size);
 int url_read(URLContext *pstUrlCtx, unsigned char *buf, int size);
+int64_t url_seek(URLContext *pstUrlCtx, int64_t pos, int whence);
+
 int url_get_file_handle(URLContext *pstUrlCtx);
 int url_get_multi_file_handle(URLContext *h, int **handles, int *numhandles);
 int url_get_short_seek(URLContext *pstUrlCtx);

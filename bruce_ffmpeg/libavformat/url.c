@@ -19,6 +19,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/error.h"
 #include "libavutil/mem.h"
+#include "libavutil/time.h"
 
 void url_split(char *proto, int proto_size, char *authorization, int authorization_size, char *hostname, int hostname_size, int *port_ptr, char *path, int path_size, const char *url)
 {
@@ -195,6 +196,176 @@ void make_absolute_url(char *buf, int size, const char *base, const char *rel)
         rel += 3;
     }
     av_strlcat(buf, rel, size);
+}
+
+#define URL_SCHEME_CHARS                        \
+    "abcdefghijklmnopqrstuvwxyz"                \
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"                \
+    "0123456789+-."
+
+static const struct URLProtocol *url_find_protocol(const char *filename)
+{
+    const URLProtocol **protocols;
+    char proto_str[128], proto_nested[128], *ptr;
+    size_t proto_len = strspn(filename, URL_SCHEME_CHARS);
+    int i;
+
+    if (filename[proto_len] != ':' && (strncmp(filename, "subfile,", 8) || !strchr(filename + proto_len + 1, ':')))
+        //|| is_dos_path(filename))
+        strcpy(proto_str, "file");
+    else
+        av_strlcpy(proto_str, filename, FFMIN(proto_len + 1, sizeof(proto_str)));
+
+    av_strlcpy(proto_nested, proto_str, sizeof(proto_nested));
+    if ((ptr = strchr(proto_nested, '+')))
+        *ptr = '\0';
+
+    protocols = url_get_protocols(NULL, NULL);
+    if (!protocols)
+        return NULL;
+    
+    for (i = 0; protocols[i]; i++) {
+        const URLProtocol *up = protocols[i];
+        
+        if (!strcmp(proto_str, up->url_name)) {
+            av_freep(&protocols);
+            return up;
+        }
+        if (up->flags & URL_PROTOCOL_FLAG_NESTED_SCHEME && !strcmp(proto_nested, up->url_name)) {
+            av_freep(&protocols);
+            return up;
+        }
+    }
+    av_freep(&protocols);
+
+    return NULL;
+}
+
+static const char *url_context_to_name(void *ptr)
+{
+    URLContext *h = (URLContext *)ptr;
+    if (h->pstUrlProt)
+        return h->pstUrlProt->url_name;
+    else
+        return "NULL";
+}
+
+static void *url_context_child_next(void *obj, void *prev)
+{
+    URLContext *h = obj;
+    if (!prev && h->pstPrivData && h->pstUrlProt->pstPrivDataClass)
+        return h->pstPrivData;
+    return NULL;
+}
+
+#define OFFSET(x) offsetof(URLContext,x)
+#define E AV_OPT_FLAG_ENCODING_PARAM
+#define D AV_OPT_FLAG_DECODING_PARAM
+static const AVOption options[] = {
+    {"rw_timeout", OFFSET(rw_timeout), AV_OPT_TYPE_INT64, {.i64 = 0}, 0, INT64_MAX, D | E},
+    { NULL }
+};
+
+const AVClass url_context_class = {
+    .class_name       = "URLContext",
+    .item_name        = url_context_to_name,
+    .option           = options,
+    .child_next       = url_context_child_next,
+    .child_class_next = url_context_child_class_next,
+};
+
+static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *pstUrlProt, const char *filename, int flags, const AVIOInterruptCB *int_cb)
+{
+    URLContext *pstUrlCtx;
+    int err;
+
+    if ((flags & AVIO_FLAG_READ) && !pstUrlProt->url_read) {
+        av_log(NULL, AV_LOG_ERROR, "Impossible to open the '%s' protocol for reading\n", pstUrlProt->url_name);
+        return -1;
+    }
+    
+    if ((flags & AVIO_FLAG_WRITE) && !pstUrlProt->url_write) {
+        av_log(NULL, AV_LOG_ERROR, "Impossible to open the '%s' protocol for writing\n", pstUrlProt->url_name);
+        return -1;
+    }
+    
+    pstUrlCtx = av_mallocz(sizeof(URLContext) + strlen(filename) + 1);
+    if (!pstUrlCtx) {
+        err = -1;
+        goto fail;
+    }
+    
+    pstUrlCtx->pstClass = &url_context_class;
+    pstUrlCtx->filename = (char *)&pstUrlCtx[1];
+    strcpy(pstUrlCtx->filename, filename);
+    pstUrlCtx->pstUrlProt      = pstUrlProt;
+    pstUrlCtx->flags           = flags;
+    pstUrlCtx->is_streamed     = 0; /* default = not streamed */
+    pstUrlCtx->max_packet_size = 0; /* default: stream file */
+    if (pstUrlProt->priv_data_size) {
+        pstUrlCtx->pstPrivData = av_mallocz(pstUrlProt->priv_data_size);
+        if (!pstUrlCtx->pstPrivData) {
+            err = -1;
+            goto fail;
+        }
+        
+        if (pstUrlProt->pstPrivDataClass) {
+            int proto_len= strlen(pstUrlProt->url_name);
+            char *start = strchr(pstUrlCtx->filename, ',');
+            *(const AVClass **)pstUrlCtx->pstPrivData = pstUrlProt->pstPrivDataClass;
+            av_opt_set_defaults(pstUrlCtx->pstPrivData);
+            /*if(!strncmp(pstUrlProt->url_name, pstUrlCtx->filename, proto_len) && pstUrlCtx->filename + proto_len == start){
+                int ret= 0;
+                char *p= start;
+                char sep= *++p;
+                char *key, *val;
+                p++;
+
+                if (strcmp(pstUrlProt->name, "subfile"))
+                    ret = -1;
+
+                while(ret >= 0 && (key= strchr(p, sep)) && p<key && (val = strchr(key+1, sep))){
+                    *val= *key= 0;
+                    if (strcmp(p, "start") && strcmp(p, "end")) {
+                        ret = AVERROR_OPTION_NOT_FOUND;
+                    } else {
+                        //ret= av_opt_set(uc->priv_data, p, key+1, 0);
+                    }
+                    
+                    if (ret == AVERROR_OPTION_NOT_FOUND) {
+                        
+                        //av_log(uc, AV_LOG_ERROR, "Key '%s' not found.\n", p);
+                    }
+                    
+                    *val= *key= sep;
+                    p= val+1;
+                }
+                
+                if(ret<0 || p!=key){
+                    //av_log(uc, AV_LOG_ERROR, "Error parsing options string %s\n", start);
+                    ff_freep(&pstUrlCtx->priv_data);
+                    ff_freep(&pstUrlCtx);
+                    err = -1;
+                    goto fail;
+                }
+                
+                memmove(start, key+1, strlen(key));
+            }*/
+        }
+    }
+    
+    if (int_cb)
+        pstUrlCtx->interrupt_callback = *int_cb;
+
+    *ppstUrlCtx = pstUrlCtx;
+    return 0;
+    
+fail:
+    *ppstUrlCtx = NULL;
+    if (pstUrlCtx)
+        av_freep(&pstUrlCtx->pstPrivData);
+    av_freep(&pstUrlCtx);
+    return err;
 }
 
 int url_alloc(URLContext **ppstUrlCtx, const char *filename, int flags, const AVIOInterruptCB *int_cb)
@@ -380,6 +551,17 @@ int url_write(URLContext *pstUrlCtx, const unsigned char *buf, int size)
         return AVERROR(EIO);
 
     return retry_transfer_wrapper(pstUrlCtx, (unsigned char *)buf, size, size, pstUrlCtx->pstUrlProt->url_write);
+}
+
+int64_t url_seek(URLContext *pstUrlCtx, int64_t pos, int whence)
+{
+    int64_t ret;
+
+    if (!pstUrlCtx->pstUrlProt->url_seek)
+        return -1;
+    ret = pstUrlCtx->pstUrlProt->url_seek(pstUrlCtx, pos, whence & ~AVSEEK_FORCE);
+    
+    return ret;
 }
 
 int url_get_file_handle(URLContext *pstUrlCtx)
