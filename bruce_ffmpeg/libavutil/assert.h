@@ -7,6 +7,11 @@
 *********************************/
 
 
+#ifndef ASSERT_H
+#define ASSERT_H
+
+#include "macro.h"
+
 #define av_assert0(cond) do {                                           \
     if (!(cond)) {                                                      \
         av_log(NULL, AV_LOG_PANIC, "Assertion %s failed at %s:%d\n",    \
@@ -24,3 +29,4 @@
 #define av_assert2_fpu() ((void)0)
 #endif
 
+#endif

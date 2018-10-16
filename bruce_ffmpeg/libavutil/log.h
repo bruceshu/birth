@@ -105,6 +105,8 @@ typedef struct AVClass {
 } AVClass;
 
 void av_log(void* avcl, int level, const char *fmt, ...);
+const char *av_default_item_name(void *ptr);
+
 
 
 #endif

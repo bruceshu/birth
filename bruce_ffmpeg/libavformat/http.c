@@ -9,6 +9,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include <limits.h>
 
 #include "libavutil/error.h"
 #include "libavutil/assert.h"
@@ -17,10 +20,12 @@
 #include "libavutil/dict.h"
 #include "libavutil/avstring.h"
 #include "libavutil/time.h"
+#include "libavutil/log.h"
 
 #include "url.h"
 #include "http.h"
 #include "internal.h"
+#include "version.h"
 
 int http_averror(int status_code, int default_averror)
 {
@@ -85,7 +90,7 @@ static int http_write_reply(URLContext* h, int status_code)
         message_len = snprintf(message, sizeof(message),
                  "HTTP/1.1 %03d %s\r\n"
                  "Content-Type: %s\r\n"
-                 "Content-Length: %"SIZE_SPECIFIER"\r\n"
+                 "Content-Length: %u\r\n"
                  "%s"
                  "\r\n"
                  "%03d %s\r\n",
@@ -117,120 +122,10 @@ static int http_write_reply(URLContext* h, int status_code)
     return 0;
 }
 
-static void handle_http_errors(URLContext *h, int error)
+static void http_handle_error_code(URLContext *h, int error)
 {
     av_assert0(error < 0);
     http_write_reply(h, error);
-}
-
-static int http_read_header(URLContext *h, int *new_location)
-{
-    HTTPContext *s = h->pstPrivData;
-    char line[MAX_URL_SIZE];
-    int err = 0;
-
-    s->chunksize = UINT64_MAX;
-
-    for (;;) {
-        if ((err = http_get_line(s, line, sizeof(line))) < 0)
-            return err;
-
-        av_log(h, AV_LOG_TRACE, "header='%s'\n", line);
-
-        err = process_line(h, line, s->line_count, new_location);
-        if (err < 0)
-            return err;
-        if (err == 0)
-            break;
-        s->line_count++;
-    }
-
-    if (s->seekable == -1 && s->is_mediagateway && s->filesize == 2000000000)
-        h->is_streamed = 1; /* we can in fact _not_ seek */
-
-    // add any new cookies into the existing cookie string
-    cookie_string(s->cookie_dict, &s->cookies);
-    av_dict_free(&s->cookie_dict);
-
-    return err;
-}
-
-static int http_handshake(URLContext *c)
-{
-    int ret, err, new_location;
-    HTTPContext *ch = c->pstPrivData;
-    URLContext *cl = ch->hd;
-    switch (ch->handshake_step) {
-        case LOWER_PROTO:
-            av_log(c, AV_LOG_TRACE, "Lower protocol\n");
-            if ((ret = url_handshake(cl)) > 0)
-                return 2 + ret;
-            if (ret < 0)
-                return ret;
-            ch->handshake_step = READ_HEADERS;
-            ch->is_connected_server = 1;
-            return 2;
-        case READ_HEADERS:
-            av_log(c, AV_LOG_TRACE, "Read headers\n");
-            if ((err = http_read_header(c, &new_location)) < 0) {
-                handle_http_errors(c, err);
-                return err;
-            }
-            ch->handshake_step = WRITE_REPLY_HEADERS;
-            return 1;
-        case WRITE_REPLY_HEADERS:
-            av_log(c, AV_LOG_TRACE, "Reply code: %d\n", ch->reply_code);
-            if ((err = http_write_reply(c, ch->reply_code)) < 0)
-                return err;
-            ch->handshake_step = FINISH;
-            return 1;
-        case FINISH:
-            return 0;
-        default:
-            return AVERROR(EINVAL);
-    }
-}
-
-static int http_listen(URLContext *h, const char *uri, int flags, AVDictionary **options) {
-    HTTPContext *s = h->pstPrivData;
-    int ret;
-    int port;
-    char proto[10],hostname[1024];
-    char lower_url[100];
-    const char *lower_proto = "tcp";
-    
-    url_split(proto, sizeof(proto), NULL, 0, hostname, sizeof(hostname), &port, NULL, 0, uri);
-    if (!strcmp(proto, "https"))
-        lower_proto = "tls";
-    
-    url_join(lower_url, sizeof(lower_url), lower_proto, NULL, hostname, port, NULL);
-    if ((ret = dict_set_int(options, "listen", s->listen, 0)) < 0)
-        goto fail;
-
-    ret = url_open_whitelist(&s->hd, lower_url, AVIO_FLAG_READ_WRITE, &h->interrupt_callback, options, h->protocol_whitelist, h->protocol_blacklist, h);
-    if (ret < 0)
-        goto fail;
-    
-    s->handshake_step = LOWER_PROTO;
-    if (s->listen == HTTP_SINGLE) { /* single client */
-        s->reply_code = 200;
-        do {
-            ret = http_handshake(h);
-        }while (ret > 0);
-    }
-    
-fail:
-    dict_free(&s->chained_options);
-    return ret;
-}
-
-static int has_header(const char *str, const char *header)
-{
-    if (!str)
-        return 0;
-    
-    /* header + 2 to skip over CRLF prefix. (make sure you have one!) */
-    return av_stristart(str, header + 2, NULL) || av_stristr(str, header);
 }
 
 static int http_getc(HTTPContext *s)
@@ -275,120 +170,7 @@ static int http_get_line(HTTPContext *s, char *line, int line_size)
     }
 }
 
-static int check_http_code(URLContext *h, int http_code, const char *end)
-{
-    HTTPContext *s = h->pstPrivData;
-    /* error codes are 4xx and 5xx, but regard 401 as a success, so we
-     * don't abort until all headers have been parsed. */
-    if (http_code >= 400 && http_code < 600 &&
-        (http_code != 401 || s->auth_state.auth_type != HTTP_AUTH_NONE) &&
-        (http_code != 407 || s->proxy_auth_state.auth_type != HTTP_AUTH_NONE)) {
-        end += strspn(end, SPACE_CHARS);
-        av_log(h, AV_LOG_WARNING, "HTTP error %d %s\n", http_code, end);
-        return http_averror(http_code, AVERROR(EIO));
-    }
-    return 0;
-}
-
-static void parse_content_range(URLContext *h, const char *p)
-{
-    HTTPContext *s = h->pstPrivData;
-    const char *slash;
-
-    if (!strncmp(p, "bytes ", 6)) {
-        p += 6;
-        s->off = strtoull(p, NULL, 10);
-        if ((slash = strchr(p, '/')) && strlen(slash) > 0)
-            s->filesize = strtoull(slash + 1, NULL, 10);
-    }
-    if (s->seekable == -1 && (!s->is_akamai || s->filesize != 2147483647))
-        h->is_streamed = 0; /* we _can_ in fact seek */
-}
-
-static int parse_cookie(HTTPContext *s, const char *p, AVDictionary **cookies)
-{
-    char *eql, *name;
-
-    // duplicate the cookie name (dict will dupe the value)
-    if (!(eql = strchr(p, '='))) 
-        return AVERROR(EINVAL);
-    
-    if (!(name = av_strndup(p, eql - p))) 
-        return AVERROR(ENOMEM);
-
-    // add the cookie to the dictionary
-    dict_set(cookies, name, eql, AV_DICT_DONT_STRDUP_KEY);
-
-    return 0;
-}
-
-static int parse_icy(HTTPContext *s, const char *tag, const char *p)
-{
-    int len = 4 + strlen(p) + strlen(tag);
-    int is_first = !s->icy_metadata_headers;
-    int ret;
-
-    dict_set(&s->metadata, tag, p, 0);
-
-    if (s->icy_metadata_headers)
-        len += strlen(s->icy_metadata_headers);
-
-    if ((ret = av_reallocp(&s->icy_metadata_headers, len)) < 0)
-        return ret;
-
-    if (is_first)
-        *s->icy_metadata_headers = '\0';
-
-    av_strlcatf(s->icy_metadata_headers, len, "%s: %s\n", tag, p);
-
-    return 0;
-}
-
-static int parse_content_encoding(URLContext *h, const char *p)
-{
-    if (!av_strncasecmp(p, "gzip", 4) || !av_strncasecmp(p, "deflate", 7)) {
-#if 0 //CONFIG_ZLIB
-        HTTPContext *s = h->priv_data;
-
-        s->compressed = 1;
-        inflateEnd(&s->inflate_stream);
-        if (inflateInit2(&s->inflate_stream, 32 + 15) != Z_OK) {
-            av_log(h, AV_LOG_WARNING, "Error during zlib initialisation: %s\n",
-                   s->inflate_stream.msg);
-            return AVERROR(ENOSYS);
-        }
-        if (zlibCompileFlags() & (1 << 17)) {
-            av_log(h, AV_LOG_WARNING,
-                   "Your zlib was compiled without gzip support.\n");
-            return AVERROR(ENOSYS);
-        }
-#else
-        av_log(h, AV_LOG_WARNING, "Compressed (%s) content, need zlib with gzip support\n", p);
-        return AVERROR(ENOSYS);
-#endif /* CONFIG_ZLIB */
-    } else if (!av_strncasecmp(p, "identity", 8)) {
-        // The normal, no-encoding case (although servers shouldn't include
-        // the header at all if this is the case).
-    } else {
-        av_log(h, AV_LOG_WARNING, "Unknown content coding: %s\n", p);
-    }
-    
-    return 0;
-}
-
-static int parse_location(HTTPContext *s, const char *p)
-{
-    char redirected_location[MAX_URL_SIZE], *new_loc;
-    make_absolute_url(redirected_location, sizeof(redirected_location), s->location, p);
-    new_loc = av_strdup(redirected_location);
-    if (!new_loc)
-        return AVERROR(ENOMEM);
-    av_free(s->location);
-    s->location = new_loc;
-    return 0;
-}
-
-static int process_line(URLContext *h, char *line, int line_count, int *new_location)
+static int http_process_line(URLContext *h, char *line, int line_count, int *new_location)
 {
     HTTPContext *s = h->pstPrivData;
     const char *auto_method =  h->flags & AVIO_FLAG_READ ? "POST" : "GET";
@@ -466,7 +248,7 @@ static int process_line(URLContext *h, char *line, int line_count, int *new_loca
 
             av_log(h, AV_LOG_TRACE, "http_code=%d\n", s->http_code);
 
-            if ((ret = check_http_code(h, s->http_code, end)) < 0)
+            if ((ret = http_check_code(h, s->http_code, end)) < 0)
                 return ret;
         }
     } else {
@@ -528,7 +310,7 @@ static int process_line(URLContext *h, char *line, int line_count, int *new_loca
     return 1;
 }
 
-static int cookie_string(AVDictionary *dict, char **cookies)
+static int http_cookie_string(AVDictionary *dict, char **cookies)
 {
     AVDictionaryEntry *e = NULL;
     int len = 1;
@@ -555,7 +337,231 @@ static int cookie_string(AVDictionary *dict, char **cookies)
     return 0;
 }
 
-static int get_cookies(HTTPContext *s, char **cookies, const char *path, const char *domain)
+static int http_read_header(URLContext *h, int *new_location)
+{
+    HTTPContext *s = h->pstPrivData;
+    char line[MAX_URL_SIZE];
+    int err = 0;
+
+    s->chunksize = UINT64_MAX;
+
+    for (;;) {
+        if ((err = http_get_line(s, line, sizeof(line))) < 0)
+            return err;
+
+        av_log(h, AV_LOG_TRACE, "header='%s'\n", line);
+
+        err = http_process_line(h, line, s->line_count, new_location);
+        if (err < 0)
+            return err;
+        if (err == 0)
+            break;
+        s->line_count++;
+    }
+
+    if (s->seekable == -1 && s->is_mediagateway && s->filesize == 2000000000)
+        h->is_streamed = 1; /* we can in fact _not_ seek */
+
+    // add any new cookies into the existing cookie string
+    http_cookie_string(s->cookie_dict, &s->cookies);
+    av_dict_free(&s->cookie_dict);
+
+    return err;
+}
+
+static int http_handshake(URLContext *c)
+{
+    int ret, err, new_location;
+    HTTPContext *ch = c->pstPrivData;
+    URLContext *cl = ch->hd;
+    switch (ch->handshake_step) {
+        case LOWER_PROTO:
+            av_log(c, AV_LOG_TRACE, "Lower protocol\n");
+            if ((ret = url_handshake(cl)) > 0)
+                return 2 + ret;
+            if (ret < 0)
+                return ret;
+            ch->handshake_step = READ_HEADERS;
+            ch->is_connected_server = 1;
+            return 2;
+        case READ_HEADERS:
+            av_log(c, AV_LOG_TRACE, "Read headers\n");
+            if ((err = http_read_header(c, &new_location)) < 0) {
+                http_handle_error_code(c, err);
+                return err;
+            }
+            ch->handshake_step = WRITE_REPLY_HEADERS;
+            return 1;
+        case WRITE_REPLY_HEADERS:
+            av_log(c, AV_LOG_TRACE, "Reply code: %d\n", ch->reply_code);
+            if ((err = http_write_reply(c, ch->reply_code)) < 0)
+                return err;
+            ch->handshake_step = FINISH;
+            return 1;
+        case FINISH:
+            return 0;
+        default:
+            return AVERROR(EINVAL);
+    }
+}
+
+static int http_listen(URLContext *h, const char *uri, int flags, AVDictionary **options) {
+    HTTPContext *s = h->pstPrivData;
+    int ret;
+    int port;
+    char proto[10],hostname[1024];
+    char lower_url[100];
+    const char *lower_proto = "tcp";
+    
+    url_split(proto, sizeof(proto), NULL, 0, hostname, sizeof(hostname), &port, NULL, 0, uri);
+    if (!strcmp(proto, "https"))
+        lower_proto = "tls";
+    
+    url_join(lower_url, sizeof(lower_url), lower_proto, NULL, hostname, port, NULL);
+    if ((ret = dict_set_int(options, "listen", s->listen, 0)) < 0)
+        goto fail;
+
+    ret = url_open_whitelist(&s->hd, lower_url, AVIO_FLAG_READ_WRITE, options, h);
+    if (ret < 0)
+        goto fail;
+    
+    s->handshake_step = LOWER_PROTO;
+    if (s->listen == HTTP_SINGLE) { /* single client */
+        s->reply_code = 200;
+        do {
+            ret = http_handshake(h);
+        }while (ret > 0);
+    }
+    
+fail:
+    dict_free(&s->chained_options);
+    return ret;
+}
+
+static int http_has_header(const char *str, const char *header)
+{
+    if (!str)
+        return 0;
+    
+    /* header + 2 to skip over CRLF prefix. (make sure you have one!) */
+    return av_stristart(str, header + 2, NULL) || av_stristr(str, header);
+}
+
+static int http_check_code(URLContext *h, int http_code, const char *end)
+{
+    HTTPContext *s = h->pstPrivData;
+    /* error codes are 4xx and 5xx, but regard 401 as a success, so we
+     * don't abort until all headers have been parsed. */
+    if (http_code >= 400 && http_code < 600 &&
+        (http_code != 401 || s->auth_state.auth_type != HTTP_AUTH_NONE) &&
+        (http_code != 407 || s->proxy_auth_state.auth_type != HTTP_AUTH_NONE)) {
+        end += strspn(end, SPACE_CHARS);
+        av_log(h, AV_LOG_WARNING, "HTTP error %d %s\n", http_code, end);
+        return http_averror(http_code, AVERROR(EIO));
+    }
+    return 0;
+}
+
+static void http_parse_content_range(URLContext *h, const char *p)
+{
+    HTTPContext *s = h->pstPrivData;
+    const char *slash;
+
+    if (!strncmp(p, "bytes ", 6)) {
+        p += 6;
+        s->off = strtoull(p, NULL, 10);
+        if ((slash = strchr(p, '/')) && strlen(slash) > 0)
+            s->filesize = strtoull(slash + 1, NULL, 10);
+    }
+    
+    if (s->seekable == -1 && (!s->is_akamai || s->filesize != 2147483647))
+        h->is_streamed = 0; /* we _can_ in fact seek */
+}
+
+static int http_parse_cookie(HTTPContext *s, const char *p, AVDictionary **cookies)
+{
+    char *eql, *name;
+
+    // duplicate the cookie name (dict will dupe the value)
+    if (!(eql = strchr(p, '='))) 
+        return AVERROR(EINVAL);
+    
+    if (!(name = av_strndup(p, eql - p))) 
+        return AVERROR(ENOMEM);
+
+    // add the cookie to the dictionary
+    dict_set(cookies, name, eql, AV_DICT_DONT_STRDUP_KEY);
+
+    return 0;
+}
+
+static int http_parse_icy(HTTPContext *s, const char *tag, const char *p)
+{
+    int len = 4 + strlen(p) + strlen(tag);
+    int is_first = !s->icy_metadata_headers;
+    int ret;
+
+    dict_set(&s->metadata, tag, p, 0);
+
+    if (s->icy_metadata_headers)
+        len += strlen(s->icy_metadata_headers);
+
+    if ((ret = av_reallocp(&s->icy_metadata_headers, len)) < 0)
+        return ret;
+
+    if (is_first)
+        *s->icy_metadata_headers = '\0';
+
+    av_strlcatf(s->icy_metadata_headers, len, "%s: %s\n", tag, p);
+
+    return 0;
+}
+
+static int http_parse_content_encoding(URLContext *h, const char *p)
+{
+    if (!av_strncasecmp(p, "gzip", 4) || !av_strncasecmp(p, "deflate", 7)) {
+#if 0 //CONFIG_ZLIB
+        HTTPContext *s = h->priv_data;
+
+        s->compressed = 1;
+        inflateEnd(&s->inflate_stream);
+        if (inflateInit2(&s->inflate_stream, 32 + 15) != Z_OK) {
+            av_log(h, AV_LOG_WARNING, "Error during zlib initialisation: %s\n",
+                   s->inflate_stream.msg);
+            return AVERROR(ENOSYS);
+        }
+        if (zlibCompileFlags() & (1 << 17)) {
+            av_log(h, AV_LOG_WARNING,
+                   "Your zlib was compiled without gzip support.\n");
+            return AVERROR(ENOSYS);
+        }
+#else
+        av_log(h, AV_LOG_WARNING, "Compressed (%s) content, need zlib with gzip support\n", p);
+        return AVERROR(ENOSYS);
+#endif /* CONFIG_ZLIB */
+    } else if (!av_strncasecmp(p, "identity", 8)) {
+        // The normal, no-encoding case (although servers shouldn't include
+        // the header at all if this is the case).
+    } else {
+        av_log(h, AV_LOG_WARNING, "Unknown content coding: %s\n", p);
+    }
+    
+    return 0;
+}
+
+static int http_parse_location(HTTPContext *s, const char *p)
+{
+    char redirected_location[MAX_URL_SIZE], *new_loc;
+    make_absolute_url(redirected_location, sizeof(redirected_location), s->location, p);
+    new_loc = av_strdup(redirected_location);
+    if (!new_loc)
+        return AVERROR(ENOMEM);
+    av_free(s->location);
+    s->location = new_loc;
+    return 0;
+}
+
+static int http_get_cookies(HTTPContext *s, char **cookies, const char *path, const char *domain)
 {
     // cookie strings will look like Set-Cookie header field values.  Multiple
     // Set-Cookie fields will result in multiple values delimited by a newline
@@ -700,50 +706,50 @@ static int http_connect(URLContext *h, const char *path, const char *local_path,
 #endif
 
     /* set default headers if needed */
-    if (!has_header(s->headers, "\r\nUser-Agent: "))
+    if (!http_has_header(s->headers, "\r\nUser-Agent: "))
         len += av_strlcatf(headers + len, sizeof(headers) - len, "User-Agent: %s\r\n", s->user_agent);
     
-    if (!has_header(s->headers, "\r\nAccept: "))
+    if (!http_has_header(s->headers, "\r\nAccept: "))
         len += av_strlcpy(headers + len, "Accept: */*\r\n", sizeof(headers) - len);
     
     // Note: we send this on purpose even when s->off is 0 when we're probing,
     // since it allows us to detect more reliably if a (non-conforming)
     // server supports seeking by analysing the reply headers.
-    if (!has_header(s->headers, "\r\nRange: ") && !post && (s->off > 0 || s->end_off || s->seekable == -1)) {
+    if (!http_has_header(s->headers, "\r\nRange: ") && !post && (s->off > 0 || s->end_off || s->seekable == -1)) {
         len += av_strlcatf(headers + len, sizeof(headers) - len, "Range: bytes=%"PRIu64"-", s->off);
         if (s->end_off)
             len += av_strlcatf(headers + len, sizeof(headers) - len, "%"PRId64, s->end_off - 1);
         len += av_strlcpy(headers + len, "\r\n", sizeof(headers) - len);
     }
     
-    if (send_expect_100 && !has_header(s->headers, "\r\nExpect: "))
+    if (send_expect_100 && !http_has_header(s->headers, "\r\nExpect: "))
         len += av_strlcatf(headers + len, sizeof(headers) - len, "Expect: 100-continue\r\n");
 
-    if (!has_header(s->headers, "\r\nConnection: ")) {
+    if (!http_has_header(s->headers, "\r\nConnection: ")) {
         if (s->multiple_requests)
             len += av_strlcpy(headers + len, "Connection: keep-alive\r\n", sizeof(headers) - len);
         else
             len += av_strlcpy(headers + len, "Connection: close\r\n", sizeof(headers) - len);
     }
 
-    if (!has_header(s->headers, "\r\nHost: "))
+    if (!http_has_header(s->headers, "\r\nHost: "))
         len += av_strlcatf(headers + len, sizeof(headers) - len, "Host: %s\r\n", hoststr);
     
-    if (!has_header(s->headers, "\r\nContent-Length: ") && s->post_data)
+    if (!http_has_header(s->headers, "\r\nContent-Length: ") && s->post_data)
         len += av_strlcatf(headers + len, sizeof(headers) - len, "Content-Length: %d\r\n", s->post_datalen);
 
-    if (!has_header(s->headers, "\r\nContent-Type: ") && s->content_type)
+    if (!http_has_header(s->headers, "\r\nContent-Type: ") && s->content_type)
         len += av_strlcatf(headers + len, sizeof(headers) - len, "Content-Type: %s\r\n", s->content_type);
     
-    if (!has_header(s->headers, "\r\nCookie: ") && s->cookies) {
+    if (!http_has_header(s->headers, "\r\nCookie: ") && s->cookies) {
         char *cookies = NULL;
-        if (!get_cookies(s, &cookies, path, hoststr) && cookies) {
+        if (!http_get_cookies(s, &cookies, path, hoststr) && cookies) {
             len += av_strlcatf(headers + len, sizeof(headers) - len, "Cookie: %s\r\n", cookies);
             av_free(cookies);
         }
     }
     
-    if (!has_header(s->headers, "\r\nIcy-MetaData: ") && s->icy)
+    if (!http_has_header(s->headers, "\r\nIcy-MetaData: ") && s->icy)
         len += av_strlcatf(headers + len, sizeof(headers) - len, "Icy-MetaData: %d\r\n", 1);
 
     /* now add in custom headers */
@@ -856,7 +862,7 @@ static int http_open_cnx_internal(URLContext *h, AVDictionary **options)
     
     url_join(buf, sizeof(buf), lower_proto, NULL, hostname, port, NULL);
     if (!s->hd) {
-        err = url_open_whitelist(&s->hd, buf, AVIO_FLAG_READ_WRITE, &h->interrupt_callback, options, h->protocol_whitelist, h->protocol_blacklist, h);
+        err = url_open_whitelist(&s->hd, buf, AVIO_FLAG_READ_WRITE, options, h);
         if (err < 0)
             return err;
     }
@@ -1102,7 +1108,7 @@ static int64_t http_seek_internal(URLContext *h, int64_t off, int whence, int fo
     return off;
 }
 
-static int store_icy(URLContext *h, int size)
+static int http_store_icy(URLContext *h, int size)
 {
 #if 0
     HTTPContext *s = h->pstPrivData;
@@ -1141,6 +1147,39 @@ static int store_icy(URLContext *h, int size)
     return FFMIN(size, remaining);
 #endif
 }
+
+#if CONFIG_ZLIB
+#define DECOMPRESS_BUF_SIZE (256 * 1024)
+static int http_buf_read_compressed(URLContext *h, uint8_t *buf, int size)
+{
+    HTTPContext *s = h->pstPrivData;
+    int ret;
+
+    if (!s->inflate_buffer) {
+        s->inflate_buffer = av_malloc(DECOMPRESS_BUF_SIZE);
+        if (!s->inflate_buffer)
+            return AVERROR(ENOMEM);
+    }
+
+    if (s->inflate_stream.avail_in == 0) {
+        int read = http_buf_read(h, s->inflate_buffer, DECOMPRESS_BUF_SIZE);
+        if (read <= 0)
+            return read;
+        s->inflate_stream.next_in  = s->inflate_buffer;
+        s->inflate_stream.avail_in = read;
+    }
+
+    s->inflate_stream.avail_out = size;
+    s->inflate_stream.next_out  = buf;
+
+    ret = inflate(&s->inflate_stream, Z_SYNC_FLUSH);
+    if (ret != Z_OK && ret != Z_STREAM_END)
+        av_log(h, AV_LOG_WARNING, "inflate return value: %d, %s\n",
+               ret, s->inflate_stream.msg);
+
+    return size - s->inflate_stream.avail_out;
+}
+#endif /* CONFIG_ZLIB */
 
 static int http_read_stream(URLContext *h, uint8_t *buf, int size)
 {
@@ -1329,7 +1368,7 @@ const URLProtocol http_protocol = {
     .url_get_short_seek  = http_get_short_seek,
     .url_shutdown        = http_shutdown,
     .priv_data_size      = sizeof(HTTPContext),
-    .priv_data_class     = &http_context_class,
+    .pstPrivDataClass     = &http_context_class,
     .flags               = URL_PROTOCOL_FLAG_NETWORK,
     //.default_whitelist   = "http,https,tls,rtp,tcp,udp,crypto,httpproxy"
 };

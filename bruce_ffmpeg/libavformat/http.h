@@ -9,6 +9,10 @@
 #ifndef HTTP_H
 #define HTTP_H
 
+#if CONFIG_ZLIB
+#include <zlib.h>
+#endif /* CONFIG_ZLIB */
+
 #include "url.h"
 #include "httpauth.h"
 
