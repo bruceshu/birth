@@ -573,7 +573,7 @@ int url_handshake(URLContext *c)
     return 0;
 }
 
-typedef int (*transfer_func)(URLContext *pstUrlCtx, const uint8_t *buf, int size);
+typedef int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size);
 static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, transfer_func func)
 {
     int ret, len;
