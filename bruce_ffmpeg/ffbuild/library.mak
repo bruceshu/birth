@@ -17,8 +17,6 @@ all-$(CONFIG_SHARED): $(SUBDIR)$(SLIBNAME) $(SUBDIR)lib$(FULLNAME).pc
 $(warning library.mak $(SUBDIR)$(LIBNAME))
 $(warning library.mak $(SUBDIR)lib$(FULLNAME).pc)
 
-$(warning library.mak $(OBJS))
-
 #LIBOBJS := $(OBJS) $(SUBDIR)%.h.o $(TESTOBJS)
 #$(LIBOBJS) $(LIBOBJS:.o=.s) $(LIBOBJS:.o=.i):   CPPFLAGS += -DHAVE_AV_CONFIG_H
 
