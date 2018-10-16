@@ -6,7 +6,7 @@ static const URLProtocol *url_protocols[] = {
     //&ff_file_protocol,
     //&ff_ftp_protocol,
     //&ff_hls_protocol,
-    &ff_http_protocol,
+    &http_protocol,
     //&ff_httpproxy_protocol,
     //&ff_ijkhttphook_protocol,
     //&ff_ijklongurl_protocol,
@@ -19,7 +19,7 @@ static const URLProtocol *url_protocols[] = {
     //&ff_rtmp_protocol,
     //&ff_rtmpt_protocol,
     //&ff_tee_protocol,
-    &ff_tcp_protocol,
+    //&tcp_protocol,
     //&ff_udp_protocol,
     //&ff_udplite_protocol,
     NULL };

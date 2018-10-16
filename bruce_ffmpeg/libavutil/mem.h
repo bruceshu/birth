@@ -10,6 +10,8 @@
 #ifndef MEM_H
 #define MEM_H
 
+#include <stddef.h>
+
 #if 0 //后续研究
 #if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1110 || defined(__SUNPRO_C)
     #define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v

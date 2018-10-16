@@ -66,7 +66,7 @@ extern const URLProtocol tcp_protocol;
 //extern const URLProtocol ff_libssh_protocol;
 //extern const URLProtocol ff_libsmbclient_protocol;
 
-#include "libavformat/protocol_list.c"
+#include "protocol_list.c"
 
 const AVClass *url_context_child_class_next(const AVClass *prev)
 {
