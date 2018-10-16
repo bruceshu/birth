@@ -78,10 +78,4 @@ typedef struct AVIOContext {
     int (*short_seek_get)(void *opaque);
 } AVIOContext;
 
-
-
-
-
-int url_close(URLContext *pstUrlCtx);
-
 #endif

@@ -10,7 +10,9 @@
 #define URL_H
 
 #include "libavutil/log.h"
-#include "libavutil/dict.h"
+#include "libavutil/dict.h"
+
+#include "avio.h"
 
 #define URL_PROTOCOL_FLAG_NESTED_SCHEME 1 /*< The protocol name can be the first part of a nested protocol scheme */
 #define URL_PROTOCOL_FLAG_NETWORK       2 /*< The protocol uses network */
@@ -79,6 +81,8 @@ typedef struct URLProtocol {
 
 const URLProtocol **url_get_protocols(const char *whitelist, const char *blacklist);
 const AVClass *url_context_child_class_next(const AVClass *prev);
+
+int url_close(URLContext *pstUrlCtx);
 
 
 #endif

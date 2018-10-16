@@ -573,8 +573,8 @@ int url_handshake(URLContext *c)
     return 0;
 }
 
-typedef int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size);
-static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, transfer_func func)
+static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, 
+    int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size))
 {
     int ret, len;
     int fast_retries = 5;
@@ -585,7 +585,7 @@ static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size,
         /*if (ff_check_interrupt(&h->interrupt_callback))
             return AVERROR_EXIT;*/
             
-        ret = func(pstUrlCtx, buf + len, size - len);
+        ret = transfer_func(pstUrlCtx, buf + len, size - len);
         if (ret == AVERROR(EINTR))
             continue;
         
@@ -646,7 +646,7 @@ int url_get_file_handle(URLContext *pstUrlCtx)
     return pstUrlCtx->pstUrlProt->url_get_file_handle(pstUrlCtx);
 }
 
-int ffurl_get_multi_file_handle(URLContext *h, int **handles, int *numhandles)
+int url_get_multi_file_handle(URLContext *h, int **handles, int *numhandles)
 {
     if (!h || !h->pstUrlProt)
         return AVERROR(ENOSYS);
