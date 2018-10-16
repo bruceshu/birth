@@ -7,6 +7,8 @@
 *********************************/
 
 
+#include <fcntl.h>
+
 #include "config.h"
 
 
