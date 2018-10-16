@@ -8,11 +8,14 @@
 
 
 #include <stddef.h>
-#include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "libavutil/error.h"
+#include "libavutil/avstring.h"
+#include "libavutil/mem.h"
+#include "libavutil/opt.h"
 
 #include "url.h"
 #include "avio.h"
@@ -379,6 +382,23 @@ static const struct URLProtocol *url_find_protocol(const char *filename)
     return NULL;
 }
 
+static const char *url_context_to_name(void *ptr)
+{
+    URLContext *h = (URLContext *)ptr;
+    if (h->pstUrlProt)
+        return h->pstUrlProt->url_name;
+    else
+        return "NULL";
+}
+
+static void *url_context_child_next(void *obj, void *prev)
+{
+    URLContext *h = obj;
+    if (!prev && h->pstPrivData && h->pstUrlProt->pstPrivDataClass)
+        return h->pstPrivData;
+    return NULL;
+}
+
 #define OFFSET(x) offsetof(URLContext,x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 #define D AV_OPT_FLAG_DECODING_PARAM
@@ -389,9 +409,9 @@ static const AVOption options[] = {
 
 const AVClass url_context_class = {
     .class_name       = "URLContext",
-    .item_name        = urlcontext_to_name,
+    .item_name        = url_context_to_name,
     .option           = options,
-    .child_next       = urlcontext_child_next,
+    .child_next       = url_context_child_next,
     .child_class_next = url_context_child_class_next,
 };
 
@@ -511,7 +531,7 @@ int url_open_whitelist(URLContext **ppstUrlCtx, const char *filename, int flags,
         return ret;
     
     if (parent) {
-        opt_copy(*puc, parent);
+        av_opt_copy(*ppstUrlCtx, parent);
     }
     
     /*
@@ -552,7 +572,7 @@ int url_handshake(URLContext *c)
     return 0;
 }
 
-typedef int (*transfer_func)(URLContext *pstUrlCtx, uint_t *buf, int size);
+typedef int (*transfer_func)(URLContext *pstUrlCtx, uint8_t *buf, int size);
 static int retry_transfer_wrapper(URLContext *pstUrlCtx, uint8_t *buf, int size, int size_min, transfer_func func)
 {
     int ret, len;

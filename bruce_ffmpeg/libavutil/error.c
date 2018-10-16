@@ -13,8 +13,6 @@
 #include "common.h"
 #include "avstring.h"
 
-#define HAVE_STRERROR_R 1
-
 #define ERROR_TAG(tag) AVERROR_##tag, #tag
 #define EERROR_TAG(tag) AVERROR(tag), #tag
 static const struct error_entry error_entries[] = {

@@ -81,10 +81,14 @@ typedef struct AVOptionRanges {
     int nb_components;
 } AVOptionRanges;
 
-int av_opt_set(void *obj, const char *name, const char *val, int search_flags);
-const AVOption *av_opt_next(const void *obj, const AVOption *last);
+
 void av_opt_set_defaults(void *s);
 void av_opt_set_defaults2(void *s, int mask, int flags);
+const AVOption *av_opt_find2(void *obj, const char *name, const char *unit, int opt_flags, int search_flags, void **target_obj);
+const AVOption *av_opt_next(const void *obj, const AVOption *last);
+int av_opt_copy(void *dst, const void *src);
+int av_opt_set(void *obj, const char *name, const char *val, int search_flags);
+
 void av_opt_free(void *obj);
 
 #endif

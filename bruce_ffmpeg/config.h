@@ -21,4 +21,5 @@
 
 #define HAVE_POLL_H 1
 #define HAVE_SYS_TIME_H 1
+#define HAVE_STRERROR_R 1
 #endif /* FFMPEG_CONFIG_H */
