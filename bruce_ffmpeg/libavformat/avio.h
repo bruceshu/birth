@@ -11,8 +11,9 @@ description:
 #ifndef AVIO_H
 #define AVIO_H
 
-#include "url.h"
+#include <stdint.h>
 
+#include "libavutil/log.h"
 
 #define AVSEEK_SIZE 0x10000
 #define AVSEEK_FORCE 0x20000
