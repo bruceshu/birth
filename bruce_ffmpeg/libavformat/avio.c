@@ -523,30 +523,3 @@ int url_alloc(URLContext **ppstUrlCtx, const char *filename, int flags, const AV
     return AVERROR_PROTOCOL_NOT_FOUND;
 }
 
-int url_closep(URLContext **ppstUrlCtx)
-{
-    URLContext *pstUrlCtx = *ppstUrlCtx;
-    int ret = 0;
-    if (!pstUrlCtx)
-        return 0;     /* can happen when ffurl_open fails */
-
-    if (pstUrlCtx->is_connected && pstUrlCtx->pstUrlProt->url_close)
-        ret = pstUrlCtx->pstUrlProt->url_close(pstUrlCtx);
-
-    if (pstUrlCtx->pstUrlProt->priv_data_size) {
-        if (pstUrlCtx->pstUrlProt->pstPrivDataClass)
-            av_opt_free(pstUrlCtx->pstPrivData);
-        av_freep(&pstUrlCtx->pstPrivData);
-    }
-    
-    av_opt_free(pstUrlCtx);
-    av_freep(ppstUrlCtx);
-    
-    return ret;
-}
-
-int url_close(URLContext *pstUrlCtx)
-{
-    return url_closep(&pstUrlCtx);
-}
-

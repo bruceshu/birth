@@ -27,7 +27,7 @@
 #include "internal.h"
 #include "version.h"
 
-int http_averror(int status_code, int default_averror)
+static int http_averror(int status_code, int default_averror)
 {
     switch (status_code) {
         case 400: return AVERROR_HTTP_BAD_REQUEST;
@@ -185,6 +185,93 @@ static int http_check_code(URLContext *h, int http_code, const char *end)
     return 0;
 }
 
+static void http_parse_content_range(URLContext *h, const char *p)
+{
+    HTTPContext *s = h->pstPrivData;
+    const char *slash;
+
+    if (!strncmp(p, "bytes ", 6)) {
+        p += 6;
+        s->off = strtoull(p, NULL, 10);
+        if ((slash = strchr(p, '/')) && strlen(slash) > 0)
+            s->filesize = strtoull(slash + 1, NULL, 10);
+    }
+    
+    if (s->seekable == -1 && (!s->is_akamai || s->filesize != 2147483647))
+        h->is_streamed = 0; /* we _can_ in fact seek */
+}
+
+static int http_parse_cookie(HTTPContext *s, const char *p, AVDictionary **cookies)
+{
+    char *eql, *name;
+
+    // duplicate the cookie name (dict will dupe the value)
+    if (!(eql = strchr(p, '='))) 
+        return AVERROR(EINVAL);
+    
+    if (!(name = av_strndup(p, eql - p))) 
+        return AVERROR(ENOMEM);
+
+    // add the cookie to the dictionary
+    av_dict_set(cookies, name, eql, AV_DICT_DONT_STRDUP_KEY);
+
+    return 0;
+}
+
+static int http_parse_icy(HTTPContext *s, const char *tag, const char *p)
+{
+    int len = 4 + strlen(p) + strlen(tag);
+    int is_first = !s->icy_metadata_headers;
+    int ret;
+
+    av_dict_set(&s->metadata, tag, p, 0);
+
+    if (s->icy_metadata_headers)
+        len += strlen(s->icy_metadata_headers);
+
+    if ((ret = av_reallocp(&s->icy_metadata_headers, len)) < 0)
+        return ret;
+
+    if (is_first)
+        *s->icy_metadata_headers = '\0';
+
+    av_strlcatf(s->icy_metadata_headers, len, "%s: %s\n", tag, p);
+
+    return 0;
+}
+
+static int http_parse_content_encoding(URLContext *h, const char *p)
+{
+    if (!av_strncasecmp(p, "gzip", 4) || !av_strncasecmp(p, "deflate", 7)) {
+#if 0 //CONFIG_ZLIB
+        HTTPContext *s = h->priv_data;
+
+        s->compressed = 1;
+        inflateEnd(&s->inflate_stream);
+        if (inflateInit2(&s->inflate_stream, 32 + 15) != Z_OK) {
+            av_log(h, AV_LOG_WARNING, "Error during zlib initialisation: %s\n",
+                   s->inflate_stream.msg);
+            return AVERROR(ENOSYS);
+        }
+        if (zlibCompileFlags() & (1 << 17)) {
+            av_log(h, AV_LOG_WARNING,
+                   "Your zlib was compiled without gzip support.\n");
+            return AVERROR(ENOSYS);
+        }
+#else
+        av_log(h, AV_LOG_WARNING, "Compressed (%s) content, need zlib with gzip support\n", p);
+        return AVERROR(ENOSYS);
+#endif /* CONFIG_ZLIB */
+    } else if (!av_strncasecmp(p, "identity", 8)) {
+        // The normal, no-encoding case (although servers shouldn't include
+        // the header at all if this is the case).
+    } else {
+        av_log(h, AV_LOG_WARNING, "Unknown content coding: %s\n", p);
+    }
+    
+    return 0;
+}
+
 static int http_process_line(URLContext *h, char *line, int line_count, int *new_location)
 {
     HTTPContext *s = h->pstPrivData;
@@ -278,7 +365,7 @@ static int http_process_line(URLContext *h, char *line, int line_count, int *new
         while (av_isspace(*p))
             p++;
         if (!av_strcasecmp(tag, "Location")) {
-            if ((ret = parse_location(s, p)) < 0)
+            if ((ret = http_parse_location(s, p)) < 0)
                 return ret;
             *new_location = 1;
         } else if (!av_strcasecmp(tag, "Content-Length") && s->filesize == UINT64_MAX) {
@@ -462,93 +549,6 @@ static int http_has_header(const char *str, const char *header)
     return av_stristart(str, header + 2, NULL) || av_stristr(str, header);
 }
 
-static void http_parse_content_range(URLContext *h, const char *p)
-{
-    HTTPContext *s = h->pstPrivData;
-    const char *slash;
-
-    if (!strncmp(p, "bytes ", 6)) {
-        p += 6;
-        s->off = strtoull(p, NULL, 10);
-        if ((slash = strchr(p, '/')) && strlen(slash) > 0)
-            s->filesize = strtoull(slash + 1, NULL, 10);
-    }
-    
-    if (s->seekable == -1 && (!s->is_akamai || s->filesize != 2147483647))
-        h->is_streamed = 0; /* we _can_ in fact seek */
-}
-
-static int http_parse_cookie(HTTPContext *s, const char *p, AVDictionary **cookies)
-{
-    char *eql, *name;
-
-    // duplicate the cookie name (dict will dupe the value)
-    if (!(eql = strchr(p, '='))) 
-        return AVERROR(EINVAL);
-    
-    if (!(name = av_strndup(p, eql - p))) 
-        return AVERROR(ENOMEM);
-
-    // add the cookie to the dictionary
-    dict_set(cookies, name, eql, AV_DICT_DONT_STRDUP_KEY);
-
-    return 0;
-}
-
-static int http_parse_icy(HTTPContext *s, const char *tag, const char *p)
-{
-    int len = 4 + strlen(p) + strlen(tag);
-    int is_first = !s->icy_metadata_headers;
-    int ret;
-
-    dict_set(&s->metadata, tag, p, 0);
-
-    if (s->icy_metadata_headers)
-        len += strlen(s->icy_metadata_headers);
-
-    if ((ret = av_reallocp(&s->icy_metadata_headers, len)) < 0)
-        return ret;
-
-    if (is_first)
-        *s->icy_metadata_headers = '\0';
-
-    av_strlcatf(s->icy_metadata_headers, len, "%s: %s\n", tag, p);
-
-    return 0;
-}
-
-static int http_parse_content_encoding(URLContext *h, const char *p)
-{
-    if (!av_strncasecmp(p, "gzip", 4) || !av_strncasecmp(p, "deflate", 7)) {
-#if 0 //CONFIG_ZLIB
-        HTTPContext *s = h->priv_data;
-
-        s->compressed = 1;
-        inflateEnd(&s->inflate_stream);
-        if (inflateInit2(&s->inflate_stream, 32 + 15) != Z_OK) {
-            av_log(h, AV_LOG_WARNING, "Error during zlib initialisation: %s\n",
-                   s->inflate_stream.msg);
-            return AVERROR(ENOSYS);
-        }
-        if (zlibCompileFlags() & (1 << 17)) {
-            av_log(h, AV_LOG_WARNING,
-                   "Your zlib was compiled without gzip support.\n");
-            return AVERROR(ENOSYS);
-        }
-#else
-        av_log(h, AV_LOG_WARNING, "Compressed (%s) content, need zlib with gzip support\n", p);
-        return AVERROR(ENOSYS);
-#endif /* CONFIG_ZLIB */
-    } else if (!av_strncasecmp(p, "identity", 8)) {
-        // The normal, no-encoding case (although servers shouldn't include
-        // the header at all if this is the case).
-    } else {
-        av_log(h, AV_LOG_WARNING, "Unknown content coding: %s\n", p);
-    }
-    
-    return 0;
-}
-
 static int http_parse_location(HTTPContext *s, const char *p)
 {
     char redirected_location[MAX_URL_SIZE], *new_loc;
@@ -571,7 +571,7 @@ static int http_get_cookies(HTTPContext *s, char **cookies, const char *path, co
     if (!set_cookies) return AVERROR(EINVAL);
 
     // destroy any cookies in the dictionary.
-    dict_free(&s->cookie_dict);
+    av_dict_free(&s->cookie_dict);
 
     *cookies = NULL;
     while ((cookie = av_strtok(set_cookies, "\n", &next))) {
@@ -580,7 +580,7 @@ static int http_get_cookies(HTTPContext *s, char **cookies, const char *path, co
         set_cookies = NULL;
 
         // store the cookie in a dict in case it is updated in the response
-        if (parse_cookie(s, cookie, &s->cookie_dict))
+        if (http_parse_cookie(s, cookie, &s->cookie_dict))
             av_log(s, AV_LOG_WARNING, "Unable to parse '%s'\n", cookie);
 
         while ((param = av_strtok(cookie, "; ", &next_param))) {

@@ -101,7 +101,7 @@ int url_get_short_seek(URLContext *pstUrlCtx);
 
 
 
-
+int url_closep(URLContext **ppstUrlCtx);
 int url_close(URLContext *pstUrlCtx);
 
 #endif
