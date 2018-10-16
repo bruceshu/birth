@@ -96,7 +96,7 @@ const URLProtocol **url_get_protocols(const char *whitelist, const char *blackli
     int i;
     int ret_idx = 0;
 
-    ret = av_mallocz_array(FF_ARRAY_ELEMS(url_protocols), sizeof(*ret));
+    ret = (URLProtocol **)av_mallocz_array(FF_ARRAY_ELEMS(url_protocols), sizeof(*ret));
     if (!ret)
         return NULL;
 

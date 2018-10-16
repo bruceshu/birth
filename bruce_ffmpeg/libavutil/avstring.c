@@ -49,19 +49,15 @@ char *av_stristr(const char *s1, const char *s2)
     return NULL;
 }
 
-size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...)
+size_t av_strlcat(char *dst, const char *src, size_t size)
 {
     size_t len = strlen(dst);
-    va_list vl;
-
-    va_start(vl, fmt);
-    len += vsnprintf(dst + len, size > len ? size - len : 0, fmt, vl);
-    va_end(vl);
-
-    return len;
+    if (size <= len + 1)
+        return len + strlen(src);
+    return len + av_strlcpy(dst + len, src, size - len);
 }
 
-size_t av_strlcat(char *dst, size_t size, const char *fmt, ...)
+size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...)
 {
     size_t len = strlen(dst);
     va_list vl;

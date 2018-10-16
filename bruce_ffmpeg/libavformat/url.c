@@ -8,14 +8,17 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <netdb.h>
 #include <stdarg.h>
 #include <string.h>
 
 #include "config.h"
+#include "url.h"
 
 #include "libavutil/avstring.h"
-#include "url.h"
+#include "libavutil/error.h"
+#include "libavutil/mem.h"
 
 void url_split(char *proto, int proto_size, char *authorization, int authorization_size, char *hostname, int hostname_size, int *port_ptr, char *path, int path_size, const char *url)
 {
@@ -192,6 +195,76 @@ void make_absolute_url(char *buf, int size, const char *base, const char *rel)
         rel += 3;
     }
     av_strlcat(buf, rel, size);
+}
+
+int url_alloc(URLContext **ppstUrlCtx, const char *filename, int flags, const AVIOInterruptCB *int_cb)
+{
+    const URLProtocol *p = NULL;
+
+    p = url_find_protocol(filename);
+    if (p)
+       return url_alloc_for_protocol(ppstUrlCtx, p, filename, flags, int_cb);
+
+    *ppstUrlCtx = NULL;
+    
+    return AVERROR_PROTOCOL_NOT_FOUND;
+}
+
+int url_connect(URLContext *pstUrlCtx, AVDictionary **options)
+{
+    int err;
+    //AVDictionary *tmp_opts = NULL;
+    //AVDictionaryEntry *e;
+
+    /*
+    if (!options)
+        options = &tmp_opts;
+
+    
+    if (uc->protocol_whitelist && av_match_list(uc->prot->name, uc->protocol_whitelist, ',') <= 0) {
+        av_log(uc, AV_LOG_ERROR, "Protocol '%s' not on whitelist '%s'!\n", uc->prot->name, uc->protocol_whitelist);
+        return AVERROR(EINVAL);
+    }
+
+    if (uc->protocol_blacklist && av_match_list(uc->prot->name, uc->protocol_blacklist, ',') > 0) {
+        av_log(uc, AV_LOG_ERROR, "Protocol '%s' on blacklist '%s'!\n", uc->prot->name, uc->protocol_blacklist);
+        return AVERROR(EINVAL);
+    }
+
+    if (!uc->protocol_whitelist && uc->prot->default_whitelist) {
+        av_log(uc, AV_LOG_DEBUG, "Setting default whitelist '%s'\n", uc->prot->default_whitelist);
+        uc->protocol_whitelist = av_strdup(uc->prot->default_whitelist);
+        if (!uc->protocol_whitelist) {
+            return AVERROR(ENOMEM);
+        }
+    } else if (!uc->protocol_whitelist)
+        av_log(uc, AV_LOG_DEBUG, "No default whitelist set\n"); // This should be an error once all declare a default whitelist
+
+    if ((err = av_dict_set(options, "protocol_whitelist", uc->protocol_whitelist, 0)) < 0)
+        return err;
+    if ((err = av_dict_set(options, "protocol_blacklist", uc->protocol_blacklist, 0)) < 0)
+        return err;
+        */
+
+    err = pstUrlCtx->pstUrlProt->url_open2 ? pstUrlCtx->pstUrlProt->url_open2(pstUrlCtx, pstUrlCtx->filename, pstUrlCtx->flags, options) 
+                                           : pstUrlCtx->pstUrlProt->url_open(pstUrlCtx, pstUrlCtx->filename, pstUrlCtx->flags);
+
+    //av_dict_set(options, "protocol_whitelist", NULL, 0);
+    //av_dict_set(options, "protocol_blacklist", NULL, 0);
+
+    if (err)
+        return err;
+    
+    pstUrlCtx->is_connected = 1;
+    
+    /* We must be careful here as ffurl_seek() could be slow, for example for http */
+    if ((pstUrlCtx->flags & AVIO_FLAG_WRITE) || !strcmp(pstUrlCtx->pstUrlProt->url_name, "file")) {
+        if (!pstUrlCtx->is_streamed && url_seek(pstUrlCtx, 0, SEEK_SET) < 0) {
+            pstUrlCtx->is_streamed = 1;
+        }
+    }
+        
+    return 0;
 }
 
 int url_open_whitelist(URLContext **ppstUrlCtx, const char *filename, int flags, AVDictionary **options, URLContext *parent)

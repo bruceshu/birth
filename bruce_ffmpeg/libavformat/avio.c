@@ -510,16 +510,3 @@ fail:
     return err;
 }
 
-int url_alloc(URLContext **ppstUrlCtx, const char *filename, int flags, const AVIOInterruptCB *int_cb)
-{
-    const URLProtocol *p = NULL;
-
-    p = url_find_protocol(filename);
-    if (p)
-       return url_alloc_for_protocol(ppstUrlCtx, p, filename, flags, int_cb);
-
-    *ppstUrlCtx = NULL;
-    
-    return AVERROR_PROTOCOL_NOT_FOUND;
-}
-

@@ -89,6 +89,8 @@ int url_join(char *str, int size, const char *proto, const char *authorization,
 void make_absolute_url(char *buf, int size, const char *base, const char *rel);
 
 
+int url_alloc(URLContext **ppstUrlCtx, const char *filename, int flags, const AVIOInterruptCB *int_cb);
+int url_connect(URLContext *pstUrlCtx, AVDictionary **options);
 
 int url_open_whitelist(URLContext **ppstUrlCtx, const char *filename, int flags, AVDictionary **options, URLContext *parent);
 int url_handshake(URLContext *c);
