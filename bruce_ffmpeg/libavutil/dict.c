@@ -14,7 +14,7 @@
 #include "dict.h"
 
 
-AVDictionaryEntry *dict_get(const AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags)
+AVDictionaryEntry *av_dict_get(const AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags)
 {
     unsigned int i, j;
 
@@ -43,7 +43,7 @@ AVDictionaryEntry *dict_get(const AVDictionary *m, const char *key, const AVDict
     return NULL;
 }
 
-int dict_set(AVDictionary **pm, const char *key, const char *value, int flags)
+int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags)
 {
     AVDictionary *m = *pm;
     AVDictionaryEntry *tag = NULL;
@@ -118,7 +118,7 @@ err_out:
     return AVERROR(ENOMEM);
 }
 
-int dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags)
+int av_dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags)
 {
     char valuestr[22];
     snprintf(valuestr, sizeof(valuestr), "%"PRId64, value);
@@ -126,7 +126,7 @@ int dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags)
     return dict_set(pm, key, valuestr, flags);
 }
 
-int dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
+int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
 {
     AVDictionaryEntry *t = NULL;
 
@@ -139,7 +139,7 @@ int dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
     return 0;
 }
 
-void dict_free(AVDictionary **ppstAVDict)
+void av_dict_free(AVDictionary **ppstAVDict)
 {
     AVDictionary *pstAVDict = *ppstAVDict;
 

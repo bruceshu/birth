@@ -90,7 +90,7 @@ static int http_write_reply(URLContext* h, int status_code)
         message_len = snprintf(message, sizeof(message),
                  "HTTP/1.1 %03d %s\r\n"
                  "Content-Type: %s\r\n"
-                 "Content-Length: %u\r\n"
+                 "Content-Length: %zu\r\n"
                  "%s"
                  "\r\n"
                  "%03d %s\r\n",
@@ -168,6 +168,21 @@ static int http_get_line(HTTPContext *s, char *line, int line_size)
                 *q++ = ch;
         }
     }
+}
+
+static int http_check_code(URLContext *h, int http_code, const char *end)
+{
+    HTTPContext *s = h->pstPrivData;
+    /* error codes are 4xx and 5xx, but regard 401 as a success, so we
+     * don't abort until all headers have been parsed. */
+    if (http_code >= 400 && http_code < 600 &&
+        (http_code != 401 || s->auth_state.auth_type != HTTP_AUTH_NONE) &&
+        (http_code != 407 || s->proxy_auth_state.auth_type != HTTP_AUTH_NONE)) {
+        end += strspn(end, SPACE_CHARS);
+        av_log(h, AV_LOG_WARNING, "HTTP error %d %s\n", http_code, end);
+        return http_averror(http_code, AVERROR(EIO));
+    }
+    return 0;
 }
 
 static int http_process_line(URLContext *h, char *line, int line_count, int *new_location)
@@ -269,7 +284,7 @@ static int http_process_line(URLContext *h, char *line, int line_count, int *new
         } else if (!av_strcasecmp(tag, "Content-Length") && s->filesize == UINT64_MAX) {
             s->filesize = strtoull(p, NULL, 10);
         } else if (!av_strcasecmp(tag, "Content-Range")) {
-            parse_content_range(h, p);
+            http_parse_content_range(h, p);
         } else if (!av_strcasecmp(tag, "Accept-Ranges") && !strncmp(p, "bytes", 5) && s->seekable == -1) {
             h->is_streamed = 0;
         } else if (!av_strcasecmp(tag, "Transfer-Encoding") && !av_strncasecmp(p, "chunked", 7)) {
@@ -294,15 +309,15 @@ static int http_process_line(URLContext *h, char *line, int line_count, int *new
             av_free(s->mime_type);
             s->mime_type = av_strdup(p);
         } else if (!av_strcasecmp(tag, "Set-Cookie")) {
-            if (parse_cookie(s, p, &s->cookie_dict))
+            if (http_parse_cookie(s, p, &s->cookie_dict))
                 av_log(h, AV_LOG_WARNING, "Unable to parse '%s'\n", p);
         } else if (!av_strcasecmp(tag, "Icy-MetaInt")) {
             s->icy_metaint = strtoull(p, NULL, 10);
         } else if (!av_strncasecmp(tag, "Icy-", 4)) {
-            if ((ret = parse_icy(s, tag, p)) < 0)
+            if ((ret = http_parse_icy(s, tag, p)) < 0)
                 return ret;
         } else if (!av_strcasecmp(tag, "Content-Encoding")) {
-            if ((ret = parse_content_encoding(h, p)) < 0)
+            if ((ret = http_parse_content_encoding(h, p)) < 0)
                 return ret;
         }
     }
@@ -316,7 +331,7 @@ static int http_cookie_string(AVDictionary *dict, char **cookies)
     int len = 1;
 
     // determine how much memory is needed for the cookies string
-    while (e = dict_get(dict, "", e, AV_DICT_IGNORE_SUFFIX))
+    while (e = av_dict_get(dict, "", e, AV_DICT_IGNORE_SUFFIX))
         len += strlen(e->key) + strlen(e->value) + 1;
 
     // reallocate the cookies
@@ -418,7 +433,7 @@ static int http_listen(URLContext *h, const char *uri, int flags, AVDictionary *
         lower_proto = "tls";
     
     url_join(lower_url, sizeof(lower_url), lower_proto, NULL, hostname, port, NULL);
-    if ((ret = dict_set_int(options, "listen", s->listen, 0)) < 0)
+    if ((ret = av_dict_set_int(options, "listen", s->listen, 0)) < 0)
         goto fail;
 
     ret = url_open_whitelist(&s->hd, lower_url, AVIO_FLAG_READ_WRITE, options, h);
@@ -434,7 +449,7 @@ static int http_listen(URLContext *h, const char *uri, int flags, AVDictionary *
     }
     
 fail:
-    dict_free(&s->chained_options);
+    av_dict_free(&s->chained_options);
     return ret;
 }
 
@@ -445,21 +460,6 @@ static int http_has_header(const char *str, const char *header)
     
     /* header + 2 to skip over CRLF prefix. (make sure you have one!) */
     return av_stristart(str, header + 2, NULL) || av_stristr(str, header);
-}
-
-static int http_check_code(URLContext *h, int http_code, const char *end)
-{
-    HTTPContext *s = h->pstPrivData;
-    /* error codes are 4xx and 5xx, but regard 401 as a success, so we
-     * don't abort until all headers have been parsed. */
-    if (http_code >= 400 && http_code < 600 &&
-        (http_code != 401 || s->auth_state.auth_type != HTTP_AUTH_NONE) &&
-        (http_code != 407 || s->proxy_auth_state.auth_type != HTTP_AUTH_NONE)) {
-        end += strspn(end, SPACE_CHARS);
-        av_log(h, AV_LOG_WARNING, "HTTP error %d %s\n", http_code, end);
-        return http_averror(http_code, AVERROR(EIO));
-    }
-    return 0;
 }
 
 static void http_parse_content_range(URLContext *h, const char *p)
@@ -882,7 +882,7 @@ static int http_open_cnx(URLContext *h, AVDictionary **options)
     int location_changed, attempts = 0, redirects = 0;
     
 redo:
-    dict_copy(options, s->chained_options, 0);
+    av_dict_copy(options, s->chained_options, 0);
 
     cur_auth_type       = s->auth_state.auth_type;
     cur_proxy_auth_type = s->auth_state.auth_type;
@@ -976,7 +976,7 @@ static int http_open(URLContext *h, const char *uri, int flags, AVDictionary **o
     
     ret = http_open_cnx(h, options);
     if (ret < 0)
-        dict_free(&s->chained_options);
+        av_dict_free(&s->chained_options);
     
     return ret;
 }
@@ -1094,7 +1094,7 @@ static int64_t http_seek_internal(URLContext *h, int64_t off, int whence, int fo
     s->hd = NULL;
 
     if ((ret = http_open_cnx(h, &options)) < 0) {
-        dict_free(&options);
+        av_dict_free(&options);
         memcpy(s->buffer, old_buf, old_buf_size);
         s->buf_ptr = s->buffer;
         s->buf_end = s->buffer + old_buf_size;
@@ -1103,7 +1103,7 @@ static int64_t http_seek_internal(URLContext *h, int64_t off, int whence, int fo
         return ret;
     }
 
-    dict_free(&options);
+    av_dict_free(&options);
     url_close(old_hd);
     return off;
 }
@@ -1230,7 +1230,7 @@ static int http_read(URLContext *h, uint8_t *buf, int size)
     HTTPContext *s = h->pstPrivData;
 
     if (s->icy_metaint > 0) {
-        size = store_icy(h, size);
+        size = http_store_icy(h, size);
         if (size < 0)
             return size;
     }
@@ -1287,7 +1287,7 @@ static int http_close(URLContext *h)
 
     if (s->hd)
         url_closep(&s->hd);
-    dict_free(&s->chained_options);
+    av_dict_free(&s->chained_options);
     return ret;
 }
 
@@ -1315,14 +1315,12 @@ static const AVOption http_options[] = {
     { "headers", OFFSET(headers), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
     { "content_type", OFFSET(content_type), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
     { "user_agent", OFFSET(user_agent), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D },
-    { "referer", OFFSET(referer), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D },
 #if FF_API_HTTP_USER_AGENT
     { "user-agent", OFFSET(user_agent_deprecated), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D|AV_OPT_FLAG_DEPRECATED },
 #endif
     { "multiple_requests", OFFSET(multiple_requests), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D | E },
     { "post_data", OFFSET(post_data), AV_OPT_TYPE_BINARY, .flags = D | E },
     { "mime_type", OFFSET(mime_type), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT | AV_OPT_FLAG_READONLY },
-    { "http_version", OFFSET(http_version), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT | AV_OPT_FLAG_READONLY },
     { "cookies", OFFSET(cookies), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D },
     { "icy", OFFSET(icy), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, D },
     { "icy_metadata_headers", OFFSET(icy_metadata_headers), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, AV_OPT_FLAG_EXPORT },
