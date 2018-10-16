@@ -8,10 +8,14 @@
 
 
 #include <stddef.h>
+#include <limits.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "libavutil/error.h"
 
 #include "url.h"
 #include "avio.h"
-
 
 static const char *urlcontext_to_name(void *ptr)
 {
@@ -388,7 +392,7 @@ const AVClass url_context_class = {
     .item_name        = urlcontext_to_name,
     .option           = options,
     .child_next       = urlcontext_child_next,
-    .child_class_next = ff_urlcontext_child_class_next,
+    .child_class_next = url_context_child_class_next,
 };
 
 static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *pstUrlProt, const char *filename, int flags, const AVIOInterruptCB *int_cb)

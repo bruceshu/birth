@@ -19,21 +19,21 @@
 #define AV_OPT_ALLOW_NULL (1 << 2)
 #define AV_OPT_MULTI_COMPONENT_RANGE (1 << 12)
 
-enum OptionType{
-    OPT_TYPE_FLAGS,
-    OPT_TYPE_INT,
-    OPT_TYPE_INT64,
-    OPT_TYPE_DOUBLE,
-    OPT_TYPE_FLOAT,
-    OPT_TYPE_STRING,
-    OPT_TYPE_RATIONAL,
-    OPT_TYPE_BINARY,
-    OPT_TYPE_DICT,
-    OPT_TYPE_UINT64,
-    OPT_TYPE_CONST = 128,
-    OPT_TYPE_IMAGE_SIZE = MKBETAG('S','I','Z','E'),
-    OPT_TYPE_PIXEL_FMT  = MKBETAG('P','F','M','T'),
-    OPT_TYPE_SAMPLE_FMT = MKBETAG('S','F','M','T'),
+enum AVOptionType{
+    AV_OPT_TYPE_FLAGS,
+    AV_OPT_TYPE_INT,
+    AV_OPT_TYPE_INT64,
+    AV_OPT_TYPE_DOUBLE,
+    AV_OPT_TYPE_FLOAT,
+    AV_OPT_TYPE_STRING,
+    AV_OPT_TYPE_RATIONAL,
+    AV_OPT_TYPE_BINARY,
+    AV_OPT_TYPE_DICT,
+    AV_OPT_TYPE_UINT64,
+    AV_OPT_TYPE_CONST = 128,
+    AV_OPT_TYPE_IMAGE_SIZE = MKBETAG('S','I','Z','E'),
+    AV_OPT_TYPE_PIXEL_FMT  = MKBETAG('P','F','M','T'),
+    AV_OPT_TYPE_SAMPLE_FMT = MKBETAG('S','F','M','T'),
     AV_OPT_TYPE_VIDEO_RATE = MKBETAG('V','R','A','T'),
     AV_OPT_TYPE_DURATION   = MKBETAG('D','U','R',' '),
     AV_OPT_TYPE_COLOR      = MKBETAG('C','O','L','R'),
@@ -56,15 +56,15 @@ typedef struct AVOption {
     double max;
 
     int flags;
-#define OPT_FLAG_ENCODING_PARAM  1
-#define OPT_FLAG_DECODING_PARAM  2
-#define OPT_FLAG_METADATA        4
-#define OPT_FLAG_AUDIO_PARAM     8
-#define OPT_FLAG_VIDEO_PARAM     16
-#define OPT_FLAG_SUBTITLE_PARAM  32
-#define OPT_FLAG_EXPORT          64
-#define OPT_FLAG_READONLY        128
-#define OPT_FLAG_FILTERING_PARAM (1<<16)
+#define AV_OPT_FLAG_ENCODING_PARAM  1
+#define AV_OPT_FLAG_DECODING_PARAM  2
+#define AV_OPT_FLAG_METADATA        4
+#define AV_OPT_FLAG_AUDIO_PARAM     8
+#define AV_OPT_FLAG_VIDEO_PARAM     16
+#define AV_OPT_FLAG_SUBTITLE_PARAM  32
+#define AV_OPT_FLAG_EXPORT          64
+#define AV_OPT_FLAG_READONLY        128
+#define AV_OPT_FLAG_FILTERING_PARAM (1<<16)
     const char *unit;
 }AVOption;
 
@@ -81,10 +81,10 @@ typedef struct AVOptionRanges {
     int nb_components;
 } AVOptionRanges;
 
-int opt_set(void *obj, const char *name, const char *val, int search_flags);
-const AVOption *opt_next(const void *obj, const AVOption *last);
-void opt_set_defaults(void *s);
-void opt_set_defaults2(void *s, int mask, int flags);
-void opt_free(void *obj);
+int av_opt_set(void *obj, const char *name, const char *val, int search_flags);
+const AVOption *av_opt_next(const void *obj, const AVOption *last);
+void av_opt_set_defaults(void *s);
+void av_opt_set_defaults2(void *s, int mask, int flags);
+void av_opt_free(void *obj);
 
 #endif

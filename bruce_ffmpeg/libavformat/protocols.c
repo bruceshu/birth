@@ -68,7 +68,7 @@ extern const URLProtocol tcp_protocol;
 
 #include "libavformat/protocol_list.c"
 
-const AVClass *urlcontext_child_class_next(const AVClass *prev)
+const AVClass *url_context_child_class_next(const AVClass *prev)
 {
     int i;
 
