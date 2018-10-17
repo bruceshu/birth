@@ -20,14 +20,12 @@ $(warning library.mak $(SUBDIR)lib$(FULLNAME).pc)
 #LIBOBJS := $(OBJS) $(SUBDIR)%.h.o $(TESTOBJS)
 #$(LIBOBJS) $(LIBOBJS:.o=.s) $(LIBOBJS:.o=.i):   CPPFLAGS += -DHAVE_AV_CONFIG_H
 
-$(warning library.mak compile begin $(SUBDIR)$(LIBNAME))
+$(warning library.mak compile $(SUBDIR)$(LIBNAME))
 
 $(SUBDIR)$(LIBNAME): $(OBJS)
 	$(RM) $@
 	$(AR) $(ARFLAGS) $(AR_O) $^
 	$(RANLIB) $@
-
-$(warning library.mak compile end $(SUBDIR)$(LIBNAME))
 	
 install-headers: install-lib$(NAME)-headers install-lib$(NAME)-pkgconfig
 
@@ -43,26 +41,30 @@ $(LIBOBJS): CPPFLAGS += -DBUILDING_$(NAME)
 #$(TESTPROGS) $(TOOLS): %$(EXESUF): %.o
 #	$$(LD) $(LDFLAGS) $(LDEXEFLAGS) $$(LD_O) $$(filter %.o,$$^) $$(THISLIB) $(FFEXTRALIBS) $$(EXTRALIBS-$$(*F)) $$(ELIBS)
 
+$(warning library.mak compile $(SUBDIR)lib$(NAME).version)
+
 $(SUBDIR)lib$(NAME).version: $(SUBDIR)version.h | $(SUBDIR)
 	$$(M) $$(SRC_PATH)/ffbuild/libversion.sh $(NAME) $$< > $$@
 
+$(warning library.mak compile $(SUBDIR)lib$(FULLNAME).pc)
+	
 $(SUBDIR)lib$(FULLNAME).pc: $(SUBDIR)version.h ffbuild/config.sh | $(SUBDIR)
 	$$(M) $$(SRC_PATH)/ffbuild/pkgconfig_generate.sh $(NAME) "$(DESC)"
 
-$(SUBDIR)lib$(NAME).ver: $(SUBDIR)lib$(NAME).v $(OBJS)
-	$$(M)sed 's/MAJOR/$(lib$(NAME)_VERSION_MAJOR)/' $$< | $(VERSION_SCRIPT_POSTPROCESS_CMD) > $$@
+#$(SUBDIR)lib$(NAME).ver: $(SUBDIR)lib$(NAME).v $(OBJS)
+#	$$(M)sed 's/MAJOR/$(lib$(NAME)_VERSION_MAJOR)/' $$< | $(VERSION_SCRIPT_POSTPROCESS_CMD) > $$@
 
-$(SUBDIR)$(SLIBNAME): $(SUBDIR)$(SLIBNAME_WITH_MAJOR)
-	$(Q)cd ./$(SUBDIR) && $(LN_S) $(SLIBNAME_WITH_MAJOR) $(SLIBNAME)
+#$(SUBDIR)$(SLIBNAME): $(SUBDIR)$(SLIBNAME_WITH_MAJOR)
+#	$(Q)cd ./$(SUBDIR) && $(LN_S) $(SLIBNAME_WITH_MAJOR) $(SLIBNAME)
 
-$(SUBDIR)$(SLIBNAME_WITH_MAJOR): $(OBJS) $(SLIBOBJS) $(SUBDIR)lib$(NAME).ver
-	$(SLIB_CREATE_DEF_CMD)
-	$$(LD) $(SHFLAGS) $(LDFLAGS) $(LDSOFLAGS) $$(LD_O) $$(filter %.o,$$^) $(FFEXTRALIBS)
-	$(SLIB_EXTRA_CMD)
+#$(SUBDIR)$(SLIBNAME_WITH_MAJOR): $(OBJS) $(SLIBOBJS) $(SUBDIR)lib$(NAME).ver
+#	$(SLIB_CREATE_DEF_CMD)
+#	$$(LD) $(SHFLAGS) $(LDFLAGS) $(LDSOFLAGS) $$(LD_O) $$(filter %.o,$$^) $(FFEXTRALIBS)
+#	$(SLIB_EXTRA_CMD)
 
-ifdef SUBDIR
-$(SUBDIR)$(SLIBNAME_WITH_MAJOR): $(DEP_LIBS)
-endif
+#ifdef SUBDIR
+#$(SUBDIR)$(SLIBNAME_WITH_MAJOR): $(DEP_LIBS)
+#endif
 
 clean::
 	$(RM) $(addprefix $(SUBDIR),$(CLEANFILES) $(CLEANSUFFIXES) $(LIBSUFFIXES)) \
