@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void test1();
 void test2();
+void test3();
 
 int main(int argc, char * argv[])
 {
 //	test1();
-
-	test2();
+//	test2();
+	test3();
 
 	return 0;
 }
@@ -44,4 +46,11 @@ void test2()
 
         result = strcspn(str1, str3);
         printf("the result of strcspn is %d\n", result);
+}
+
+void test3()
+{
+	u_int64_t num = 0x1000000000;
+	printf("num is %d\n", num);
+	printf("num is %lld\n", num);
 }
