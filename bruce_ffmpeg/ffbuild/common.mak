@@ -4,6 +4,7 @@ $(warning common_mak SUBDIR=$(SUBDIR))
 
 ifndef SUBDIR
 
+ECHO   = printf "$(1)\t%s\n" $(2)
 M      = @$(call ECHO,$(TAG),$@);
 
 IFLAGS     := -I. -I$(SRC_LINK)/
