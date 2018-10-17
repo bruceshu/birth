@@ -4,6 +4,8 @@ $(warning common_mak SUBDIR=$(SUBDIR))
 
 ifndef SUBDIR
 
+M      = @$(call ECHO,$(TAG),$@);
+
 IFLAGS     := -I. -I$(SRC_LINK)/
 CPPFLAGS   := $(IFLAGS) $(CPPFLAGS)
 CFLAGS     += $(ECFLAGS)
@@ -21,6 +23,8 @@ COMPILE_C = $(call COMPILE,CC)
 %.o: %.c
 	$(COMPILE_C)
 	
+%.c %.h %.pc %.ver %.version: TAG = GEN
+
 endif
 
 include $(SRC_PATH)/ffbuild/arch.mak
