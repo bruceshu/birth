@@ -1,8 +1,9 @@
 include $(SRC_PATH)/ffbuild/common.mak
 
-#ifeq (,$(filter %clean config,$(MAKECMDGOALS)))
-#-include $(SUBDIR)lib$(NAME).version
-#endif
+$(warning library.mak MAKECMDGOALS $(MAKECMDGOALS))
+ifeq (,$(filter %clean config,$(MAKECMDGOALS)))
+-include $(SUBDIR)lib$(NAME).version
+endif
 
 LIBVERSION := $(lib$(NAME)_VERSION)
 LIBMAJOR   := $(lib$(NAME)_VERSION_MAJOR)
