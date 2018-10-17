@@ -7,12 +7,9 @@ HEADERS =  avstring.h \
 HEADERS-$(CONFIG_LZO) += lzo.h
 
 
-ARCH_HEADERS = bswap.h \
-			   intmath.h \
-			   timer.h \
+ARCH_HEADERS = 
 			   
-BUILT_HEADERS = avconfig.h \
-				ffversion.h
+BUILT_HEADERS = 
 				
 OBJS = error.o \
 	   log.o \
