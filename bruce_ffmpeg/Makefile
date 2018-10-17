@@ -55,7 +55,10 @@ install: install-libs install-headers
 
 install-libs: install-libs-yes
 
-#uninstall: uninstall-data uninstall-headers uninstall-libs uninstall-pkgconfig
+uninstall: uninstall-data uninstall-headers uninstall-libs uninstall-pkgconfig
+
+uninstall-data:
+	$(RM) -r "$(DATADIR)"
 
 #uninstall-data:
 #	$(RM) -r "$(DATADIR)"

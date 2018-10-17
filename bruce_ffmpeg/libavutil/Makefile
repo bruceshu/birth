@@ -2,8 +2,7 @@ NAME = avutil
 DESC = FFmpeg utility library
 
 
-HEADERS = avutil.h \
-		  avstring.h \
+HEADERS =  avstring.h \
 		  
 HEADERS-$(CONFIG_LZO) += lzo.h
 

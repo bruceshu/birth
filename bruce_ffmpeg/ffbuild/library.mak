@@ -93,20 +93,20 @@ install-lib$(NAME)-pkgconfig: $(SUBDIR)lib$(FULLNAME).pc
 	$(Q)mkdir -p "$(PKGCONFIGDIR)"
 	$$(INSTALL) -m 644 $$^ "$(PKGCONFIGDIR)"
 
-#uninstall-libs::
-#	-$(RM) "$(SHLIBDIR)/$(SLIBNAME_WITH_MAJOR)" \
-#	       "$(SHLIBDIR)/$(SLIBNAME)"            \
-#	       "$(SHLIBDIR)/$(SLIBNAME_WITH_VERSION)"
-#	-$(RM)  $(SLIB_INSTALL_EXTRA_SHLIB:%="$(SHLIBDIR)/%")
-#	-$(RM)  $(SLIB_INSTALL_EXTRA_LIB:%="$(LIBDIR)/%")
-#	-$(RM) "$(LIBDIR)/$(LIBNAME)"
+uninstall-libs::
+	-$(RM) "$(SHLIBDIR)/$(SLIBNAME_WITH_MAJOR)" \
+	       "$(SHLIBDIR)/$(SLIBNAME)"            \
+	       "$(SHLIBDIR)/$(SLIBNAME_WITH_VERSION)"
+	-$(RM)  $(SLIB_INSTALL_EXTRA_SHLIB:%="$(SHLIBDIR)/%")
+	-$(RM)  $(SLIB_INSTALL_EXTRA_LIB:%="$(LIBDIR)/%")
+	-$(RM) "$(LIBDIR)/$(LIBNAME)"
 
-#uninstall-headers::
-#	$(RM) $(addprefix "$(INCINSTDIR)/",$(HEADERS) $(BUILT_HEADERS))
-#	-rmdir "$(INCINSTDIR)"
+uninstall-headers::
+	$(RM) $(addprefix "$(INCINSTDIR)/",$(HEADERS) $(BUILT_HEADERS))
+	-rmdir "$(INCINSTDIR)"
 
-#uninstall-pkgconfig::
-#	$(RM) "$(PKGCONFIGDIR)/lib$(FULLNAME).pc"
+uninstall-pkgconfig::
+	$(RM) "$(PKGCONFIGDIR)/lib$(FULLNAME).pc"
 endef
 
 $(eval $(RULES))
