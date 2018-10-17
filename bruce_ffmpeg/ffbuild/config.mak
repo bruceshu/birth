@@ -3,7 +3,7 @@
 prefix=/usr/local
 LIBDIR=$(DESTDIR)${prefix}/lib
 INCDIR=$(DESTDIR)${prefix}/include
-
+PKGCONFIGDIR=$(DESTDIR)${prefix}/lib/pkgconfig
 
 SRC_PATH=.
 SRC_LINK=.
