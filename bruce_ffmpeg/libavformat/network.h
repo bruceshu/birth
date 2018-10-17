@@ -7,6 +7,9 @@
 *********************************/
 
 
+#ifndef NETWORK_H
+#define NETWORK_H
+
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16
 #endif
@@ -107,3 +110,10 @@ int ff_neterrno(void);
 #define MSG_NOSIGNAL 0
 #endif
 
+
+int ff_network_init(void);
+int ff_tls_init(void);
+
+
+
+#endif

@@ -7,7 +7,22 @@
 *********************************/
 
 
+#include "config.h"
 
+int ff_tls_init(void)
+{
+#if CONFIG_TLS_PROTOCOL
+#if CONFIG_OPENSSL
+    int ret;
+    if ((ret = ff_openssl_init()) < 0)
+        return ret;
+#endif
+#if CONFIG_GNUTLS
+    ff_gnutls_init();
+#endif
+#endif
+    return 0;
+}
 
 int ff_network_init(void)
 {

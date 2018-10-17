@@ -18,7 +18,11 @@
 #define HAVE_THREADS 1
 
 #define CONFIG_NETWORK 1
+#define CONFIG_TLS_PROTOCOL 0
+#define CONFIG_OPENSSL 0
+#define CONFIG_GNUTLS 0
 #define CONFIG_ZLIB 0
+
 
 #define HAVE_POLL_H 1
 #define HAVE_SYS_TIME_H 1

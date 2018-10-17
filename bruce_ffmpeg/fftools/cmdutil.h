@@ -7,7 +7,8 @@
 *********************************/
 
 
-
+#ifndef CMDUTIL_H
+#define CMDUTIL_H
 
 typedef struct OptionDef {
     const char *name;
@@ -43,3 +44,4 @@ typedef struct OptionDef {
     const char *argname;
 } OptionDef;
 
+#endif

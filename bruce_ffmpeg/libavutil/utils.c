@@ -8,12 +8,11 @@
 
 
 #include <string.h>
-#include <stdlib.h>
 
-#include "avstring.h"
+#include "version.h"
 
 #if 0 //后续需要时再放开
- AVStream *avformat_new_stream(AVFormatContext *s, const AVCodec *c)
+AVStream *avformat_new_stream(AVFormatContext *s, const AVCodec *c)
  {
      AVStream *st;
      int i;
@@ -284,6 +283,41 @@
      return 0;
  }
 #endif
+
+unsigned avutil_version(void)
+{
+#if 0
+    static int checks_done;
+    if (checks_done)
+        return LIBAVUTIL_VERSION_INT;
+ 
+    av_assert0(AV_SAMPLE_FMT_DBLP == 9);
+    av_assert0(AVMEDIA_TYPE_ATTACHMENT == 4);
+    av_assert0(AV_PICTURE_TYPE_BI == 7);
+    av_assert0(LIBAVUTIL_VERSION_MICRO >= 100);
+    av_assert0(HAVE_MMX2 == HAVE_MMXEXT);
+ 
+    av_assert0(((size_t)-1) > 0); // C guarantees this but if false on a platform we care about revert at least b284e1ffe343d6697fb950d1ee517bafda8a9844
+ 
+    if (av_sat_dadd32(1, 2) != 5) {
+        av_log(NULL, AV_LOG_FATAL, "Libavutil has been built with a broken binutils, please upgrade binutils and rebuild\n");
+        abort();
+    }
+ 
+    if (llrint(1LL<<60) != 1LL<<60) {
+        av_log(NULL, AV_LOG_ERROR, "Libavutil has been linked to a broken llrint()\n");
+    }
+ 
+    checks_done = 1;
+#endif
+
+    return LIBAVUTIL_VERSION_INT;
+ }
+ 
+ const char *avutil_configuration(void)
+ {
+     return FFMPEG_CONFIGURATION;
+ }
 
  int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info)
  {
