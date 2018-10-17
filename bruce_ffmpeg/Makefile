@@ -48,14 +48,12 @@ $(foreach P,$(FFLIBS),$(eval $(call DOSUBDIR,lib$(P))))
 
 
 
-#all : all-yes
-
 #include $(SRC_PATH)/ffbuild/common.mak
 
 
-#install: install-libs install-headers
+install: install-libs install-headers
 
-#install-libs: install-libs-yes
+install-libs: install-libs-yes
 
 #uninstall: uninstall-data uninstall-headers uninstall-libs uninstall-pkgconfig
 

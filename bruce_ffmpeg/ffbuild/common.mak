@@ -4,8 +4,14 @@ $(warning common_mak SUBDIR=$(SUBDIR))
 
 ifndef SUBDIR
 
+ifndef V
+Q      = @
 ECHO   = printf "$(1)\t%s\n" $(2)
 M      = @$(call ECHO,$(TAG),$@);
+$(eval INSTALL = @$(call ECHO,INSTALL,$$(^:$(SRC_DIR)/%=%)); $(INSTALL))
+
+$(warning INSTALL=$(INSTALL))
+endif
 
 IFLAGS     := -I. -I$(SRC_LINK)/
 CPPFLAGS   := $(IFLAGS) $(CPPFLAGS)

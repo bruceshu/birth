@@ -1,6 +1,6 @@
 include $(SRC_PATH)/ffbuild/common.mak
 
-$(warning library.mak MAKECMDGOALS $(MAKECMDGOALS))
+$(warning library.mak MAKECMDGOALS=$(MAKECMDGOALS))
 ifeq (,$(filter %clean config,$(MAKECMDGOALS)))
 -include $(SUBDIR)lib$(NAME).version
 endif

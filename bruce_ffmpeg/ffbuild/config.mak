@@ -2,7 +2,7 @@
 
 prefix=/usr/local
 LIBDIR=$(DESTDIR)${prefix}/lib
-SHLIBDIR=$(DESTDIR)${prefix}/lib
+INCDIR=$(DESTDIR)${prefix}/include
 
 
 SRC_PATH=.
