@@ -31,7 +31,6 @@ COMPILE_C = $(call COMPILE,CC)
 	$(COMPILE_C)
 	
 %.c %.h %.pc %.ver %.version: TAG = GEN
-
 endif
 
 include $(SRC_PATH)/ffbuild/arch.mak
@@ -51,7 +50,8 @@ $(warning common_mak SLIBOBJS=$(SLIBOBJS))
 #HOSTOBJS  := $(HOSTPROGS:%=$(SUBDIR)%.o)
 #HEADERS   += $(HEADERS-yes)
 
-
+CLEANSUFFIXES     = *.d *.gcda *.gcno *.h.c *.ho *.map *.o *.pc *.ptx *.ptx.c *.ver *.version *$(DEFAULT_X86ASMD).asm *~
+LIBSUFFIXES       = *.a *.lib *.so *.so.* *.dylib *.dll *.def *.dll.a
 define RULES
 clean::
 	$(RM) $(HOSTPROGS)
@@ -59,3 +59,4 @@ endef
 
 $(eval $(RULES))
 
+-include $(wildcard $(OBJS:.o=.d) $(HOSTOBJS:.o=.d) $(TESTOBJS:.o=.d) $(HOBJS:.o=.d) $(SLIBOBJS:.o=.d)) $(OBJS:.o=$(DEFAULT_X86ASMD).d)

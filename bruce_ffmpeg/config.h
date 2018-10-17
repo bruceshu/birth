@@ -15,6 +15,7 @@
 
 #define HAVE_ALIGNED_MALLOC 0
 #define HAVE_WINSOCK2_H 0
+#define HAVE_THREADS 1
 
 #define CONFIG_NETWORK 1
 #define CONFIG_ZLIB 0

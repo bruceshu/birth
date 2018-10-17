@@ -16,6 +16,7 @@
 #define LINE_SZ 1024
 
 static int av_log_level = AV_LOG_INFO;
+static int flags;
 
 #if 0 //待后续研究ffmpeg日志系统
 static void format_line(void *avcl, int level, const char *fmt, va_list vl, AVBPrint part[4], int *print_prefix, int type[2])
@@ -136,7 +137,10 @@ void av_log(void* avcl, int level, const char *fmt, ...)
     va_end(vl);
 }
 
-
+void av_log_set_flags(int arg)
+{
+    flags = arg;
+}
 
 const char *av_default_item_name(void *ptr)
 {

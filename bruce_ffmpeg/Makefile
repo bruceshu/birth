@@ -64,7 +64,7 @@ uninstall-data:
 #	$(RM) -r "$(DATADIR)"
 	
 clean::
-	$(RM) $(OBJS-yes) $(OBJS)
+	$(RM) $(CLEANSUFFIXES)
 	
 .PHONY: clean
 #.PHONY: all all-yes alltools check

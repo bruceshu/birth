@@ -107,6 +107,7 @@ typedef struct AVClass {
 void av_log(void* avcl, int level, const char *fmt, ...);
 const char *av_default_item_name(void *ptr);
 
-
+#define AV_LOG_SKIP_REPEATED 1
+#define AV_LOG_PRINT_LEVEL 2
 
 #endif
