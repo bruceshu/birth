@@ -35,6 +35,8 @@ AVDictionaryEntry *av_dict_get(const AVDictionary *m, const char *key, const AVD
 int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags);
 int av_dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags);
 int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags);
+int av_dict_count(const AVDictionary *m);
+
 void av_dict_free(AVDictionary **ppstAVDict);
 
 

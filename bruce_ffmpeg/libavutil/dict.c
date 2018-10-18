@@ -139,6 +139,11 @@ int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
     return 0;
 }
 
+int av_dict_count(const AVDictionary *m)
+{
+    return m ? m->count : 0;
+}
+
 void av_dict_free(AVDictionary **ppstAVDict)
 {
     AVDictionary *pstAVDict = *ppstAVDict;

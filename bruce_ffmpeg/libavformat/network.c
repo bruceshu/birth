@@ -24,6 +24,18 @@ int ff_tls_init(void)
     return 0;
 }
 
+void ff_tls_deinit(void)
+{
+#if CONFIG_TLS_PROTOCOL
+#if CONFIG_OPENSSL
+    ff_openssl_deinit();
+#endif
+#if CONFIG_GNUTLS
+    ff_gnutls_deinit();
+#endif
+#endif
+}
+
 int ff_network_init(void)
 {
 #if HAVE_WINSOCK2_H
@@ -33,6 +45,13 @@ int ff_network_init(void)
         return 0;
 #endif
     return 1;
+}
+
+void ff_network_close(void)
+{
+#if HAVE_WINSOCK2_H
+    WSACleanup();
+#endif
 }
 
 int ff_socket(int af, int type, int proto)
@@ -148,13 +167,6 @@ int ff_listen_bind(int fd, const struct sockaddr *addr, socklen_t addrlen, int t
     
     closesocket(fd);
     return ret;
-}
-
-void ff_network_close(void)
-{
-#if HAVE_WINSOCK2_H
-    WSACleanup();
-#endif
 }
 
 int ff_network_wait_fd(int fd, int write)

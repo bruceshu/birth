@@ -61,7 +61,6 @@
  */
 #define AV_LOG_TRACE    56
 
-
 typedef enum {
     AV_CLASS_CATEGORY_NA = 0,
     AV_CLASS_CATEGORY_INPUT,
@@ -82,7 +81,6 @@ typedef enum {
     AV_CLASS_CATEGORY_DEVICE_INPUT,
     AV_CLASS_CATEGORY_NB  ///< not part of ABI/API
 }AVClassCategory;
-
 
 typedef struct AVClass {
     const char* class_name;

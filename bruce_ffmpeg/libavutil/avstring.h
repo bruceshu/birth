@@ -59,6 +59,7 @@ int av_strcasecmp(const char *a, const char *b);
 int av_strncasecmp(const char *a, const char *b, size_t n);
 
 char *av_strtok(char *s, const char *delim, char **saveptr);
+int av_match_name(const char *name, const char *names);
 
 
 #endif

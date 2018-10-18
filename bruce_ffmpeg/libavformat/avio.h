@@ -1,11 +1,10 @@
-/*
-copyright bruceshu
-
-author: bruceshu
-date: 2018-07-05
-description:
-
-*/
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-10-18
+ * Description:
+ 
+*********************************/
 
 
 #ifndef AVIO_H
@@ -22,8 +21,15 @@ description:
 #define AVIO_FLAG_WRITE 2
 #define AVIO_FLAG_READ_WRITE (AVIO_FLAG_READ|AVIO_FLAG_WRITE)
 
+#define AVIO_SEEKABLE_NORMAL (1 << 0)
+#define AVIO_SEEKABLE_TIME   (1 << 1)
+
 #define AVIO_FLAG_NONBLOCK 8
 #define AVIO_FLAG_DIRECT 0x8000
+
+#define IO_BUFFER_SIZE 32768
+#define SHORT_SEEK_THRESHOLD 4096
+
 
 enum AVIODataMarkerType {
     AVIO_DATA_MARKER_HEADER,
@@ -77,6 +83,18 @@ typedef struct AVIOContext {
     enum AVIODataMarkerType current_type;
     int64_t last_time;
     int (*short_seek_get)(void *opaque);
+    int64_t written;
+    unsigned char *buf_ptr_max;
+    int min_packet_size;
 } AVIOContext;
+
+typedef struct AVIOInternal {
+    URLContext *h;
+} AVIOInternal;
+
+static inline int64_t avio_tell(AVIOContext *s)
+{
+    return avio_seek(s, 0, SEEK_CUR);
+}
 
 #endif

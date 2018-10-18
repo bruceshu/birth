@@ -261,7 +261,7 @@ static void *url_context_child_next(void *obj, void *prev)
 #define OFFSET(x) offsetof(URLContext,x)
 #define E AV_OPT_FLAG_ENCODING_PARAM
 #define D AV_OPT_FLAG_DECODING_PARAM
-static const AVOption options[] = {
+static const AVOption url_options[] = {
     {"rw_timeout", OFFSET(rw_timeout), AV_OPT_TYPE_INT64, {.i64 = 0}, 0, INT64_MAX, D | E},
     { NULL }
 };
@@ -269,7 +269,7 @@ static const AVOption options[] = {
 const AVClass url_context_class = {
     .class_name       = "URLContext",
     .item_name        = url_context_to_name,
-    .option           = options,
+    .option           = url_options,
     .child_next       = url_context_child_next,
     .child_class_next = url_context_child_class_next,
 };

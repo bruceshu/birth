@@ -46,14 +46,14 @@ void *av_mallocz(size_t size)
     return ptr;
 }
 
-void **av_mallocz_array(int n_elem, size_t size)
+void *av_mallocz_array(int n_elem, size_t size)
 {
     size_t new_size;
-    void **ret;
+    void *ret;
 
     new_size = n_elem * size;
 
-    ret = (void **)av_mallocz(new_size);
+    ret = (void *)av_mallocz(new_size);
     if (!ret) {
         return NULL;
     }
@@ -91,6 +91,21 @@ int av_reallocp(void *ptr, size_t size)
 
     memcpy(ptr, &val, sizeof(val));
     return 0;
+}
+
+void *av_realloc_f(void *ptr, size_t nelem, size_t elsize)
+{
+    size_t size;
+    void *r;
+
+    if (av_size_mult(elsize, nelem, &size)) {
+        av_free(ptr);
+        return NULL;
+    }
+    r = av_realloc(ptr, size);
+    if (!r)
+        av_free(ptr);
+    return r;
 }
 
 char *av_strdup(const char *s)

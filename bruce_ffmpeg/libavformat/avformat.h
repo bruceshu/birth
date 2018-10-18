@@ -7,9 +7,31 @@
 *********************************/
 
 
+#define AVPROBE_SCORE_RETRY (AVPROBE_SCORE_MAX/4)
+#define AVPROBE_SCORE_STREAM_RETRY (AVPROBE_SCORE_MAX/4-1)
 #define AVPROBE_SCORE_EXTENSION  50 ///< score for file extension
 #define AVPROBE_SCORE_MIME       75 ///< score for file mime type
 #define AVPROBE_SCORE_MAX       100 ///< maximum score
+
+#define AVPROBE_PADDING_SIZE 32 ///< extra allocated bytes at the end of the probe buffer
+
+#define AV_DISPOSITION_DEFAULT   0x0001
+#define AV_DISPOSITION_DUB       0x0002
+#define AV_DISPOSITION_ORIGINAL  0x0004
+#define AV_DISPOSITION_COMMENT   0x0008
+#define AV_DISPOSITION_LYRICS    0x0010
+#define AV_DISPOSITION_KARAOKE   0x0020
+#define AV_DISPOSITION_FORCED    0x0040
+#define AV_DISPOSITION_HEARING_IMPAIRED  0x0080  /**< stream for hearing impaired audiences */
+#define AV_DISPOSITION_VISUAL_IMPAIRED   0x0100  /**< stream for visual impaired audiences */
+#define AV_DISPOSITION_CLEAN_EFFECTS     0x0200  /**< stream without voice */
+#define AV_DISPOSITION_ATTACHED_PIC      0x0400
+#define AV_DISPOSITION_TIMED_THUMBNAILS  0x0800
+#define AV_DISPOSITION_CAPTIONS     0x10000
+#define AV_DISPOSITION_DESCRIPTIONS 0x20000
+#define AV_DISPOSITION_METADATA     0x40000
+#define AV_DISPOSITION_DEPENDENT    0x80000 ///< dependent audio stream (mix_type=0 in mpegts)
+#define AV_DISPOSITION_STILL_IMAGE 0x100000 ///< still images in video stream (still_picture_flag=1 in mpegts)
 
 enum AVStreamParseType {
     AVSTREAM_PARSE_NONE,
@@ -22,6 +44,12 @@ enum AVStreamParseType {
                                                              just codec level data, otherwise position generation would fail */
 };
 
+typedef struct AVChapter {
+    int id;                 ///< unique ID to identify the chapter
+    AVRational time_base;   ///< time base in which the start/end timestamps are specified
+    int64_t start, end;     ///< chapter start/end time in time_base units
+    AVDictionary *metadata;
+} AVChapter;
 
 typedef struct AVProbeData {
     const char *filename;
@@ -184,6 +212,99 @@ typedef struct AVInputFormat {
      */
     int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
 } AVInputFormat;
+
+typedef struct AVOutputFormat {
+    const char *name;
+    const char *long_name;
+    const char *mime_type;
+    const char *extensions; /**< comma-separated filename extensions */
+    /* output support */
+    enum AVCodecID audio_codec;    /**< default audio codec */
+    enum AVCodecID video_codec;    /**< default video codec */
+    enum AVCodecID subtitle_codec; /**< default subtitle codec */
+    int flags;
+
+    /**
+     * List of supported codec_id-codec_tag pairs, ordered by "better
+     * choice first". The arrays are all terminated by AV_CODEC_ID_NONE.
+     */
+    const struct AVCodecTag * const *codec_tag;
+
+
+    const AVClass *priv_class; ///< AVClass for the private context
+
+    /*****************************************************************
+     * No fields below this line are part of the public API. They
+     * may not be used outside of libavformat and can be changed and
+     * removed at will.
+     * New public fields should be added right above.
+     *****************************************************************
+     */
+    struct AVOutputFormat *next;
+    /**
+     * size of private data so that it can be allocated in the wrapper
+     */
+    int priv_data_size;
+
+    int (*write_header)(struct AVFormatContext *);
+    /**
+     * Write a packet. If AVFMT_ALLOW_FLUSH is set in flags,
+     * pkt can be NULL in order to flush data buffered in the muxer.
+     * When flushing, return 0 if there still is more data to flush,
+     * or 1 if everything was flushed and there is no more buffered
+     * data.
+     */
+    int (*write_packet)(struct AVFormatContext *, AVPacket *pkt);
+    int (*write_trailer)(struct AVFormatContext *);
+    /**
+     * Currently only used to set pixel format if not YUV420P.
+     */
+    int (*interleave_packet)(struct AVFormatContext *, AVPacket *out,
+                             AVPacket *in, int flush);
+    /**
+     * Test if the given codec can be stored in this container.
+     *
+     * @return 1 if the codec is supported, 0 if it is not.
+     *         A negative number if unknown.
+     *         MKTAG('A', 'P', 'I', 'C') if the codec is only supported as AV_DISPOSITION_ATTACHED_PIC
+     */
+    int (*query_codec)(enum AVCodecID id, int std_compliance);
+
+    void (*get_output_timestamp)(struct AVFormatContext *s, int stream,
+                                 int64_t *dts, int64_t *wall);
+    /**
+     * Allows sending messages from application to device.
+     */
+    int (*control_message)(struct AVFormatContext *s, int type,
+                           void *data, size_t data_size);
+
+    /**
+     * Write an uncoded AVFrame.
+     *
+     * See av_write_uncoded_frame() for details.
+     *
+     * The library will free *frame afterwards, but the muxer can prevent it
+     * by setting the pointer to NULL.
+     */
+    int (*write_uncoded_frame)(struct AVFormatContext *, int stream_index,
+                               AVFrame **frame, unsigned flags);
+    /**
+     * Returns device list with it properties.
+     * @see avdevice_list_devices() for more details.
+     */
+    int (*get_device_list)(struct AVFormatContext *s, struct AVDeviceInfoList *device_list);
+    /**
+     * Initialize device capabilities submodule.
+     * @see avdevice_capabilities_create() for more details.
+     */
+    int (*create_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
+    int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
+    enum AVCodecID data_codec; /**< default data codec */
+
+    int (*init)(struct AVFormatContext *);
+    void (*deinit)(struct AVFormatContext *);
+    int (*check_bitstream)(struct AVFormatContext *, const AVPacket *pkt);
+} AVOutputFormat;
 
 typedef struct AVStream {
     int index;    /**< stream index in AVFormatContext */
@@ -1163,6 +1284,28 @@ typedef struct AVFormatContext {
     int skip_estimate_duration_from_pts;
 } AVFormatContext;
 
+typedef struct AVPacketList {
+    AVPacket pkt;
+    struct AVPacketList *next;
+} AVPacketList;
 
+typedef struct AVProgram {
+    int            id;
+    int            flags;
+    enum AVDiscard discard;        ///< selects which program to discard and which to feed to the caller
+    unsigned int   *stream_index;
+    unsigned int   nb_stream_indexes;
+    AVDictionary *metadata;
+
+    int program_num;
+    int pmt_pid;
+    int pcr_pid;
+    int pmt_version;
+
+    int64_t start_time;
+    int64_t end_time;
+    int64_t pts_wrap_reference;    ///< reference dts for wrap detection
+    int pts_wrap_behavior;         ///< behavior on wrap detection
+} AVProgram;
 
 

@@ -44,4 +44,6 @@ typedef struct OptionDef {
     const char *argname;
 } OptionDef;
 
+void print_error(const char *filename, int err);
+
 #endif

@@ -61,9 +61,8 @@ typedef struct URLProtocol {
     int     (*url_write)(URLContext *pstUrlCtx, unsigned char *pBuf, int size);
     int64_t (*url_seek)( URLContext *pstUrlCtx, int64_t pos, int whence);
     int     (*url_close)(URLContext *pstUrlCtx);
-    
-    //int (*url_read_pause)(URLContext *h, int pause);
-    //int64_t (*url_read_seek)(URLContext *h, int stream_index, int64_t timestamp, int flags);
+    int (*url_read_pause)(URLContext *h, int pause);
+    int64_t (*url_read_seek)(URLContext *h, int stream_index, int64_t timestamp, int flags);
 
     int (*url_get_file_handle)(URLContext *pstUrlCtx);
     int (*url_get_multi_file_handle)(URLContext *pstUrlCtx, int **handles, int *numhandles);

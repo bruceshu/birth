@@ -130,5 +130,29 @@ char *av_strtok(char *s, const char *delim, char **saveptr)
     return tok;
 }
 
+int av_match_name(const char *name, const char *names)
+{
+    const char *p;
+    int len, namelen;
+
+    if (!name || !names)
+        return 0;
+
+    namelen = strlen(name);
+    while (*names) {
+        int negate = '-' == *names;
+        p = strchr(names, ',');
+        if (!p)
+            p = names + strlen(names);
+        
+        names += negate;
+        len = FFMAX(p - names, namelen);
+        if (!av_strncasecmp(name, names, len) || !strncmp("ALL", names, FFMAX(3, p - names)))
+            return !negate;
+        
+        names = p + (*p == ',');
+    }
+    return 0;
+}
 
 

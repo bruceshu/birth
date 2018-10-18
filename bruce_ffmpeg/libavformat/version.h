@@ -34,7 +34,6 @@
 
 #define LIBAVFORMAT_IDENT       "Lavf" AV_STRINGIFY(LIBAVFORMAT_VERSION)
 
-#if 0
 #ifndef FF_API_LAVF_BITEXACT
 #define FF_API_LAVF_BITEXACT            (LIBAVFORMAT_VERSION_MAJOR < 58)
 #endif
@@ -76,7 +75,6 @@
 #endif
 #ifndef FF_API_OLD_ROTATE_API
 #define FF_API_OLD_ROTATE_API           (LIBAVFORMAT_VERSION_MAJOR < 58)
-#endif
 #endif
 
 #ifndef FF_API_R_FRAME_RATE

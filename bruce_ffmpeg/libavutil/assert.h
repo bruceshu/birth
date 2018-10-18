@@ -20,6 +20,11 @@
     }                                                                   \
 } while (0)
 
+#if defined(ASSERT_LEVEL) && ASSERT_LEVEL > 0
+#define av_assert1(cond) av_assert0(cond)
+#else
+#define av_assert1(cond) ((void)0)
+#endif
 
 #if defined(ASSERT_LEVEL) && ASSERT_LEVEL > 1
 #define av_assert2(cond) av_assert0(cond)
