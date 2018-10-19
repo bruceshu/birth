@@ -5,12 +5,20 @@
 void test1();
 void test2();
 void test3();
+void swap(int *a, int *b);
 
 int main(int argc, char * argv[])
 {
 //	test1();
 //	test2();
-	test3();
+//	test3();
+
+	int a = 8;
+	int b = 9;
+
+	swap(&a,&b);
+
+	printf("a=%d,b=%d\n", a, b);
 
 	return 0;
 }
@@ -53,4 +61,11 @@ void test3()
 	u_int64_t num = 0x1000000000;
 	printf("num is %d\n", num);
 	printf("num is %lld\n", num);
+}
+
+void swap(int *a, int *b)
+{
+	*a = *a + *b;
+	*b = *a - *b;
+	*a = *a - *b;
 }
