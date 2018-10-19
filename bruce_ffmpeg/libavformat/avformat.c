@@ -62,7 +62,7 @@ static int io_open_default(AVFormatContext *s, AVIOContext **pb,
 
     av_log(s, loglevel, "Opening \'%s\' for %s\n", url, flags & AVIO_FLAG_WRITE ? "writing" : "reading");
 
-    return avio_open_whitelist(pb, url, flags, &s->interrupt_callback, options, s->protocol_whitelist, s->protocol_blacklist);
+    return avio_open_whitelist(pb, url, flags, &s->interrupt_callback, options);
 }
 
 static void io_close_default(AVFormatContext *s, AVIOContext *pb)
@@ -187,23 +187,24 @@ static void *format_child_next(void *obj, void *prev)
 static const AVInputFormat * const *indev_list = NULL;
 static const AVOutputFormat * const *outdev_list = NULL;
 
-const AVInputFormat *av_demuxer_iterate(void **opaque)
+const AVInputFormat *av_demuxer_iterate(uint32_t *opaque)
 {
-    static const uintptr_t size = sizeof(demuxer_list)/sizeof(demuxer_list[0]) - 1;
-    uintptr_t i = (uintptr_t)*opaque;
+    static const uint32_t size = sizeof(demuxer_list)/sizeof(demuxer_list[0]) - 1;
+    uint32_t i = *opaque;
     const AVInputFormat *f = NULL;
 
     if (i < size) {
         f = demuxer_list[i];
-    } else if (outdev_list) {
-        f = indev_list[i - size];
     }
 
-    if (f)
-        *opaque = (void*)(i + 1);
+    if (f) {
+        *opaque = i + 1;
+    }
+    
     return f;
 }
 
+#if 0 //后续需要时再放开
 const AVOutputFormat *av_muxer_iterate(void **opaque)
 {
     static const uintptr_t size = sizeof(muxer_list)/sizeof(muxer_list[0]) - 1;
@@ -218,8 +219,10 @@ const AVOutputFormat *av_muxer_iterate(void **opaque)
 
     if (f)
         *opaque = (void*)(i + 1);
+    
     return f;
 }
+#endif
 
 static AVMutex avpriv_register_devices_mutex = AV_MUTEX_INITIALIZER;
 static AVOnce av_format_next_init = AV_ONCE_INIT;
@@ -266,10 +269,10 @@ AVInputFormat *av_iformat_next(const AVInputFormat *f)
 {
     ff_thread_once(&av_format_next_init, av_format_init_next);
 
-    if (f)
+    if (f) {
         return f->next;
-    else {
-        void *opaque = NULL;
+    } else {
+        uint32_t opaque = 0;
         return (AVInputFormat *)av_demuxer_iterate(&opaque);
     }
 }
@@ -340,7 +343,6 @@ static void avformat_get_context_defaults(AVFormatContext *s)
     memset(s, 0, sizeof(AVFormatContext));
 
     s->av_class = &av_format_context_class;
-
     s->io_open  = io_open_default;
     s->io_close = io_close_default;
 
@@ -483,6 +485,7 @@ int av_match_ext(const char *filename, const char *extensions)
     ext = strrchr(filename, '.');
     if (ext)
         return av_match_name(ext + 1, extensions);
+    
     return 0;
 }
 
@@ -492,7 +495,7 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened, int *score
     const AVInputFormat *fmt1 = NULL;
     AVInputFormat *fmt = NULL;
     int score, score_max = 0;
-    void *i = 0;
+    uint32_t i = 0;
     const static uint8_t zerobuffer[AVPROBE_PADDING_SIZE];
     enum nodat {
         NO_ID3,
@@ -518,13 +521,15 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened, int *score
     }
 
     while ((fmt1 = av_demuxer_iterate(&i))) {
-        if (!is_opened == !(fmt1->flags & AVFMT_NOFILE) && strcmp(fmt1->name, "image2"))
+        if (is_opened == (fmt1->flags & AVFMT_NOFILE) && strcmp(fmt1->name, "image2"))
             continue;
+        
         score = 0;
         if (fmt1->read_probe) {
             score = fmt1->read_probe(&lpd);
             if (score)
                 av_log(NULL, AV_LOG_TRACE, "Probing %s score:%d size:%d\n", fmt1->name, score, lpd.buf_size);
+            
             if (fmt1->extensions && av_match_ext(lpd.filename, fmt1->extensions)) {
                 switch (nodat) {
                 case NO_ID3:
@@ -543,20 +548,26 @@ AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened, int *score
             if (av_match_ext(lpd.filename, fmt1->extensions))
                 score = AVPROBE_SCORE_EXTENSION;
         }
+        
         if (av_match_name(lpd.mime_type, fmt1->mime_type)) {
             if (AVPROBE_SCORE_MIME > score) {
                 av_log(NULL, AV_LOG_DEBUG, "Probing %s score:%d increased to %d due to MIME type\n", fmt1->name, score, AVPROBE_SCORE_MIME);
                 score = AVPROBE_SCORE_MIME;
             }
         }
+        
         if (score > score_max) {
             score_max = score;
             fmt       = (AVInputFormat*)fmt1;
-        } else if (score == score_max)
+        } else if (score == score_max) {
             fmt = NULL;
+        }
     }
-    if (nodat == ID3_GREATER_PROBE)
+    
+    if (nodat == ID3_GREATER_PROBE) {
         score_max = FFMIN(AVPROBE_SCORE_EXTENSION / 2 - 1, score_max);
+    }
+    
     *score_ret = score_max;
 
     return fmt;

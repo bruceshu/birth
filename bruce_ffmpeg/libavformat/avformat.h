@@ -15,6 +15,31 @@
 
 #define AVPROBE_PADDING_SIZE 32 ///< extra allocated bytes at the end of the probe buffer
 
+#define AVFMT_NOFILE        0x0001
+#define AVFMT_NEEDNUMBER    0x0002 /**< Needs '%d' in filename. */
+#define AVFMT_SHOW_IDS      0x0008 /**< Show format stream IDs numbers. */
+#define AVFMT_GLOBALHEADER  0x0040 /**< Format wants global header. */
+#define AVFMT_NOTIMESTAMPS  0x0080 /**< Format does not need / have any timestamps. */
+#define AVFMT_GENERIC_INDEX 0x0100 /**< Use generic index building code. */
+#define AVFMT_TS_DISCONT    0x0200 /**< Format allows timestamp discontinuities. Note, muxers always require valid (monotone) timestamps */
+#define AVFMT_VARIABLE_FPS  0x0400 /**< Format allows variable fps. */
+#define AVFMT_NODIMENSIONS  0x0800 /**< Format does not need width/height */
+#define AVFMT_NOSTREAMS     0x1000 /**< Format does not require any streams */
+#define AVFMT_NOBINSEARCH   0x2000 /**< Format does not allow to fall back on binary search via read_timestamp */
+#define AVFMT_NOGENSEARCH   0x4000 /**< Format does not allow to fall back on generic search */
+#define AVFMT_NO_BYTE_SEEK  0x8000 /**< Format does not allow seeking by bytes */
+#define AVFMT_ALLOW_FLUSH  0x10000 /**< Format allows flushing. If not set, the muxer will not receive a NULL packet in the write_packet function. */
+#define AVFMT_TS_NONSTRICT 0x20000 /**< Format does not require strictly increasing timestamps, but they must still be monotonic */
+#define AVFMT_TS_NEGATIVE  0x40000 /**< Format allows muxing negative timestamps. If not set the timestamp will be shifted in av_write_frame and
+                                        av_interleaved_write_frame so they
+                                        start from 0.
+                                        The user or muxer can override this through
+                                        AVFormatContext.avoid_negative_ts
+                                        */
+
+#define AVFMT_SEEK_TO_PTS   0x4000000 /**< Seeking is based on PTS */
+
+
 #define AV_DISPOSITION_DEFAULT   0x0001
 #define AV_DISPOSITION_DUB       0x0002
 #define AV_DISPOSITION_ORIGINAL  0x0004

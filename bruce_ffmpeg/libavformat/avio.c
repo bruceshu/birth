@@ -450,17 +450,17 @@ fail:
     return AVERROR(ENOMEM);
 }
 
-int avio_open_whitelist(AVIOContext **s, const char *filename, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options)
+int avio_open_whitelist(AVIOContext **ppstIOCtx, const char *filename, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options)
 {
-    URLContext *h;
+    URLContext *pstUrlCtx;
     int err;
 
-    err = url_open_whitelist(&h, filename, flags, int_cb, options, NULL);
+    err = url_open_whitelist(&pstUrlCtx, filename, flags, int_cb, options, NULL);
     if (err < 0)
         return err;
-    err = avio_fdopen(s, h);
+    err = avio_fdopen(ppstIOCtx, pstUrlCtx);
     if (err < 0) {
-        url_close(h);
+        url_close(pstUrlCtx);
         return err;
     }
     return 0;

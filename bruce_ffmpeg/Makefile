@@ -44,9 +44,20 @@ endef
 
 $(foreach P,$(FFLIBS),$(eval $(call DOSUBDIR,lib$(P))))
 
-#include $(SRC_PATH)/fftools/Makefile
+include $(SRC_PATH)/fftools/Makefile
 
+libavcodec/utils.o libavformat/utils.o libavdevice/avdevice.o libavfilter/avfilter.o libavutil/utils.o libpostproc/postprocess.o libswresample/swresample.o libswscale/utils.o : libavutil/ffversion.h
 
+$(PROGS): %$(PROGSSUF)$(EXESUF): %$(PROGSSUF)_g$(EXESUF)
+ifeq ($(STRIPTYPE),direct)
+	$(STRIP) -o $@ $<
+else
+	$(CP) $< $@
+	$(STRIP) $@
+endif
+
+%$(PROGSSUF)_g$(EXESUF): $(FF_DEP_LIBS)
+	$(LD) $(LDFLAGS) $(LDEXEFLAGS) $(LD_O) $(OBJS-$*) $(FF_EXTRALIBS)
 
 #include $(SRC_PATH)/ffbuild/common.mak
 
