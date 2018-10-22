@@ -86,7 +86,7 @@ const AVClass *url_context_child_class_next(const AVClass *prev)
             return url_protocols[i]->pstPrivDataClass;
         }
     }
-        
+    
     return NULL;
 }
 

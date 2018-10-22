@@ -596,14 +596,14 @@ int main(int argc, char **argv)
     register_exit(ffprobe_cleanup);
 
     //options = real_options;
-    parse_loglevel(argc, argv, NULL);
+    //parse_loglevel(argc, argv, NULL);
     avformat_network_init();
-    init_opts();
-#if CONFIG_AVDEVICE
+    //init_opts();
+#if 0 //CONFIG_AVDEVICE
     avdevice_register_all();
 #endif
 
-    show_banner(argc, argv, options);
+    //show_banner(argc, argv, options);
     parse_options(NULL, argc, argv, options, opt_input_file);
 
     //if (do_show_log)

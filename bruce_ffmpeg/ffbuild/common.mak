@@ -40,6 +40,8 @@ OBJS      += $(OBJS-yes)
 SLIBOBJS  += $(SLIBOBJS-yes)
 FFLIBS    := $($(NAME)_FFLIBS) $(FFLIBS-yes) $(FFLIBS)
 
+PATH_LIBNAME = $(foreach NAME,$(1),lib$(NAME)/$($(2)LIBNAME))
+DEP_LIBS := $(foreach lib,$(FFLIBS),$(call PATH_LIBNAME,$(lib),$(CONFIG_SHARED:yes=S)))
 #LDLIBS       = $(FFLIBS:%=%$(BUILDSUF))
 
 OBJS      := $(sort $(OBJS:%=$(SUBDIR)%))
