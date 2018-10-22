@@ -28,9 +28,6 @@ typedef struct AVDictionary {
     AVDictionaryEntry *elems;
 }AVDictionary;
 
-
-
-
 AVDictionaryEntry *av_dict_get(const AVDictionary *m, const char *key, const AVDictionaryEntry *prev, int flags);
 int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags);
 int av_dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags);

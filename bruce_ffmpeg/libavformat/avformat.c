@@ -6,6 +6,18 @@
  
 *********************************/
 
+
+#include <stdint.h>
+#include <limits.h>
+
+#include "avio.h"
+#include "avformat.h"
+#include "internal.h"
+
+#include "libavutil/dict.h"
+#include "libavutil/opt.h"
+#include "libavutil/log.h"
+
 static void writeout(AVIOContext *s, const uint8_t *data, int len)
 {
     if (!s->error) {
@@ -39,8 +51,7 @@ static void flush_buffer(AVIOContext *s)
     if (s->write_flag && s->buf_ptr_max > s->buffer) {
         writeout(s, s->buffer, s->buf_ptr_max - s->buffer);
         if (s->update_checksum) {
-            s->checksum     = s->update_checksum(s->checksum, s->checksum_ptr,
-                                                 s->buf_ptr_max - s->checksum_ptr);
+            s->checksum     = s->update_checksum(s->checksum, s->checksum_ptr, s->buf_ptr_max - s->checksum_ptr);
             s->checksum_ptr = s->buffer;
         }
     }
@@ -49,8 +60,7 @@ static void flush_buffer(AVIOContext *s)
         s->buf_end = s->buffer;
 }
 
-static int io_open_default(AVFormatContext *s, AVIOContext **pb,
-                           const char *url, int flags, AVDictionary **options)
+static int io_open_default(AVFormatContext *s, AVIOContext **pb, const char *url, int flags, AVDictionary **options)
 {
     int loglevel;
 
