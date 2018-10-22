@@ -7,6 +7,11 @@
 *********************************/
 
 
+#ifndef AVFORMAT_H
+#define AVFORMAT_H
+
+#include "internal.h"
+
 #define AVPROBE_SCORE_RETRY (AVPROBE_SCORE_MAX/4)
 #define AVPROBE_SCORE_STREAM_RETRY (AVPROBE_SCORE_MAX/4-1)
 #define AVPROBE_SCORE_EXTENSION  50 ///< score for file extension
@@ -1333,4 +1338,8 @@ typedef struct AVProgram {
     int pts_wrap_behavior;         ///< behavior on wrap detection
 } AVProgram;
 
+AVFormatContext *avformat_alloc_context(void);
+AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened, int *score_max);
 
+
+#endif

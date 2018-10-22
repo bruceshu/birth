@@ -13,10 +13,24 @@
 #include "avio.h"
 #include "avformat.h"
 #include "internal.h"
+#include "id3v2.h"
 
 #include "libavutil/dict.h"
 #include "libavutil/opt.h"
 #include "libavutil/log.h"
+#include "libavutil/utils.h"
+#include "libavutil/error.h"
+#include "libavutil/thread.h"
+
+#include "libavcodec/avcodec.h"
+
+extern AVInputFormat  ff_aac_demuxer;
+extern AVInputFormat  ff_ac3_demuxer;
+extern AVInputFormat  ff_flv_demuxer;
+extern AVOutputFormat ff_hls_demuxer;
+extern AVOutputFormat ff_mpegts_demuxer;
+extern AVOutputFormat ff_rtp_demuxer;
+extern AVOutputFormat ff_rtsp_demuxer;
 
 static void writeout(AVIOContext *s, const uint8_t *data, int len)
 {

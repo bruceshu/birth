@@ -7,11 +7,10 @@
 *********************************/
 
 
-
-
 #ifndef INTERNAL_H
 #define INTERNAL_H
 
+#include "libavcodec/avcodec.h"
 
 #define MAX_URL_SIZE 4096
 

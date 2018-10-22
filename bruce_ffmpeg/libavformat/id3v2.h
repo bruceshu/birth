@@ -28,4 +28,8 @@ typedef struct ID3v2ExtraMeta {
     struct ID3v2ExtraMeta *next;
 } ID3v2ExtraMeta;
 
+int ff_id3v2_match(const uint8_t *buf, const char *magic);
+int ff_id3v2_tag_len(const uint8_t *buf);
+
+
 #endif
