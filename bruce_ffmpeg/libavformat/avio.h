@@ -97,4 +97,6 @@ static inline int64_t avio_tell(AVIOContext *s)
     return avio_seek(s, 0, SEEK_CUR);
 }
 
+int avio_close(AVIOContext *s);
+
 #endif

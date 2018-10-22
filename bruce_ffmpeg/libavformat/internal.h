@@ -14,7 +14,6 @@
 
 #define MAX_URL_SIZE 4096
 
-/** size of probe buffer, for guessing file type from file contents */
 #define PROBE_BUF_MIN 2048
 #define PROBE_BUF_MAX (1 << 20)
 
@@ -41,21 +40,9 @@ do {\
 #endif
 
 struct AVFormatInternal {
-    /**
-     * Number of streams relevant for interleaving.
-     * Muxing only.
-     */
     int nb_interleaved_streams;
-
-    /**
-     * This buffer is only needed when packets were already buffered but
-     * not decoded, for example to get the codec parameters in MPEG
-     * streams.
-     */
     struct AVPacketList *packet_buffer;
     struct AVPacketList *packet_buffer_end;
-
-    /* av_seek_frame() support */
     int64_t data_offset; /**< offset of the first packet */
 
     /**
@@ -142,6 +129,11 @@ struct AVStreamInternal {
 
     FFFrac *priv_pts;
 };
+
+typedef struct AVCodecTag {
+    enum AVCodecID id;
+    unsigned int tag;
+} AVCodecTag;
 
 
 #endif

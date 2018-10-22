@@ -19,6 +19,7 @@
 #include "libavutil/utils.h"
 #include "libavutil/error.h"
 #include "libavutil/thread.h"
+#include "libavutil/mem.h"
 
 extern AVInputFormat  ff_aac_demuxer;
 extern AVInputFormat  ff_ac3_demuxer;
