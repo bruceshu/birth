@@ -1,6 +1,6 @@
 
 
-$(warning common_mak SUBDIR=$(SUBDIR))
+#$(warning common_mak SUBDIR=$(SUBDIR))
 
 ifndef SUBDIR
 
@@ -9,17 +9,15 @@ Q      = @
 ECHO   = printf "$(1)\t%s\n" $(2)
 M      = @$(call ECHO,$(TAG),$@);
 $(eval INSTALL = @$(call ECHO,INSTALL,$$(^:$(SRC_DIR)/%=%)); $(INSTALL))
-
-$(warning INSTALL=$(INSTALL))
+#$(warning INSTALL=$(INSTALL))
 endif
 
 IFLAGS     := -I. -I$(SRC_LINK)/
 CPPFLAGS   := $(IFLAGS) $(CPPFLAGS)
 CFLAGS     += $(ECFLAGS)
-CCFLAGS     := $(CPPFLAGS) $(CFLAGS)
+CCFLAGS    := $(CPPFLAGS) $(CFLAGS)
 
-ALLFFLIBS = avcodec avdevice avfilter avformat avresample avutil postproc swscale swresample
-
+#ALLFFLIBS = avcodec avdevice avfilter avformat avresample avutil postproc swscale swresample
 define COMPILE
        $(call $(1)DEP,$(1))
        $($(1)) $($(1)FLAGS) $($(1)_DEPFLAGS) $($(1)_C) $($(1)_O) $(patsubst $(SRC_PATH)/%,$(SRC_LINK)/%,$<)
@@ -31,29 +29,30 @@ COMPILE_C = $(call COMPILE,CC)
 	$(COMPILE_C)
 	
 %.c %.h %.pc %.ver %.version: TAG = GEN
+
 endif
 
 include $(SRC_PATH)/ffbuild/arch.mak
 
 
 OBJS      += $(OBJS-yes)
-SLIBOBJS  += $(SLIBOBJS-yes)
+#SLIBOBJS  += $(SLIBOBJS-yes)
 FFLIBS    := $($(NAME)_FFLIBS) $(FFLIBS-yes) $(FFLIBS)
-
 PATH_LIBNAME = $(foreach NAME,$(1),lib$(NAME)/$($(2)LIBNAME))
 DEP_LIBS := $(foreach lib,$(FFLIBS),$(call PATH_LIBNAME,$(lib),$(CONFIG_SHARED:yes=S)))
 #LDLIBS       = $(FFLIBS:%=%$(BUILDSUF))
 
 OBJS      := $(sort $(OBJS:%=$(SUBDIR)%))
-SLIBOBJS  := $(sort $(SLIBOBJS:%=$(SUBDIR)%))
+#SLIBOBJS  := $(sort $(SLIBOBJS:%=$(SUBDIR)%))
 
-$(warning common_mak OBJS=$(OBJS))
-$(warning common_mak SLIBOBJS=$(SLIBOBJS))
-#HOSTOBJS  := $(HOSTPROGS:%=$(SUBDIR)%.o)
+#$(warning common_mak OBJS=$(OBJS))
+#$(warning common_mak SLIBOBJS=$(SLIBOBJS))
+HOSTOBJS  := $(HOSTPROGS:%=$(SUBDIR)%.o)
 #HEADERS   += $(HEADERS-yes)
 
 CLEANSUFFIXES     = *.d *.gcda *.gcno *.h.c *.ho *.map *.o *.pc *.ptx *.ptx.c *.ver *.version *$(DEFAULT_X86ASMD).asm *~
 LIBSUFFIXES       = *.a *.lib *.so *.so.* *.dylib *.dll *.def *.dll.a
+
 define RULES
 clean::
 	$(RM) $(HOSTPROGS)

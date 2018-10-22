@@ -1,6 +1,6 @@
 include $(SRC_PATH)/ffbuild/common.mak
 
-$(warning library.mak MAKECMDGOALS=$(MAKECMDGOALS))
+#$(warning library.mak MAKECMDGOALS=$(MAKECMDGOALS))
 ifeq (,$(filter %clean config,$(MAKECMDGOALS)))
 -include $(SUBDIR)lib$(NAME).version
 endif
@@ -15,13 +15,13 @@ INSTHEADERS := $(INSTHEADERS) $(HEADERS:%=$(SUBDIR)%)
 all-$(CONFIG_STATIC): $(SUBDIR)$(LIBNAME)  $(SUBDIR)lib$(FULLNAME).pc
 all-$(CONFIG_SHARED): $(SUBDIR)$(SLIBNAME) $(SUBDIR)lib$(FULLNAME).pc
 
-$(warning library.mak $(SUBDIR)$(LIBNAME))
-$(warning library.mak $(SUBDIR)lib$(FULLNAME).pc)
+#$(warning library.mak $(SUBDIR)$(LIBNAME))
+#$(warning library.mak $(SUBDIR)lib$(FULLNAME).pc)
 
 #LIBOBJS := $(OBJS) $(SUBDIR)%.h.o $(TESTOBJS)
 #$(LIBOBJS) $(LIBOBJS:.o=.s) $(LIBOBJS:.o=.i):   CPPFLAGS += -DHAVE_AV_CONFIG_H
 
-$(warning library.mak compile $(SUBDIR)$(LIBNAME))
+#$(warning library.mak compile $(SUBDIR)$(LIBNAME))
 
 $(SUBDIR)$(LIBNAME): $(OBJS)
 	$(RM) $@
@@ -42,12 +42,12 @@ $(LIBOBJS): CPPFLAGS += -DBUILDING_$(NAME)
 #$(TESTPROGS) $(TOOLS): %$(EXESUF): %.o
 #	$$(LD) $(LDFLAGS) $(LDEXEFLAGS) $$(LD_O) $$(filter %.o,$$^) $$(THISLIB) $(FFEXTRALIBS) $$(EXTRALIBS-$$(*F)) $$(ELIBS)
 
-$(warning library.mak compile $(SUBDIR)lib$(NAME).version)
+#$(warning library.mak compile $(SUBDIR)lib$(NAME).version)
 
 $(SUBDIR)lib$(NAME).version: $(SUBDIR)version.h | $(SUBDIR)
 	$$(M) $$(SRC_PATH)/ffbuild/libversion.sh $(NAME) $$< > $$@
 
-$(warning library.mak compile $(SUBDIR)lib$(FULLNAME).pc)
+#$(warning library.mak compile $(SUBDIR)lib$(FULLNAME).pc)
 	
 $(SUBDIR)lib$(FULLNAME).pc: $(SUBDIR)version.h ffbuild/config.sh | $(SUBDIR)
 	$$(M) $$(SRC_PATH)/ffbuild/pkgconfig_generate.sh $(NAME) "$(DESC)"

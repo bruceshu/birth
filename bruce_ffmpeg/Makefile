@@ -16,17 +16,17 @@ FFLIBS-$(CONFIG_AVFORMAT) += avformat
 #FFLIBS-$(CONFIG_SWSCALE) += swscale
 FFLIBS := avutil
 
-$(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
+#$(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
 
 #first so "all" becomes default target
 all : all-yes
 
 include $(SRC_PATH)/ffbuild/common.mak
 
-$(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
-$(warning main_makefile FFLIBS=$(FFLIBS))
+#$(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
+#$(warning main_makefile FFLIBS=$(FFLIBS))
 
-SUBDIR_VARS := CLEANFILES FFLIBS OBJS   
+SUBDIR_VARS := OBJS
 			   
 define RESET
 $(1) :=

@@ -676,6 +676,7 @@ int avformat_open_input(AVFormatContext **ppstFmtCtx, const char *filename, AVIn
     avio_skip(pstFmtCtx->pb, pstFmtCtx->skip_initial_bytes);
 
     /* Check filename in case an image number is expected. */
+                                                                
     /*if (s->iformat->flags & AVFMT_NEEDNUMBER) {
         if (!av_filename_number_test(filename)) {
             ret = AVERROR(EINVAL);

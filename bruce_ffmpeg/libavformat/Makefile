@@ -27,4 +27,4 @@ OBJS-$(CONFIG_AC3_MUXER)                 += rawenc.o
 OBJS-$(CONFIG_MPEGTS_DEMUXER)            += mpegts.o
 OBJS-$(CONFIG_MPEGTS_MUXER)              += mpegtsenc.o
 
-$(warning $(NAME)_makefile $(OBJS))
+#$(warning $(NAME)_makefile $(OBJS))
