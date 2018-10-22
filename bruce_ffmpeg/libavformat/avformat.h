@@ -12,6 +12,14 @@
 
 #include "internal.h"
 
+#include "libavutil/rational.h"
+#include "libavutil/log.h"
+#include "libavutil/dict.h"
+
+
+#include "libavcodec/avcodec.h"
+
+
 #define AVPROBE_SCORE_RETRY (AVPROBE_SCORE_MAX/4)
 #define AVPROBE_SCORE_STREAM_RETRY (AVPROBE_SCORE_MAX/4-1)
 #define AVPROBE_SCORE_EXTENSION  50 ///< score for file extension
@@ -35,15 +43,9 @@
 #define AVFMT_NO_BYTE_SEEK  0x8000 /**< Format does not allow seeking by bytes */
 #define AVFMT_ALLOW_FLUSH  0x10000 /**< Format allows flushing. If not set, the muxer will not receive a NULL packet in the write_packet function. */
 #define AVFMT_TS_NONSTRICT 0x20000 /**< Format does not require strictly increasing timestamps, but they must still be monotonic */
-#define AVFMT_TS_NEGATIVE  0x40000 /**< Format allows muxing negative timestamps. If not set the timestamp will be shifted in av_write_frame and
-                                        av_interleaved_write_frame so they
-                                        start from 0.
-                                        The user or muxer can override this through
-                                        AVFormatContext.avoid_negative_ts
-                                        */
+#define AVFMT_TS_NEGATIVE  0x40000 /**< Format allows muxing negative timestamps. If not set the timestamp will be shifted in av_write_frame and                     */
 
 #define AVFMT_SEEK_TO_PTS   0x4000000 /**< Seeking is based on PTS */
-
 
 #define AV_DISPOSITION_DEFAULT   0x0001
 #define AV_DISPOSITION_DUB       0x0002
@@ -69,9 +71,7 @@ enum AVStreamParseType {
     AVSTREAM_PARSE_HEADERS,    /**< Only parse headers, do not repack. */
     AVSTREAM_PARSE_TIMESTAMPS, /**< full parsing and interpolation of timestamps for frames not starting on a packet boundary */
     AVSTREAM_PARSE_FULL_ONCE,  /**< full parsing and repack of the first frame only, only implemented for H.264 currently */
-    AVSTREAM_PARSE_FULL_RAW=MKTAG(0,'R','A','W'),       /**< full parsing and repack with timestamp and position generation by parser for raw
-                                                             this assumes that each packet in the file contains no demuxer level headers and
-                                                             just codec level data, otherwise position generation would fail */
+    AVSTREAM_PARSE_FULL_RAW=MKTAG(0,'R','A','W'),    
 };
 
 typedef struct AVChapter {
@@ -83,13 +83,10 @@ typedef struct AVChapter {
 
 typedef struct AVProbeData {
     const char *filename;
-
     /**< Buffer must have AVPROBE_PADDING_SIZE of extra allocated bytes filled with zero. */
     unsigned char *buf; 
-
     /**< Size of buf except extra allocated bytes */
     int buf_size;
-
     /**< mime_type, when known. */
     const char *mime_type; 
 } AVProbeData;
@@ -100,14 +97,12 @@ typedef struct AVInputFormat {
      * may be appended with a minor bump.
      */
     const char *name;
-
     /**
      * Descriptive name for the format, meant to be more human-readable
      * than name. You should use the NULL_IF_CONFIG_SMALL() macro
      * to define it.
      */
     const char *long_name;
-
     /**
      * Can use flags: AVFMT_NOFILE, AVFMT_NEEDNUMBER, AVFMT_SHOW_IDS,
      * AVFMT_GENERIC_INDEX, AVFMT_TS_DISCONT, AVFMT_NOBINSEARCH,
@@ -289,8 +284,7 @@ typedef struct AVOutputFormat {
     /**
      * Currently only used to set pixel format if not YUV420P.
      */
-    int (*interleave_packet)(struct AVFormatContext *, AVPacket *out,
-                             AVPacket *in, int flush);
+    int (*interleave_packet)(struct AVFormatContext *, AVPacket *out, AVPacket *in, int flush);
     /**
      * Test if the given codec can be stored in this container.
      *
@@ -300,13 +294,11 @@ typedef struct AVOutputFormat {
      */
     int (*query_codec)(enum AVCodecID id, int std_compliance);
 
-    void (*get_output_timestamp)(struct AVFormatContext *s, int stream,
-                                 int64_t *dts, int64_t *wall);
+    void (*get_output_timestamp)(struct AVFormatContext *s, int stream, int64_t *dts, int64_t *wall);
     /**
      * Allows sending messages from application to device.
      */
-    int (*control_message)(struct AVFormatContext *s, int type,
-                           void *data, size_t data_size);
+    int (*control_message)(struct AVFormatContext *s, int type, void *data, size_t data_size);
 
     /**
      * Write an uncoded AVFrame.
@@ -316,8 +308,7 @@ typedef struct AVOutputFormat {
      * The library will free *frame afterwards, but the muxer can prevent it
      * by setting the pointer to NULL.
      */
-    int (*write_uncoded_frame)(struct AVFormatContext *, int stream_index,
-                               AVFrame **frame, unsigned flags);
+    int (*write_uncoded_frame)(struct AVFormatContext *, int stream_index, AVFrame **frame, unsigned flags);
     /**
      * Returns device list with it properties.
      * @see avdevice_list_devices() for more details.
@@ -374,7 +365,6 @@ typedef struct AVStream {
      *           user-provided one, depending on the format).
      */
     AVRational time_base;
-
     /**
      * Decoding: pts of the first frame of the stream in presentation order, in stream time base.
      * Only set this if you are absolutely 100% sure that the value you set
@@ -384,7 +374,6 @@ typedef struct AVStream {
      * demuxer must NOT set this.
      */
     int64_t start_time;
-
     /**
      * Decoding: duration of the stream, in stream time base.
      * If a source file does not specify a duration, but does specify
