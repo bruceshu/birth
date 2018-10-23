@@ -10,6 +10,11 @@
 #ifndef FRAME_H
 #define FRAME_H
 
+#include "rational.h"
+#include "buffer.h"
+#include "dict.h"
+#include "version.h"
+
 enum AVFrameSideDataType {
 
     AV_FRAME_DATA_PANSCAN,

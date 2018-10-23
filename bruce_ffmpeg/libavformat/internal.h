@@ -10,7 +10,11 @@
 #ifndef INTERNAL_H
 #define INTERNAL_H
 
+#include "libavutil/rational.h"
+#include "libavutil/buffer.h"
+
 #include "libavcodec/avcodec.h"
+
 
 #define MAX_URL_SIZE 4096
 
@@ -44,96 +48,43 @@ struct AVFormatInternal {
     struct AVPacketList *packet_buffer;
     struct AVPacketList *packet_buffer_end;
     int64_t data_offset; /**< offset of the first packet */
-
-    /**
-     * Raw packets from the demuxer, prior to parsing and decoding.
-     * This buffer is used for buffering packets until the codec can
-     * be identified, as parsing cannot be done without knowing the
-     * codec.
-     */
+    
     struct AVPacketList *raw_packet_buffer;
     struct AVPacketList *raw_packet_buffer_end;
-    /**
-     * Packets split by the parser get queued here.
-     */
     struct AVPacketList *parse_queue;
     struct AVPacketList *parse_queue_end;
-    /**
-     * Remaining size available for raw_packet_buffer, in bytes.
-     */
+
 #define RAW_PACKET_BUFFER_SIZE 2500000
     int raw_packet_buffer_remaining_size;
-
-    /**
-     * Offset to remap timestamps to be non-negative.
-     * Expressed in timebase units.
-     * @see AVStream.mux_ts_offset
-     */
     int64_t offset;
-
-    /**
-     * Timebase for the timestamp offset.
-     */
     AVRational offset_timebase;
-
 #if FF_API_COMPUTE_PKT_FIELDS2
     int missing_ts_warning;
 #endif
-
     int inject_global_side_data;
-
     int avoid_negative_ts_use_pts;
-
-    /**
-     * Timestamp of the end of the shortest stream.
-     */
     int64_t shortest_end;
-
-    /**
-     * Whether or not avformat_init_output has already been called
-     */
     int initialized;
-
-    /**
-     * Whether or not avformat_init_output fully initialized streams
-     */
     int streams_initialized;
-
-    /**
-     * ID3v2 tag useful for MP3 demuxing
-     */
     AVDictionary *id3v2_meta;
-
-    /*
-     * Prefer the codec framerate for avg_frame_rate computation.
-     */
     int prefer_codec_framerate;
 };
 
 struct AVStreamInternal {
     int reorder;
-    AVBSFContext **bsfcs;
+    //AVBSFContext **bsfcs;
     int nb_bsfcs;
     int bitstream_checked;
     AVCodecContext *avctx;
     int avctx_inited;
     enum AVCodecID orig_codec_id;
-    
     struct {
-        AVBSFContext *bsf;
+        //AVBSFContext *bsf;
         AVPacket     *pkt;
         int inited;
     } extract_extradata;
-
     int need_context_update;
-
-    FFFrac *priv_pts;
+    //FFFrac *priv_pts;
 };
-
-typedef struct AVCodecTag {
-    enum AVCodecID id;
-    unsigned int tag;
-} AVCodecTag;
-
 
 #endif

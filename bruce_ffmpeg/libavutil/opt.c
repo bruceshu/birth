@@ -185,7 +185,7 @@ static int set_string_binary(void *obj, const AVOption *o, const char *val, uint
 void av_opt_set_defaults2(void *s, int mask, int flags)
 {
     const AVOption *opt = NULL;
-    while ((opt = opt_next(s, opt))) {
+    while ((opt = av_opt_next(s, opt))) {
         void *dst = ((uint8_t*)s) + opt->offset;
 
         if ((opt->flags & mask) != flags)

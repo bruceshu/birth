@@ -10,6 +10,9 @@
 #ifndef PIXFMT_H
 #define PIXFMT_H
 
+
+#include "version.h"
+
 enum AVPixelFormat {
     AV_PIX_FMT_NONE = -1,
     AV_PIX_FMT_YUV420P,   ///< planar YUV 4:2:0, 12bpp, (1 Cr & Cb sample per 2x2 Y samples)
@@ -164,23 +167,9 @@ enum AVPixelFormat {
     AV_PIX_FMT_GBRAP,        ///< planar GBRA 4:4:4:4 32bpp
     AV_PIX_FMT_GBRAP16BE,    ///< planar GBRA 4:4:4:4 64bpp, big-endian
     AV_PIX_FMT_GBRAP16LE,    ///< planar GBRA 4:4:4:4 64bpp, little-endian
-    /**
-     *  HW acceleration through QSV, data[3] contains a pointer to the
-     *  mfxFrameSurface1 structure.
-     */
     AV_PIX_FMT_QSV,
-    /**
-     * HW acceleration though MMAL, data[3] contains a pointer to the
-     * MMAL_BUFFER_HEADER_T structure.
-     */
     AV_PIX_FMT_MMAL,
-
-    AV_PIX_FMT_D3D11VA_VLD,  ///< HW decoding through Direct3D11 via old API, Picture.data[3] contains a ID3D11VideoDecoderOutputView pointer
-
-    /**
-     * HW acceleration through CUDA. data[i] contain CUdeviceptr pointers
-     * exactly as for system memory frames.
-     */
+    AV_PIX_FMT_D3D11VA_VLD,  
     AV_PIX_FMT_CUDA,
 
     AV_PIX_FMT_0RGB,        ///< packed RGB 8:8:8, 32bpp, XRGBXRGB...   X=unused/undefined
@@ -248,17 +237,6 @@ enum AVPixelFormat {
 
     AV_PIX_FMT_P016LE, ///< like NV12, with 16bpp per component, little-endian
     AV_PIX_FMT_P016BE, ///< like NV12, with 16bpp per component, big-endian
-
-    /**
-     * Hardware surfaces for Direct3D11.
-     *
-     * This is preferred over the legacy AV_PIX_FMT_D3D11VA_VLD. The new D3D11
-     * hwaccel API and filtering support AV_PIX_FMT_D3D11 only.
-     *
-     * data[0] contains a ID3D11Texture2D pointer, and data[1] contains the
-     * texture array index of the frame as intptr_t if the ID3D11Texture2D is
-     * an array texture (or always 0 if it's a normal texture).
-     */
     AV_PIX_FMT_D3D11,
 
     AV_PIX_FMT_GRAY9BE,   ///<        Y        , 9bpp, big-endian
@@ -268,19 +246,7 @@ enum AVPixelFormat {
     AV_PIX_FMT_GBRPF32LE,  ///< IEEE-754 single precision planar GBR 4:4:4,     96bpp, little-endian
     AV_PIX_FMT_GBRAPF32BE, ///< IEEE-754 single precision planar GBRA 4:4:4:4, 128bpp, big-endian
     AV_PIX_FMT_GBRAPF32LE, ///< IEEE-754 single precision planar GBRA 4:4:4:4, 128bpp, little-endian
-
-    /**
-     * DRM-managed buffers exposed through PRIME buffer sharing.
-     *
-     * data[0] points to an AVDRMFrameDescriptor.
-     */
     AV_PIX_FMT_DRM_PRIME,
-    /**
-     * Hardware surfaces for OpenCL.
-     *
-     * data[i] contain 2D image objects (typed in C as cl_mem, used
-     * in OpenCL as image2d_t) for each plane of the surface.
-     */
     AV_PIX_FMT_OPENCL,
 
     AV_PIX_FMT_GRAY14BE,   ///<        Y        , 14bpp, big-endian

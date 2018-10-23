@@ -12,7 +12,6 @@
 
 #include "avio.h"
 #include "avformat.h"
-#include "internal.h"
 #include "id3v2.h"
 
 #include "libavutil/opt.h"
@@ -34,12 +33,10 @@ static void writeout(AVIOContext *s, const uint8_t *data, int len)
     if (!s->error) {
         int ret = 0;
         if (s->write_data_type)
-            ret = s->write_data_type(s->opaque, (uint8_t *)data,
-                                     len,
-                                     s->current_type,
-                                     s->last_time);
+            ret = s->write_data_type(s->opaque, (uint8_t *)data, len, s->current_type, s->last_time);
         else if (s->write_packet)
             ret = s->write_packet(s->opaque, (uint8_t *)data, len);
+        
         if (ret < 0) {
             s->error = ret;
         } else {
@@ -47,10 +44,11 @@ static void writeout(AVIOContext *s, const uint8_t *data, int len)
                 s->written = s->pos + len;
         }
     }
-    if (s->current_type == AVIO_DATA_MARKER_SYNC_POINT ||
-        s->current_type == AVIO_DATA_MARKER_BOUNDARY_POINT) {
+    
+    if (s->current_type == AVIO_DATA_MARKER_SYNC_POINT || s->current_type == AVIO_DATA_MARKER_BOUNDARY_POINT) {
         s->current_type = AVIO_DATA_MARKER_UNKNOWN;
     }
+    
     s->last_time = AV_NOPTS_VALUE;
     s->writeout_count ++;
     s->pos += len;
@@ -359,15 +357,15 @@ static const AVClass av_format_context_class = {
     .get_category   = get_category,
 };
 
-static void avformat_get_context_defaults(AVFormatContext *s)
+static void avformat_get_context_defaults(AVFormatContext *pstFmtCtx)
 {
-    memset(s, 0, sizeof(AVFormatContext));
+    memset(pstFmtCtx, 0, sizeof(AVFormatContext));
 
-    s->av_class = &av_format_context_class;
-    s->io_open  = io_open_default;
-    s->io_close = io_close_default;
+    pstFmtCtx->av_class = &av_format_context_class;
+    pstFmtCtx->io_open  = io_open_default;
+    pstFmtCtx->io_close = io_close_default;
 
-    av_opt_set_defaults(s);
+    av_opt_set_defaults(pstFmtCtx);
 }
 
 void avformat_free_context(AVFormatContext *s)
@@ -380,24 +378,26 @@ void avformat_free_context(AVFormatContext *s)
     av_opt_free(s);
     if (s->iformat && s->iformat->priv_class && s->priv_data)
         av_opt_free(s->priv_data);
+    
     if (s->oformat && s->oformat->priv_class && s->priv_data)
         av_opt_free(s->priv_data);
 
     for (i = s->nb_streams - 1; i >= 0; i--)
         av_free_stream(s, s->streams[i]);
 
-
     for (i = s->nb_programs - 1; i >= 0; i--) {
         av_dict_free(&s->programs[i]->metadata);
         av_freep(&s->programs[i]->stream_index);
         av_freep(&s->programs[i]);
     }
+    
     av_freep(&s->programs);
     av_freep(&s->priv_data);
     while (s->nb_chapters--) {
         av_dict_free(&s->chapters[s->nb_chapters]->metadata);
         av_freep(&s->chapters[s->nb_chapters]);
     }
+    
     av_freep(&s->chapters);
     av_dict_free(&s->metadata);
     av_dict_free(&s->internal->id3v2_meta);
@@ -823,27 +823,27 @@ void avformat_close_input(AVFormatContext **ps)
     avio_close(pb);
 }
 
-AVFormatContext *avformat_alloc_context(void)
+AVFormatContext *avformat_alloc_context()
 {
-    AVFormatContext *ic;
+    AVFormatContext *pstFmtCtx;
     
-    ic = av_malloc(sizeof(AVFormatContext));
-    if (!ic) {
+    pstFmtCtx = av_malloc(sizeof(AVFormatContext));
+    if (!pstFmtCtx) {
         return NULL;
     }
     
-    avformat_get_context_defaults(ic);
+    avformat_get_context_defaults(pstFmtCtx);
 
-    ic->internal = av_mallocz(sizeof(*ic->internal));
-    if (!ic->internal) {
-        avformat_free_context(ic);
+    pstFmtCtx->internal = av_mallocz(sizeof(*pstFmtCtx->internal));
+    if (!pstFmtCtx->internal) {
+        avformat_free_context(pstFmtCtx);
         return NULL;
     }
     
-    ic->internal->offset = AV_NOPTS_VALUE;
-    ic->internal->raw_packet_buffer_remaining_size = RAW_PACKET_BUFFER_SIZE;
-    ic->internal->shortest_end = AV_NOPTS_VALUE;
+    pstFmtCtx->internal->offset = AV_NOPTS_VALUE;
+    pstFmtCtx->internal->raw_packet_buffer_remaining_size = RAW_PACKET_BUFFER_SIZE;
+    pstFmtCtx->internal->shortest_end = AV_NOPTS_VALUE;
 
-    return ic;
+    return pstFmtCtx;
 }
 

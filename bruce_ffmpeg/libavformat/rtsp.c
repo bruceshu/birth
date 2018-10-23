@@ -681,6 +681,7 @@ static int sdp_parse_rtpmap(AVFormatContext *s, AVStream *st, RTSPStream *rtsp_s
     return 0;
 }
 
+#if 0 
 int ff_wms_parse_sdp_a_line(AVFormatContext *s, const char *p)
 {
     int ret = 0;
@@ -733,7 +734,7 @@ int ff_wms_parse_sdp_a_line(AVFormatContext *s, const char *p)
     }
     return ret;
 }
-
+#endif
 
 static void rtsp_parse_range_npt(const char *p, int64_t *start, int64_t *end)
 {
