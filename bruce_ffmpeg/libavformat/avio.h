@@ -89,7 +89,7 @@ typedef struct AVIOContext {
 } AVIOContext;
 
 typedef struct AVIOInternal {
-    URLContext *h;
+    struct URLContext *h;
 } AVIOInternal;
 
 static inline int64_t avio_tell(AVIOContext *s)
