@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "libavutil/error.h"
 #include "libavutil/avstring.h"
@@ -276,6 +277,11 @@ static int avio_short_seek(void *opaque)
     return url_get_short_seek(internal->h);
 }
 
+static int64_t avio_tell(AVIOContext *s)
+{
+    return avio_seek(s, 0, SEEK_CUR);
+}
+
 static int avio_read_pause(void *opaque, int pause)
 {
     AVIOInternal *internal = opaque;
@@ -312,15 +318,6 @@ static const AVClass *avio_child_class_next(const AVClass *prev)
     return prev ? NULL : &url_context_class;
 }
 
-const AVClass avio_class = {
-    .class_name = "AVIOContext",
-    .item_name  = av_default_item_name,
-    .version    = LIBAVUTIL_VERSION_INT,
-    .option     = avio_options,
-    .child_next = avio_child_next,
-    .child_class_next = avio_child_class_next,
-};
-
 static int url_resetbuf(AVIOContext *s, int flags)
 {
     av_assert1(flags == AVIO_FLAG_WRITE || flags == AVIO_FLAG_READ);
@@ -335,7 +332,7 @@ static int url_resetbuf(AVIOContext *s, int flags)
     return 0;
 }
 
-int avio_init_context(AVIOContext *s,
+static int avio_init_context(AVIOContext *s,
                   unsigned char *buffer,
                   int buffer_size,
                   int write_flag,
@@ -385,7 +382,7 @@ int avio_init_context(AVIOContext *s,
     return 0;
 }
 
-AVIOContext *avio_alloc_context(
+static AVIOContext *avio_alloc_context(
                   unsigned char *buffer,
                   int buffer_size,
                   int write_flag,
@@ -402,7 +399,7 @@ AVIOContext *avio_alloc_context(
     return s;
 }
 
-int avio_fdopen(AVIOContext **s, URLContext *h)
+static int avio_fdopen(AVIOContext **s, URLContext *h)
 {
     AVIOInternal *internal = NULL;
     uint8_t *buffer = NULL;
@@ -512,7 +509,7 @@ static int avio_read_packet_wrapper(AVIOContext *s, uint8_t *buf, int size)
     return ret;
 }
 
-int avio_set_buf_size(AVIOContext *s, int buf_size)
+static int avio_set_buf_size(AVIOContext *s, int buf_size)
 {
     uint8_t *buffer;
     buffer = av_malloc(buf_size);

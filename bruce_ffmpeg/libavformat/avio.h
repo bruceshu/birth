@@ -92,11 +92,18 @@ typedef struct AVIOInternal {
     struct URLContext *h;
 } AVIOInternal;
 
-static inline int64_t avio_tell(AVIOContext *s)
-{
-    return avio_seek(s, 0, SEEK_CUR);
-}
+int avio_open_whitelist(AVIOContext **ppstIOCtx, const char *filename, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options);
+int avio_ensure_seekback(AVIOContext *s, int64_t buf_size);
 
 int avio_close(AVIOContext *s);
+int64_t avio_skip(AVIOContext *s, int64_t offset);
+int avio_read(AVIOContext *s, unsigned char *buf, int size);
+int avio_feof(AVIOContext *s);
+void avio_flush(AVIOContext *s);
+int avio_closep(AVIOContext **s);
+void avio_context_free(AVIOContext **ps);
+int avio_rewind_with_probe_data(AVIOContext *s, unsigned char **bufp, int buf_size);
+
+
 
 #endif

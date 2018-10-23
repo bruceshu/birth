@@ -10,9 +10,12 @@
 #ifndef FRAME_H
 #define FRAME_H
 
+#include <stddef.h>
+
 #include "rational.h"
 #include "buffer.h"
 #include "dict.h"
+#include "utils.h"
 #include "version.h"
 
 enum AVFrameSideDataType {

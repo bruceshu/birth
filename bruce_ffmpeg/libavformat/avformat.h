@@ -10,6 +10,7 @@
 #ifndef AVFORMAT_H
 #define AVFORMAT_H
 
+#include <stddef.h>
 
 #include "libavutil/rational.h"
 #include "libavutil/log.h"
@@ -96,6 +97,16 @@ typedef struct AVProbeData {
     int buf_size;
     const char *mime_type; 
 } AVProbeData;
+
+typedef struct AVIndexEntry {
+    int64_t pos;
+    int64_t timestamp;
+#define AVINDEX_KEYFRAME 0x0001
+#define AVINDEX_DISCARD_FRAME  0x0002 
+    int flags:2;
+    int size:30; //Yeah, trying to keep the size of this small to reduce memory requirements (it is 24 vs. 32 bytes due to possible 8-byte alignment).
+    int min_distance;         /**< Minimum distance between this and the previous keyframe, used to avoid unneeded searching. */
+} AVIndexEntry;
 
 typedef struct AVStream {
     int index;    /**< stream index in AVFormatContext */
@@ -374,8 +385,13 @@ typedef struct AVOutputFormat {
     struct AVOutputFormat *next;
 } AVOutputFormat;
 
-AVFormatContext *avformat_alloc_context(void);
-AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened, int *score_max);
 
+AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened, int *score_max);
+int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt, const char *filename, void *logctx, unsigned int offset, unsigned int max_probe_size);
+
+void avformat_free_context(AVFormatContext *s);
+AVFormatContext *avformat_alloc_context();
+int avformat_open_input(AVFormatContext **ppstFmtCtx, const char *filename, AVInputFormat *fmt, AVDictionary **options);
+void avformat_close_input(AVFormatContext **ps);
 
 #endif

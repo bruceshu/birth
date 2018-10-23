@@ -10,9 +10,12 @@
 #ifndef AVCODEC_INTERNAL_H
 #define AVCODEC_INTERNAL_H
 
+#include <stddef.h>
+
 #include "libavutil/internal.h"
 #include "libavutil/frame.h"
 #include "libavutil/buffer.h"
+#include "libavutil/thread.h"
 
 typedef struct DecodeSimpleContext {
     AVPacket *in_pkt;

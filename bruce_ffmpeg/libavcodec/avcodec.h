@@ -15,6 +15,7 @@
 #include "libavutil/internal.h"
 #include "libavutil/pixfmt.h"
 #include "libavutil/samplefmt.h"
+#include "libavutil/utils.h"
 
 #include "internal.h"
 #include "version.h"
