@@ -7,8 +7,8 @@
 *********************************/
 
 
-#ifndef INTERNAL_H
-#define INTERNAL_H
+#ifndef AVFORMAT_INTERNAL_H
+#define AVFORMAT_INTERNAL_H
 
 #include "libavutil/rational.h"
 #include "libavutil/buffer.h"
@@ -27,7 +27,7 @@
 
 #define FF_PACKETLIST_FLAG_REF_PACKET (1 << 0)
 
-
+#if 0
 #ifdef __GNUC__
 #define dynarray_add(tab, nb_ptr, elem)\
 do {\
@@ -41,6 +41,7 @@ do {\
 do {\
     av_dynarray_add((tab), nb_ptr, (elem));\
 } while(0)
+#endif
 #endif
 
 struct AVFormatInternal {

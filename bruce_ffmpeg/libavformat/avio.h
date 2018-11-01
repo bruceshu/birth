@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 #include "libavutil/log.h"
+#include "libavutil/dict.h"
 
 #define AVSEEK_SIZE 0x10000
 #define AVSEEK_FORCE 0x20000

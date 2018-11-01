@@ -7,6 +7,9 @@
 *********************************/
 
 
+#ifndef AVUTIL_UTILS_H
+#define AVUTIL_UTILS_H
+
 #define AV_NOPTS_VALUE ((int64_t)UINT64_C(0x8000000000000000))
 
 #define AV_TIME_BASE            1000000
@@ -43,3 +46,4 @@ void av_url_split(char *proto, int proto_size,
 
 int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info);
 
+#endif

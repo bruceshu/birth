@@ -397,10 +397,10 @@ static void free_stream(AVStream **pst)
 
     if (st->internal) {
         avcodec_free_context(&st->internal->avctx);
-        for (i = 0; i < st->internal->nb_bsfcs; i++) {
+        /*for (i = 0; i < st->internal->nb_bsfcs; i++) {
             //av_bsf_free(&st->internal->bsfcs[i]);
             //av_freep(&st->internal->bsfcs);
-        }
+        }*/
         
         //av_freep(&st->internal->priv_pts);
         //av_bsf_free(&st->internal->extract_extradata.bsf);

@@ -10,6 +10,7 @@
 #ifndef THREAD_H
 #define THREAD_H
 
+#include "config.h"
 
 #if HAVE_PTHREADS || HAVE_W32THREADS || HAVE_OS2THREADS
 
