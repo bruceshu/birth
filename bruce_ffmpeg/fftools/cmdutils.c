@@ -7,6 +7,7 @@
 *********************************/
 
 
+#include "cmdutil.h"
 
 #define INDENT        1
 #define SHOW_VERSION  2
@@ -96,6 +97,7 @@ double parse_number_or_die(const char *context, const char *numstr, int type, do
     return 0;
 }
 
+#if 0
 static int write_option(void *optctx, const OptionDef *po, const char *opt, const char *arg)
 {
     /* new-style options contain an offset into optctx, old-style address of
@@ -146,6 +148,7 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt, cons
 
     return 0;
 }
+#endif
 
 int parse_option(void *optctx, const char *opt, const char *arg, const OptionDef *options)
 {
@@ -175,10 +178,12 @@ int parse_option(void *optctx, const char *opt, const char *arg, const OptionDef
         return AVERROR(EINVAL);
     }
 
+    /*
     ret = write_option(optctx, po, opt, arg);
     if (ret < 0) {
         return ret;
     }
+    */
 
     return !!(po->flags & HAS_ARG);
 }
@@ -190,6 +195,7 @@ void print_error(const char *filename, int err)
 
     if (av_strerror(err, errbuf, sizeof(errbuf)) < 0)
         errbuf_ptr = strerror(AVUNERROR(err));
+    
     av_log(NULL, AV_LOG_ERROR, "%s: %s\n", filename, errbuf_ptr);
 }
 
@@ -203,17 +209,18 @@ AVDictionary **setup_find_stream_info_opts(AVFormatContext *s, AVDictionary *cod
     
     opts = av_mallocz_array(s->nb_streams, sizeof(*opts));
     if (!opts) {
-        av_log(NULL, AV_LOG_ERROR,
-               "Could not alloc memory for stream options.\n");
+        av_log(NULL, AV_LOG_ERROR, "Could not alloc memory for stream options.\n");
         return NULL;
     }
     
-    for (i = 0; i < s->nb_streams; i++)
+    /*for (i = 0; i < s->nb_streams; i++)
         opts[i] = filter_codec_opts(codec_opts, s->streams[i]->codecpar->codec_id, s, s->streams[i], NULL);
+        */
     
     return opts;
 }
 
+#if 0
 AVDictionary *filter_codec_opts(AVDictionary *opts, enum AVCodecID codec_id, AVFormatContext *s, AVStream *st, AVCodec *codec)
 {
     AVDictionary    *ret = NULL;
@@ -267,4 +274,4 @@ AVDictionary *filter_codec_opts(AVDictionary *opts, enum AVCodecID codec_id, AVF
     }
     return ret;
 }
-
+#endif

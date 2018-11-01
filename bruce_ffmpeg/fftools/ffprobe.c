@@ -167,6 +167,7 @@ static void check_options(const OptionDef *po)
     }
 }
 
+#if 0
 void parse_loglevel(int argc, char **argv, const OptionDef *options)
 {
     int idx = locate_option(argc, argv, options, "loglevel");
@@ -216,6 +217,8 @@ int avformat_network_deinit(void)
 #endif
     return 0;
 }
+#endif
+
 
 
 void init_opts(void)
@@ -278,6 +281,7 @@ static void opt_input_file(void *optctx, const char *arg)
     input_filename = arg;
 }
 
+#if 0
 static int writer_register(const Writer *writer)
 {
     static int next_registered_writer_idx = 0;
@@ -288,6 +292,7 @@ static int writer_register(const Writer *writer)
     registered_writers[next_registered_writer_idx++] = writer;
     return 0;
 }
+#endif
 
 #if 0
 #undef OFFSET
@@ -440,7 +445,7 @@ static int open_input_file(InputFile *ifile, const char *filename)
             continue;
         }
         
-        AVDictionary *opts = filter_codec_opts(NULL, stream->codecpar->codec_id, fmt_ctx, stream, codec);
+        //AVDictionary *opts = filter_codec_opts(NULL, stream->codecpar->codec_id, fmt_ctx, stream, codec);
 
         ist->dec_ctx = avcodec_alloc_context3(codec);
         if (!ist->dec_ctx)
@@ -460,7 +465,7 @@ static int open_input_file(InputFile *ifile, const char *filename)
         ist->dec_ctx->pkt_timebase = stream->time_base;
         ist->dec_ctx->framerate = stream->avg_frame_rate;
         
-#if FF_API_LAVF_AVCTX
+#if 0 //FF_API_LAVF_AVCTX
         ist->dec_ctx->coded_width = stream->codec->coded_width;
         ist->dec_ctx->coded_height = stream->codec->coded_height;
 #endif
@@ -470,10 +475,11 @@ static int open_input_file(InputFile *ifile, const char *filename)
             exit(1);
         }*/
 
-        if ((t = av_dict_get(opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) {
+        /*if ((t = av_dict_get(opts, "", NULL, AV_DICT_IGNORE_SUFFIX))) {
             av_log(NULL, AV_LOG_ERROR, "Option %s for input stream %d not found\n", t->key, stream->index);
             return AVERROR_OPTION_NOT_FOUND;
         }
+        */
     }
 
     ifile->fmt_ctx = fmt_ctx;
@@ -495,7 +501,7 @@ static void close_input_file(InputFile *ifile)
     avformat_close_input(&ifile->fmt_ctx);
 }
 
-static int probe_file(WriterContext *wctx, const char *filename)
+static int probe_file(const char *filename)
 {
     InputFile ifile = { 0 };
     int ret, i;
@@ -581,11 +587,11 @@ end:
 
 int main(int argc, char **argv)
 {
-    const Writer *w;
-    WriterContext *wctx;
-    char *buf;
-    char *w_name = NULL, *w_args = NULL;
-    int ret, i;
+    //const Writer *w;
+    //WriterContext *wctx;
+    //char *buf;
+    //char *w_name = NULL, *w_args = NULL;
+    int ret;
 
     //init_dynload();
 

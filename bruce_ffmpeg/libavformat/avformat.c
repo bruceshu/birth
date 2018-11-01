@@ -538,12 +538,10 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt, const char *fil
         if (*fmt) {
             /* This can only be true in the last iteration. */
             if (score <= AVPROBE_SCORE_RETRY) {
-                av_log(logctx, AV_LOG_WARNING,
-                       "Format %s detected only with low score of %d, "
+                av_log(logctx, AV_LOG_WARNING, "Format %s detected only with low score of %d, "
                        "misdetection possible!\n", (*fmt)->name, score);
             } else
-                av_log(logctx, AV_LOG_DEBUG,
-                       "Format %s probed with size=%d and score=%d\n",
+                av_log(logctx, AV_LOG_DEBUG, "Format %s probed with size=%d and score=%d\n",
                        (*fmt)->name, probe_size, score);
 #if 0
             FILE *f = fopen("probestat.tmp", "ab");

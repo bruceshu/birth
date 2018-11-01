@@ -283,6 +283,21 @@ int av_opt_set_dict(void *obj, AVDictionary **options)
     return av_opt_set_dict2(obj, options, 0);
 }
 
+void *av_opt_child_next(void *obj, void *prev)
+{
+    const AVClass *c = *(AVClass **)obj;
+    if (c->child_next)
+        return c->child_next(obj, prev);
+    return NULL;
+}
+
+const AVClass *av_opt_child_class_next(const AVClass *parent, const AVClass *prev)
+{
+    if (parent->child_class_next)
+        return parent->child_class_next(prev);
+    return NULL;
+}
+
 const AVOption *av_opt_find2(void *obj, const char *name, const char *unit, int opt_flags, int search_flags, void **target_obj)
 {
     const AVClass  *c;

@@ -97,6 +97,8 @@ int avio_ensure_seekback(AVIOContext *s, int64_t buf_size);
 
 int avio_close(AVIOContext *s);
 int64_t avio_skip(AVIOContext *s, int64_t offset);
+int64_t avio_tell(AVIOContext *s);
+
 int avio_read(AVIOContext *s, unsigned char *buf, int size);
 int avio_feof(AVIOContext *s);
 void avio_flush(AVIOContext *s);

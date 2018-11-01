@@ -7,7 +7,7 @@
 *********************************/
 
 
-
+#if 0
 static void id3v2_read_internal(AVIOContext *pb, AVDictionary **metadata, AVFormatContext *s, const char *magic, ID3v2ExtraMeta **extra_meta, int64_t max_search_size)
 {
     int len, ret;
@@ -51,12 +51,14 @@ static void id3v2_read_internal(AVIOContext *pb, AVDictionary **metadata, AVForm
     ff_metadata_conv(metadata, NULL, ff_id3v2_4_metadata_conv);
     merge_date(metadata);
 }
+#endif
 
 void id3v2_read_dict(AVIOContext *pb, AVDictionary **metadata, const char *magic, ID3v2ExtraMeta **extra_meta)
 {
-    id3v2_read_internal(pb, metadata, NULL, magic, extra_meta, 0);
+    //id3v2_read_internal(pb, metadata, NULL, magic, extra_meta, 0);
 }
 
+#if 0
 int id3v2_parse_apic(AVFormatContext *s, ID3v2ExtraMeta **extra_meta)
 {
     ID3v2ExtraMeta *cur;
@@ -137,4 +139,4 @@ int ff_id3v2_tag_len(const uint8_t *buf)
         len += ID3v2_HEADER_SIZE;
     return len;
 }
-
+#endif

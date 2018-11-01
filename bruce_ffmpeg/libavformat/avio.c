@@ -277,7 +277,7 @@ static int avio_short_seek(void *opaque)
     return url_get_short_seek(internal->h);
 }
 
-static int64_t avio_tell(AVIOContext *s)
+int64_t avio_tell(AVIOContext *s)
 {
     return avio_seek(s, 0, SEEK_CUR);
 }
@@ -526,10 +526,8 @@ static int avio_set_buf_size(AVIOContext *s, int buf_size)
 
 static void avio_fill_buffer(AVIOContext *s)
 {
-    int max_buffer_size = s->max_packet_size ?
-                          s->max_packet_size : IO_BUFFER_SIZE;
-    uint8_t *dst        = s->buf_end - s->buffer + max_buffer_size < s->buffer_size ?
-                          s->buf_end : s->buffer;
+    int max_buffer_size = s->max_packet_size ? s->max_packet_size : IO_BUFFER_SIZE;
+    uint8_t *dst        = s->buf_end - s->buffer + max_buffer_size < s->buffer_size ? s->buf_end : s->buffer;
     int len             = s->buffer_size - (dst - s->buffer);
 
     /* can't fill the buffer without read_packet, just set EOF if appropriate */
@@ -550,8 +548,9 @@ static void avio_fill_buffer(AVIOContext *s)
     if (s->read_packet && s->orig_buffer_size && s->buffer_size > s->orig_buffer_size) {
         if (dst == s->buffer && s->buf_ptr != dst) {
             int ret = avio_set_buf_size(s, s->orig_buffer_size);
-            if (ret < 0)
+            if (ret < 0) {
                 av_log(s, AV_LOG_WARNING, "Failed to decrease buffer size\n");
+            }
 
             s->checksum_ptr = dst = s->buffer;
         }
