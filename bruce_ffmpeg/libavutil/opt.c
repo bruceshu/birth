@@ -634,7 +634,7 @@ const AVOption *av_opt_next(const void *obj, const AVOption *last)
 void av_opt_free(void *obj)
 {
     const AVOption *o = NULL;
-    while ((o = opt_next(obj, o))) {
+    while ((o = av_opt_next(obj, o))) {
         switch (o->type) {
         case AV_OPT_TYPE_STRING:
         case AV_OPT_TYPE_BINARY:
@@ -642,7 +642,7 @@ void av_opt_free(void *obj)
             break;
 
         case AV_OPT_TYPE_DICT:
-            dict_free((AVDictionary **)(((uint8_t *)obj) + o->offset));
+            av_dict_free((AVDictionary **)(((uint8_t *)obj) + o->offset));
             break;
 
         default:

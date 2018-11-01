@@ -35,6 +35,7 @@ static void dump_metadata(void *ctx, AVDictionary *m, const char *indent)
     }
 }
 
+#if 0
 static void dump_stream_format(AVFormatContext *ic, int i, int index, int is_output)
 {
     char buf[256];
@@ -143,11 +144,13 @@ static void dump_stream_format(AVFormatContext *ic, int i, int index, int is_out
 
     dump_sidedata(NULL, st, "    ");
 }
+#endif
 
 void av_dump_format(AVFormatContext *ic, int index, const char *url, int is_output)
 {
     int i;
     uint8_t *printed = ic->nb_streams ? av_mallocz(ic->nb_streams) : NULL;
+    
     if (ic->nb_streams && !printed)
         return;
 
@@ -186,8 +189,7 @@ void av_dump_format(AVFormatContext *ic, int index, const char *url, int is_outp
         av_log(NULL, AV_LOG_INFO, ", bitrate: ");
         if (ic->bit_rate) {
             av_log(NULL, AV_LOG_INFO, "%"PRId64" kb/s", ic->bit_rate / 1000);
-        }
-        else {
+        } else {
             av_log(NULL, AV_LOG_INFO, "N/A");
         }
         
@@ -211,20 +213,22 @@ void av_dump_format(AVFormatContext *ic, int index, const char *url, int is_outp
             av_log(NULL, AV_LOG_INFO, "  Program %d %s\n", ic->programs[j]->id, name ? name->value : "");
             dump_metadata(NULL, ic->programs[j]->metadata, "    ");
             
-            for (k = 0; k < ic->programs[j]->nb_stream_indexes; k++) {
-                dump_stream_format(ic, ic->programs[j]->stream_index[k],
-                                   index, is_output);
+            /*for (k = 0; k < ic->programs[j]->nb_stream_indexes; k++) {
+                dump_stream_format(ic, ic->programs[j]->stream_index[k], index, is_output);
                 printed[ic->programs[j]->stream_index[k]] = 1;
-            }
+            }*/
+            
             total += ic->programs[j]->nb_stream_indexes;
         }
+        
         if (total < ic->nb_streams)
             av_log(NULL, AV_LOG_INFO, "  No Program\n");
     }
 
-    for (i = 0; i < ic->nb_streams; i++)
+    /*for (i = 0; i < ic->nb_streams; i++)
         if (!printed[i])
             dump_stream_format(ic, i, index, is_output);
+            */
 
     av_free(printed);
 }

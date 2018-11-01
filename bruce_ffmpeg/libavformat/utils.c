@@ -651,24 +651,15 @@ static int update_stream_avctx(AVFormatContext *s)
             continue;
 
         /* close parser, because it depends on the codec */
-        if (st->parser && st->internal->avctx->codec_id != st->codecpar->codec_id) {
+        /*if (st->parser && st->internal->avctx->codec_id != st->codecpar->codec_id) {
             av_parser_close(st->parser);
             st->parser = NULL;
-        }
+        }*/
 
         /* update internal codec context, for the parser */
         ret = avcodec_parameters_to_context(st->internal->avctx, st->codecpar);
         if (ret < 0)
             return ret;
-
-#if FF_API_LAVF_AVCTX
-FF_DISABLE_DEPRECATION_WARNINGS
-        /* update deprecated public codec context */
-        ret = avcodec_parameters_to_context(st->codec, st->codecpar);
-        if (ret < 0)
-            return ret;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
 
         st->internal->need_context_update = 0;
     }

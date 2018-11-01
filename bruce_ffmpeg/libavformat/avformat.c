@@ -741,26 +741,30 @@ int avformat_open_input(AVFormatContext **ppstFmtCtx, const char *filename, AVIn
         return AVERROR(EINVAL);
     }
     
-    if (fmt)
+    if (fmt) {
         pstFmtCtx->iformat = fmt;
+    }
 
-    if (options)
+    if (options) {
         av_dict_copy(&tmp, *options, 0);
+    }
 
     if (pstFmtCtx->pb) {
         pstFmtCtx->flags |= AVFMT_FLAG_CUSTOM_IO;
     }
 
-    if ((ret = av_opt_set_dict(pstFmtCtx, &tmp)) < 0)
+    if ((ret = av_opt_set_dict(pstFmtCtx, &tmp)) < 0) {
         goto fail;
+    }
 
     if (!(pstFmtCtx->url = av_strdup(filename ? filename : ""))) {
         ret = AVERROR(ENOMEM);
         goto fail;
     }
 
-    if ((ret = init_input(pstFmtCtx, filename, &tmp)) < 0)
+    if ((ret = init_input(pstFmtCtx, filename, &tmp)) < 0) {
         goto fail;
+    }
     
     pstFmtCtx->probe_score = ret;
 
@@ -839,7 +843,6 @@ int avformat_open_input(AVFormatContext **ppstFmtCtx, const char *filename, AVIn
         pstFmtCtx->internal->data_offset = avio_tell(pstFmtCtx->pb);
 
     pstFmtCtx->internal->raw_packet_buffer_remaining_size = RAW_PACKET_BUFFER_SIZE;
-
     update_stream_avctx(pstFmtCtx);
 
     for (i = 0; i < pstFmtCtx->nb_streams; i++)
@@ -903,7 +906,6 @@ AVFormatContext *avformat_alloc_context()
     }
     
     avformat_get_context_defaults(pstFmtCtx);
-
     pstFmtCtx->internal = av_mallocz(sizeof(*pstFmtCtx->internal));
     if (!pstFmtCtx->internal) {
         avformat_free_context(pstFmtCtx);

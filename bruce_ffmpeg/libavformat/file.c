@@ -70,7 +70,7 @@ static const AVClass file_class = {
     .option     = file_options,
 };
 
-const URLProtocol file_protocol = {
+const URLProtocol ff_file_protocol = {
     .name               = "file",
     .url_open           = file_open,
     .priv_data_size     = sizeof(FileContext),

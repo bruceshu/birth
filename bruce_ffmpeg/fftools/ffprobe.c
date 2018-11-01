@@ -256,6 +256,7 @@ void parse_options(void *optctx, int argc, char **argv, const OptionDef *options
 
             if ((ret = parse_option(optctx, opt, argv[optindex], options)) < 0)
                 exit_program(1);
+            
             optindex += ret;
         } else {
             if (parse_arg_function)
@@ -404,6 +405,7 @@ static int open_input_file(InputFile *ifile, const char *filename)
             av_dict_free(&opts[i]);
         
         av_freep(&opts);
+        
         if (err < 0) {
             print_error(filename, err);
             return err;
@@ -504,8 +506,9 @@ static int probe_file(WriterContext *wctx, const char *filename)
     //do_read_packets = do_show_packets || do_count_packets;
 
     ret = open_input_file(&ifile, filename);
-    if (ret < 0)
+    if (ret < 0) {
         goto end;
+    }
 #if 0
 #define CHECK_END if (ret < 0) goto end
 
@@ -566,8 +569,9 @@ static int probe_file(WriterContext *wctx, const char *filename)
 #endif
 
 end:
-    if (ifile.fmt_ctx)
+    if (ifile.fmt_ctx) {
         close_input_file(&ifile);
+    }
     //av_freep(&nb_streams_frames);
     //av_freep(&nb_streams_packets);
     //av_freep(&selected_streams);
@@ -585,19 +589,19 @@ int main(int argc, char **argv)
 
     //init_dynload();
 
-#if HAVE_THREADS
+#if 0 //HAVE_THREADS
     ret = pthread_mutex_init(&log_mutex, NULL);
     if (ret != 0) {
         goto end;
     }
 #endif
 
-    av_log_set_flags(AV_LOG_SKIP_REPEATED);
-    register_exit(ffprobe_cleanup);
+    //av_log_set_flags(AV_LOG_SKIP_REPEATED);
+    //register_exit(ffprobe_cleanup);
 
     //options = real_options;
     //parse_loglevel(argc, argv, NULL);
-    avformat_network_init();
+    //avformat_network_init();
     //init_opts();
 #if 0 //CONFIG_AVDEVICE
     avdevice_register_all();
@@ -699,12 +703,12 @@ int main(int argc, char **argv)
         av_log(NULL, AV_LOG_ERROR, "Use -h to get full help or, even better, run 'man %s'.\n", program_name);
         ret = AVERROR(EINVAL);
     } else if (input_filename) {
-        ret = probe_file(NULL, input_filename);
-        if (ret < 0 && do_show_error)
-            show_error(NULL, ret);
+        probe_file(NULL, input_filename);
+        //if (ret < 0 && do_show_error)
+        //    show_error(NULL, ret);
     }
 
-end:
+//end:
     //av_freep(&print_format);
     //av_freep(&read_intervals);
     //av_hash_freep(&hash);
@@ -713,7 +717,7 @@ end:
     //for (i = 0; i < FF_ARRAY_ELEMS(sections); i++)
     //    av_dict_free(&(sections[i].entries_to_show));
 
-    avformat_network_deinit();
+    //avformat_network_deinit();
 
     return ret < 0;
 }
