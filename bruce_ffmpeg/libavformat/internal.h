@@ -10,10 +10,13 @@
 #ifndef AVFORMAT_INTERNAL_H
 #define AVFORMAT_INTERNAL_H
 
+#include <stdint.h>
+
 #include "libavutil/rational.h"
 #include "libavutil/buffer.h"
 
 #include "libavcodec/avcodec.h"
+#include "libavcodec/internal.h"
 
 
 #define MAX_URL_SIZE 4096

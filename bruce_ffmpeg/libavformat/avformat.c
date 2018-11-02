@@ -12,15 +12,16 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "avio.h"
-#include "avformat.h"
-#include "id3v2.h"
-
 #include "libavutil/opt.h"
 #include "libavutil/utils.h"
 #include "libavutil/error.h"
 #include "libavutil/thread.h"
 #include "libavutil/mem.h"
+
+#include "avio.h"
+#include "avformat.h"
+#include "id3v2.h"
+
 
 extern AVInputFormat  ff_aac_demuxer;
 extern AVInputFormat  ff_ac3_demuxer;

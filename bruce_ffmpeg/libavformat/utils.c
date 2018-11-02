@@ -711,7 +711,7 @@ void ff_packet_list_free(AVPacketList **pkt_buf, AVPacketList **pkt_buf_end)
     *pkt_buf_end = NULL;
 }
 
-static void flush_packet_queue(AVFormatContext *s)
+void flush_packet_queue(AVFormatContext *s)
 {
     if (!s->internal)
         return;

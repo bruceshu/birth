@@ -11,10 +11,9 @@
 #define AVFORMAT_H
 
 #include <stddef.h>
+#include <stdint.h>
 
-#include "libavutil/rational.h"
 #include "libavutil/log.h"
-#include "libavutil/dict.h"
 #include "libavutil/internal.h"
 
 #include "libavcodec/avcodec.h"
@@ -84,13 +83,6 @@ enum AVDurationEstimationMethod {
 
 typedef int (*av_format_control_message)(struct AVFormatContext *s, int type, void *data, size_t data_size);
 
-typedef struct AVChapter {
-    int id;                 ///< unique ID to identify the chapter
-    AVRational time_base;   ///< time base in which the start/end timestamps are specified
-    int64_t start, end;     ///< chapter start/end time in time_base units
-    AVDictionary *metadata;
-} AVChapter;
-
 typedef struct AVProbeData {
     const char *filename;
     unsigned char *buf; 
@@ -107,6 +99,13 @@ typedef struct AVIndexEntry {
     int size:30; //Yeah, trying to keep the size of this small to reduce memory requirements (it is 24 vs. 32 bytes due to possible 8-byte alignment).
     int min_distance;         /**< Minimum distance between this and the previous keyframe, used to avoid unneeded searching. */
 } AVIndexEntry;
+
+typedef struct AVChapter {
+    int id;                 ///< unique ID to identify the chapter
+    AVRational time_base;   ///< time base in which the start/end timestamps are specified
+    int64_t start, end;     ///< chapter start/end time in time_base units
+    AVDictionary *metadata;
+} AVChapter;
 
 typedef struct AVStream {
     int index;    /**< stream index in AVFormatContext */
@@ -203,6 +202,81 @@ typedef struct AVProgram {
     int64_t pts_wrap_reference;    ///< reference dts for wrap detection
     int pts_wrap_behavior;         ///< behavior on wrap detection
 } AVProgram;
+
+typedef struct AVDeviceCapabilitiesQuery {
+    const AVClass *av_class;
+    AVFormatContext *device_context;
+    enum AVCodecID codec;
+    enum AVSampleFormat sample_format;
+    enum AVPixelFormat pixel_format;
+    int sample_rate;
+    int channels;
+    int64_t channel_layout;
+    int window_width;
+    int window_height;
+    int frame_width;
+    int frame_height;
+    AVRational fps;
+} AVDeviceCapabilitiesQuery;
+
+typedef struct AVInputFormat {
+    const char *name;
+    const char *long_name;
+    int flags;
+    const char *extensions;
+    const struct AVCodecTag * const *codec_tag;
+    const AVClass *priv_class; ///< AVClass for the private context
+    const char *mime_type;
+    int raw_codec_id;
+    int priv_data_size;
+    int (*read_probe)(AVProbeData *);
+    int (*read_header)(struct AVFormatContext *);
+    int (*read_header2)(struct AVFormatContext *, AVDictionary **options);
+    int (*read_packet)(struct AVFormatContext *, AVPacket *pkt);
+    int (*read_close)(struct AVFormatContext *);
+    int (*read_seek)(struct AVFormatContext *, int stream_index, int64_t timestamp, int flags);
+    int64_t (*read_timestamp)(struct AVFormatContext *s, int stream_index, int64_t *pos, int64_t pos_limit);
+    int (*read_play)(struct AVFormatContext *);
+    int (*read_pause)(struct AVFormatContext *);
+    int (*read_seek2)(struct AVFormatContext *s, int stream_index, int64_t min_ts, int64_t ts, int64_t max_ts, int flags);
+    int (*get_device_list)(struct AVFormatContext *s, struct AVDeviceInfoList *device_list);
+    int (*create_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
+    int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
+    
+    struct AVInputFormat *next;
+} AVInputFormat;
+
+typedef struct AVOutputFormat {
+    const char *name;
+    const char *long_name;
+    const char *mime_type;
+    const char *extensions; /**< comma-separated filename extensions */
+    /* output support */
+    enum AVCodecID audio_codec;    /**< default audio codec */
+    enum AVCodecID video_codec;    /**< default video codec */
+    enum AVCodecID subtitle_codec; /**< default subtitle codec */
+    int flags;
+    const struct AVCodecTag * const *codec_tag;
+    const AVClass *priv_class; ///< AVClass for the private context
+    int priv_data_size;
+    int (*write_header)(struct AVFormatContext *);
+    int (*write_packet)(struct AVFormatContext *, AVPacket *pkt);
+    int (*write_trailer)(struct AVFormatContext *);
+    int (*interleave_packet)(struct AVFormatContext *, AVPacket *out, AVPacket *in, int flush);
+    int (*query_codec)(enum AVCodecID id, int std_compliance);
+    void (*get_output_timestamp)(struct AVFormatContext *s, int stream, int64_t *dts, int64_t *wall);
+    int (*control_message)(struct AVFormatContext *s, int type, void *data, size_t data_size);
+    int (*write_uncoded_frame)(struct AVFormatContext *, int stream_index, AVFrame **frame, unsigned flags);
+    int (*get_device_list)(struct AVFormatContext *s, struct AVDeviceInfoList *device_list);
+    int (*create_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
+    int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
+    enum AVCodecID data_codec; /**< default data codec */
+    int (*init)(struct AVFormatContext *);
+    void (*deinit)(struct AVFormatContext *);
+    int (*check_bitstream)(struct AVFormatContext *, const AVPacket *pkt);
+
+    struct AVOutputFormat *next;
+} AVOutputFormat;
 
 typedef struct AVFormatContext {
     const AVClass *av_class;
@@ -310,87 +384,12 @@ typedef struct AVFormatContext {
     int skip_estimate_duration_from_pts;
 } AVFormatContext;
 
-typedef struct AVInputFormat {
-    const char *name;
-    const char *long_name;
-    int flags;
-    const char *extensions;
-    const struct AVCodecTag * const *codec_tag;
-    const AVClass *priv_class; ///< AVClass for the private context
-    const char *mime_type;
-    int raw_codec_id;
-    int priv_data_size;
-    int (*read_probe)(AVProbeData *);
-    int (*read_header)(struct AVFormatContext *);
-    int (*read_header2)(struct AVFormatContext *, AVDictionary **options);
-    int (*read_packet)(struct AVFormatContext *, AVPacket *pkt);
-    int (*read_close)(struct AVFormatContext *);
-    int (*read_seek)(struct AVFormatContext *, int stream_index, int64_t timestamp, int flags);
-    int64_t (*read_timestamp)(struct AVFormatContext *s, int stream_index, int64_t *pos, int64_t pos_limit);
-    int (*read_play)(struct AVFormatContext *);
-    int (*read_pause)(struct AVFormatContext *);
-    int (*read_seek2)(struct AVFormatContext *s, int stream_index, int64_t min_ts, int64_t ts, int64_t max_ts, int flags);
-    int (*get_device_list)(struct AVFormatContext *s, struct AVDeviceInfoList *device_list);
-    int (*create_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
-    int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
-    
-    struct AVInputFormat *next;
-} AVInputFormat;
-
-typedef struct AVDeviceCapabilitiesQuery {
-    const AVClass *av_class;
-    AVFormatContext *device_context;
-    enum AVCodecID codec;
-    enum AVSampleFormat sample_format;
-    enum AVPixelFormat pixel_format;
-    int sample_rate;
-    int channels;
-    int64_t channel_layout;
-    int window_width;
-    int window_height;
-    int frame_width;
-    int frame_height;
-    AVRational fps;
-} AVDeviceCapabilitiesQuery;
-
-typedef struct AVOutputFormat {
-    const char *name;
-    const char *long_name;
-    const char *mime_type;
-    const char *extensions; /**< comma-separated filename extensions */
-    /* output support */
-    enum AVCodecID audio_codec;    /**< default audio codec */
-    enum AVCodecID video_codec;    /**< default video codec */
-    enum AVCodecID subtitle_codec; /**< default subtitle codec */
-    int flags;
-    const struct AVCodecTag * const *codec_tag;
-    const AVClass *priv_class; ///< AVClass for the private context
-    int priv_data_size;
-    int (*write_header)(struct AVFormatContext *);
-    int (*write_packet)(struct AVFormatContext *, AVPacket *pkt);
-    int (*write_trailer)(struct AVFormatContext *);
-    int (*interleave_packet)(struct AVFormatContext *, AVPacket *out, AVPacket *in, int flush);
-    int (*query_codec)(enum AVCodecID id, int std_compliance);
-    void (*get_output_timestamp)(struct AVFormatContext *s, int stream, int64_t *dts, int64_t *wall);
-    int (*control_message)(struct AVFormatContext *s, int type, void *data, size_t data_size);
-    int (*write_uncoded_frame)(struct AVFormatContext *, int stream_index, AVFrame **frame, unsigned flags);
-    int (*get_device_list)(struct AVFormatContext *s, struct AVDeviceInfoList *device_list);
-    int (*create_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
-    int (*free_device_capabilities)(struct AVFormatContext *s, struct AVDeviceCapabilitiesQuery *caps);
-    enum AVCodecID data_codec; /**< default data codec */
-    int (*init)(struct AVFormatContext *);
-    void (*deinit)(struct AVFormatContext *);
-    int (*check_bitstream)(struct AVFormatContext *, const AVPacket *pkt);
-
-    struct AVOutputFormat *next;
-} AVOutputFormat;
-
+AVFormatContext *avformat_alloc_context();
 
 AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened, int *score_max);
 int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt, const char *filename, void *logctx, unsigned int offset, unsigned int max_probe_size);
 
 void avformat_free_context(AVFormatContext *s);
-AVFormatContext *avformat_alloc_context();
 int avformat_open_input(AVFormatContext **ppstFmtCtx, const char *filename, AVInputFormat *fmt, AVDictionary **options);
 void avformat_close_input(AVFormatContext **ps);
 
