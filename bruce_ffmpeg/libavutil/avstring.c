@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <stdint.h>
+#include <sys/types.h>
 
 #include "avstring.h"
 
