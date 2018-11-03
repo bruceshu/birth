@@ -1,6 +1,16 @@
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-11-03
+ * Description:
+ 
+*********************************/
 
 
+#include <stdatomic.h>
+#include <stdint.h>
 
+#include "mem.h"
 
 void av_buffer_default_free(void *opaque, uint8_t *data)
 {
@@ -12,7 +22,7 @@ AVBufferRef *av_buffer_create(uint8_t *data, int size, void (*free)(void *opaque
     AVBufferRef *ref = NULL;
     AVBuffer    *buf = NULL;
 
-    buf = ff_mallocz(sizeof(*buf));
+    buf = av_mallocz(sizeof(*buf));
     if (!buf)
         return NULL;
 
@@ -26,9 +36,9 @@ AVBufferRef *av_buffer_create(uint8_t *data, int size, void (*free)(void *opaque
     if (flags & AV_BUFFER_FLAG_READONLY)
         buf->flags |= BUFFER_FLAG_READONLY;
 
-    ref = ff_mallocz(sizeof(*ref));
+    ref = av_mallocz(sizeof(*ref));
     if (!ref) {
-        freep(&buf);
+        av_freep(&buf);
         return NULL;
     }
 
@@ -39,7 +49,7 @@ AVBufferRef *av_buffer_create(uint8_t *data, int size, void (*free)(void *opaque
     return ref;
 }
 
-static void buffer_replace(AVBufferRef **dst, AVBufferRef **src)
+void buffer_replace(AVBufferRef **dst, AVBufferRef **src)
 {
     AVBuffer *b;
 

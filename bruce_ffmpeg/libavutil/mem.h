@@ -38,6 +38,17 @@
 #endif
 #endif
 
+static inline int av_size_mult(size_t a, size_t b, size_t *r)
+{
+    size_t t = a * b;
+    /* Hack inspired from glibc: don't try the division if nelem and elsize are both less than sqrt(SIZE_MAX). */
+    if ((a | b) >= ((size_t)1 << (sizeof(size_t) * 4)) && a && t / a != b)
+        return AVERROR(EINVAL);
+    *r = t;
+    return 0;
+}
+
+
 void max_alloc_set(size_t max);
 void *av_malloc(size_t size);
 void *av_mallocz(size_t size);

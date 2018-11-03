@@ -10,6 +10,8 @@ description:
 #ifndef DICT_H
 #define DICT_H
 
+#include <stdint.h>
+
 #define AV_DICT_MATCH_CASE      1
 #define AV_DICT_IGNORE_SUFFIX   2
 #define AV_DICT_DONT_STRDUP_KEY 4
