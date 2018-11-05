@@ -9,7 +9,8 @@
 
 #include <stddef.h>
 
-#include "log.h"
+#include "libavutil/log.h"
+
 #include "cmdutil.h"
 #include "config.h"
 
