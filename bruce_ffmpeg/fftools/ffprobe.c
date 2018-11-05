@@ -387,7 +387,7 @@ static int open_input_file(InputFile *ifile, const char *filename)
     }*/
 
     if (find_stream_info) {
-        AVDictionary **opts = setup_find_stream_info_opts(fmt_ctx, NULL);
+        AVDictionary **opts = NULL;//setup_find_stream_info_opts(fmt_ctx, NULL);
         int orig_nb_streams = fmt_ctx->nb_streams;
 
         err = avformat_find_stream_info(fmt_ctx, opts);

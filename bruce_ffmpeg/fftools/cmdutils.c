@@ -223,6 +223,7 @@ void print_error(const char *filename, int err)
     av_log(NULL, AV_LOG_ERROR, "%s: %s\n", filename, errbuf_ptr);
 }
 
+#if 0
 AVDictionary **setup_find_stream_info_opts(AVFormatContext *s, AVDictionary *codec_opts)
 {
     int i;
@@ -243,6 +244,7 @@ AVDictionary **setup_find_stream_info_opts(AVFormatContext *s, AVDictionary *cod
     
     return opts;
 }
+#endif
 
 #if 0
 AVDictionary *filter_codec_opts(AVDictionary *opts, enum AVCodecID codec_id, AVFormatContext *s, AVStream *st, AVCodec *codec)
