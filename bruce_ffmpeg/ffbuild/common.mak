@@ -3,7 +3,6 @@
 #$(warning common_mak SUBDIR=$(SUBDIR))
 
 ifndef SUBDIR
-
 ifndef V
 Q      = @
 ECHO   = printf "$(1)\t%s\n" $(2)
@@ -29,7 +28,6 @@ COMPILE_C = $(call COMPILE,CC)
 	$(COMPILE_C)
 	
 %.c %.h %.pc %.ver %.version: TAG = GEN
-
 endif
 
 include $(SRC_PATH)/ffbuild/arch.mak

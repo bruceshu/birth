@@ -59,6 +59,19 @@ endif
 %$(PROGSSUF)_g$(EXESUF): $(FF_DEP_LIBS)
 	$(LD) $(LDFLAGS) $(LDEXEFLAGS) $(LD_O) $(OBJS-$*) $(FF_EXTRALIBS)
 
+VERSION_SH  = $(SRC_PATH)/ffbuild/version.sh
+	
+.version: $(wildcard $(VERSION_SH) ffbuild/config.mak
+.version: M=@
+	
+libavutil/ffversion.h .version:
+	$(M)$(VERSION_SH) $(SRC_PATH) libavutil/ffversion.h $(EXTRA_VERSION)
+	$(Q)touch .version
+	
+	
+	
+	
+	
 install: install-libs install-headers
 
 install-libs: install-libs-yes
