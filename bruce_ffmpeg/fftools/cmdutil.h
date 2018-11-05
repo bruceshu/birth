@@ -46,6 +46,11 @@ typedef struct OptionDef {
     const char *argname;
 } OptionDef;
 
+extern const int program_birth_year;
+
+void exit_program(int ret);
+
 void print_error(const char *filename, int err);
+
 
 #endif

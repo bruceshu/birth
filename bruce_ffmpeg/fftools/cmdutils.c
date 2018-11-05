@@ -8,8 +8,13 @@
 
 
 #include <stddef.h>
+#include <errno.h>
 
 #include "libavutil/log.h"
+#include "libavutil/ffversion.h"
+#include "libavutil/dict.h"
+
+#include "libavformat/avformat.h"
 
 #include "cmdutil.h"
 #include "config.h"
@@ -84,7 +89,7 @@ double parse_number_or_die(const char *context, const char *numstr, int type, do
 {
     char *tail;
     const char *error;
-    double d = av_strtod(numstr, &tail);
+    /*double d = av_strtod(numstr, &tail);
     if (*tail)
         error = "Expected number for %s but found: %s\n";
     else if (d < min || d > max)
@@ -94,7 +99,7 @@ double parse_number_or_die(const char *context, const char *numstr, int type, do
     else if (type == OPT_INT && (int)d != d)
         error = "Expected int for %s but found %s\n";
     else
-        return d;
+        return d;*/
     
     av_log(NULL, AV_LOG_FATAL, error, context, numstr, min, max);
     exit_program(1);
@@ -154,6 +159,20 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt, cons
     return 0;
 }
 #endif
+
+static const OptionDef *find_option(const OptionDef *po, const char *name)
+{
+    const char *p = strchr(name, ':');
+    int len = p ? p - name : strlen(name);
+
+    while (po->name) {
+        if (!strncmp(name, po->name, len) && strlen(po->name) == len)
+            break;
+        po++;
+    }
+    
+    return po;
+}
 
 int parse_option(void *optctx, const char *opt, const char *arg, const OptionDef *options)
 {
