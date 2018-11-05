@@ -11,7 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
-
+#include <errno.h>
 
 #define HAVE_GETTIMEOFDAY 1
 #define HAVE_UNISTD_H 1
