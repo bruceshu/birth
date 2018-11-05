@@ -34,10 +34,13 @@ AVDictionaryEntry *av_dict_get(const AVDictionary *m, const char *key, const AVD
         else
             for (j = 0; av_toupper(s[j]) == av_toupper(key[j]) && key[j]; j++)
                 ;
+            
         if (key[j])
             continue;
+        
         if (s[j] && !(flags & AV_DICT_IGNORE_SUFFIX))
             continue;
+        
         return &m->elems[i];
     }
     return NULL;
@@ -50,7 +53,7 @@ int av_dict_set(AVDictionary **pm, const char *key, const char *value, int flags
     char *oldval = NULL, *copy_key = NULL, *copy_value = NULL;
 
     if (!(flags & AV_DICT_MULTIKEY)) {
-        tag = dict_get(m, key, NULL, flags);
+        tag = av_dict_get(m, key, NULL, flags);
     }
     if (flags & AV_DICT_DONT_STRDUP_KEY)
         copy_key = (void *)key;
@@ -123,15 +126,15 @@ int av_dict_set_int(AVDictionary **pm, const char *key, int64_t value, int flags
     char valuestr[22];
     snprintf(valuestr, sizeof(valuestr), "%"PRId64, value);
     flags &= ~AV_DICT_DONT_STRDUP_VAL;
-    return dict_set(pm, key, valuestr, flags);
+    return av_dict_set(pm, key, valuestr, flags);
 }
 
 int av_dict_copy(AVDictionary **dst, const AVDictionary *src, int flags)
 {
     AVDictionaryEntry *t = NULL;
 
-    while ((t = dict_get(src, "", t, AV_DICT_IGNORE_SUFFIX))) {
-        int ret = dict_set(dst, t->key, t->value, flags);
+    while ((t = av_dict_get(src, "", t, AV_DICT_IGNORE_SUFFIX))) {
+        int ret = av_dict_set(dst, t->key, t->value, flags);
         if (ret < 0)
             return ret;
     }

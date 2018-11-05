@@ -14,6 +14,12 @@ BUILT_HEADERS =
 OBJS = error.o \
 	   log.o \
 	   mem.o \
+	   dict.o \
+	   buffer.o \
+	   avstring.o \
+	   rational.o \
+	   time.o \
+	   
 	   
 OBJS-$(CONFIG_CUDA) += hwcontext_cuda.o
 

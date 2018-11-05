@@ -29,4 +29,11 @@ typedef struct AVBufferRef {
     int      size;
 } AVBufferRef;
 
+
+void av_buffer_default_free(void *opaque, uint8_t *data);
+AVBufferRef *av_buffer_create(uint8_t *data, int size, void (*free)(void *opaque, uint8_t *data), void *opaque, int flags);
+void buffer_replace(AVBufferRef **dst, AVBufferRef **src);
+void av_buffer_unref(AVBufferRef **buf);
+
+
 #endif

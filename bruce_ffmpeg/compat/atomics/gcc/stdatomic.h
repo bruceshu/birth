@@ -20,5 +20,10 @@
 #define atomic_fetch_add_explicit(object, operand, order) \
     atomic_fetch_add(object, operand)
 
+#define atomic_init(obj, value) \
+do {                            \
+    *(obj) = (value);           \
+} while(0)
+
 
 #endif /* COMPAT_ATOMICS_GCC_STDATOMIC_H */
