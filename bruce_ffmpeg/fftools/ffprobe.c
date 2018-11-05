@@ -82,7 +82,7 @@ pthread_mutex_t log_mutex;
 #endif
 
 static const char program_name[] = "ffprobe";
-static const int program_birth_year = 2007;
+const int program_birth_year = 2007;
 
 static int do_show_error   = 0;
 static int hide_banner = 1;

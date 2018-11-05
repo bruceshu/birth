@@ -7,7 +7,11 @@
 *********************************/
 
 
+#include <stddef.h>
+
+#include "log.h"
 #include "cmdutil.h"
+#include "config.h"
 
 #define INDENT        1
 #define SHOW_VERSION  2
@@ -64,7 +68,7 @@ void print_program_info(int flags, int level)
 
 void print_all_libs_info(int flags, int level)
 {
-    PRINT_LIB_INFO(avutil,     AVUTIL,     flags, level);
+    /*PRINT_LIB_INFO(avutil,     AVUTIL,     flags, level);
     PRINT_LIB_INFO(avcodec,    AVCODEC,    flags, level);
     PRINT_LIB_INFO(avformat,   AVFORMAT,   flags, level);
     PRINT_LIB_INFO(avdevice,   AVDEVICE,   flags, level);
@@ -72,7 +76,7 @@ void print_all_libs_info(int flags, int level)
     PRINT_LIB_INFO(avresample, AVRESAMPLE, flags, level);
     PRINT_LIB_INFO(swscale,    SWSCALE,    flags, level);
     PRINT_LIB_INFO(swresample, SWRESAMPLE, flags, level);
-    PRINT_LIB_INFO(postproc,   POSTPROC,   flags, level);
+    PRINT_LIB_INFO(postproc,   POSTPROC,   flags, level);*/
 }
 
 double parse_number_or_die(const char *context, const char *numstr, int type, double min, double max)

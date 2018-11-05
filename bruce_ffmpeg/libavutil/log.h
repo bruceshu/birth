@@ -61,6 +61,9 @@
  */
 #define AV_LOG_TRACE    56
 
+#define AV_LOG_SKIP_REPEATED 1
+#define AV_LOG_PRINT_LEVEL 2
+
 typedef enum {
     AV_CLASS_CATEGORY_NA = 0,
     AV_CLASS_CATEGORY_INPUT,
@@ -102,10 +105,9 @@ typedef struct AVClass {
     int (*query_ranges)(AVOptionRanges **, void *obj, const char *key, int flags);
 } AVClass;
 
+
+
 void av_log(void* avcl, int level, const char *fmt, ...);
 const char *av_default_item_name(void *ptr);
-
-#define AV_LOG_SKIP_REPEATED 1
-#define AV_LOG_PRINT_LEVEL 2
 
 #endif

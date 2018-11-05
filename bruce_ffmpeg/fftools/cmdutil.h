@@ -10,6 +10,8 @@
 #ifndef CMDUTIL_H
 #define CMDUTIL_H
 
+#include <stddef.h>
+
 typedef struct OptionDef {
     const char *name;
     int flags;
