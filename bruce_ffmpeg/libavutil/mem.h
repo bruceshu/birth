@@ -54,7 +54,7 @@ static inline int av_size_mult(size_t a, size_t b, size_t *r)
 void max_alloc_set(size_t max);
 void *av_malloc(size_t size);
 void *av_mallocz(size_t size);
-void **av_mallocz_array(int n_elem, size_t size);
+void *av_mallocz_array(int n_elem, size_t size);
 void *av_realloc(void *ptr, size_t size);
 int av_reallocp(void *ptr, size_t size);
 void *av_realloc_f(void *ptr, size_t nelem, size_t elsize);
