@@ -9,6 +9,7 @@
 
 #include <stdatomic.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "mem.h"
 #include "buffer.h"

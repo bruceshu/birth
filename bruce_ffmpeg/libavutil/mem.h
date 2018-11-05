@@ -11,7 +11,8 @@
 #define MEM_H
 
 #include <stddef.h>
-#include <errno.h>
+
+#include "error.h"
 
 #if 0 //后续研究
 #if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1110 || defined(__SUNPRO_C)

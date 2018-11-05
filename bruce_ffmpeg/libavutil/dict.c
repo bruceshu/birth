@@ -8,6 +8,8 @@
 
 
 #include <string.h>
+#include <stdio.h>
+#include <inttypes.h>
 
 #include "avstring.h"
 #include "mem.h"
