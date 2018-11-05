@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include "mem.h"
+#include "buffer.h"
 
 void av_buffer_default_free(void *opaque, uint8_t *data)
 {
