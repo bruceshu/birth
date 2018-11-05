@@ -61,7 +61,7 @@ endif
 
 VERSION_SH  = $(SRC_PATH)/ffbuild/version.sh
 	
-.version: $(wildcard $(VERSION_SH) ffbuild/config.mak
+.version: $(VERSION_SH) ffbuild/config.mak
 .version: M=@
 	
 libavutil/ffversion.h .version:
