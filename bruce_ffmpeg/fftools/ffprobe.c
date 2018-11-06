@@ -9,12 +9,24 @@
 
 
 #include <pthread.h>
+#include <stdlib.h>
 
 #include "libavutil/rational.h"
+#include "libavutil/log.h"
+#include "libavutil/dict.h"
+#include "libavutil/mem.h"
+#include "libavutil/error.h"
+
+#include "libavcodec/avcodec.h"
+
+#include "libavformat/avformat.h"
+
+#include "fftools/cmdutil.h"
 
 #define SECTION_MAX_NB_LEVELS 10
 #define MAX_REGISTERED_WRITERS_NB 64
 
+#if 0
 typedef struct WriterContext {
     const AVClass *class;           ///< class of the writer
     const Writer *writer;           ///< the Writer of which this is an instance
@@ -58,6 +70,7 @@ typedef struct Writer {
     void (*print_string)        (WriterContext *wctx, const char *, const char *);
     int flags;                  ///< a combination or WRITER_FLAG_*
 } Writer;
+#endif
 
 typedef struct DefaultContext {
     const AVClass *class;
