@@ -8,12 +8,14 @@
 
 
 #include <string.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <sys/types.h>
 
 #include "avstring.h"
+#include "common.h"
 
 int av_strstart(const char *str, const char *pfx, const char **ptr)
 {

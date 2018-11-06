@@ -8,7 +8,7 @@ include ffbuild/config.mak
 #目标编译的库名称
 #FFLIBS-$(CONFIG_AVDEVICE) += avdevice
 #FFLIBS-$(CONFIG_AVFILTER) += avfilter
-#FFLIBS-$(CONFIG_AVFORMAT) += avformat
+FFLIBS-$(CONFIG_AVFORMAT) += avformat
 #FFLIBS-$(CONFIG_AVCODEC) += avcodec
 #FFLIBS-$(CONFIG_AVRESAMPLE) += avresample
 #FFLIBS-$(CONFIG_POSTPROC) += postproc

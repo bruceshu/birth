@@ -120,7 +120,7 @@ static void ffprobe_cleanup(int ret)
     //    av_dict_free(&(sections[i].entries_to_show));
 
 #if HAVE_THREADS
-    pthread_mutex_destroy(&log_mutex);
+    //pthread_mutex_destroy(&log_mutex);
 #endif
 }
 
