@@ -26,6 +26,7 @@
 #define SHOW_CONFIG   4
 #define SHOW_COPYRIGHT 8
 
+#if 0
 #define PRINT_LIB_INFO(libname, LIBNAME, flags, level)                  \
     if (CONFIG_##LIBNAME) {                                             \
         const char *indent = flags & INDENT? "  " : "";                 \
@@ -41,7 +42,6 @@
                    AV_VERSION_MICRO(version));                          \
         }                                                               \
 
-/* //后续需要再放开
         if (flags & SHOW_CONFIG) {                                      \
             const char *cfg = libname##_configuration();                \
             if (strcmp(FFMPEG_CONFIGURATION, cfg)) {                    \
@@ -55,8 +55,9 @@
                         indent, #libname, cfg);                         \
             }                                                           \
         }                                                               
-*/
     }
+#endif
+    
 
 
 void print_program_info(int flags, int level)
