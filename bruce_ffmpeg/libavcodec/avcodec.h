@@ -85,7 +85,7 @@ enum AVAudioServiceType {
     AV_AUDIO_SERVICE_TYPE_EMERGENCY         = 6,
     AV_AUDIO_SERVICE_TYPE_VOICE_OVER        = 7,
     AV_AUDIO_SERVICE_TYPE_KARAOKE           = 8,
-    AV_AUDIO_SERVICE_TYPE_NB                   , ///< Not part of ABI
+    AV_AUDIO_SERVICE_TYPE_NB, ///< Not part of ABI
 };
 
 typedef struct AVCodecTag {
@@ -649,7 +649,7 @@ typedef struct AVCodecParser {
     void (*parser_close)(AVCodecParserContext *s);
     int (*split)(AVCodecContext *avctx, const uint8_t *buf, int buf_size);
     struct AVCodecParser *next;
-}                                                                 } AVCodecTag;
+};
 #endif
 
 #endif
