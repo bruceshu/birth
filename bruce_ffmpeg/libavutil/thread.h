@@ -28,6 +28,9 @@
 #define ff_thread_once(control, routine) pthread_once(control, routine)
 
 #else
+#define AVMutex char
+#define AV_MUTEX_INITIALIZER 0
+
 #define AVOnce char
 #define AV_ONCE_INIT 0
 

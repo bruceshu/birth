@@ -138,6 +138,7 @@ typedef struct AVBSFContext {
 } AVBSFContext;
 #endif
 
+struct AVCodecContext;
 typedef struct AVCodec {
     const AVClass *priv_class;              ///< AVClass for the private context
     const char *name;
