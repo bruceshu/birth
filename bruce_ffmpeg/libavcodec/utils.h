@@ -13,6 +13,7 @@
 #include "avcodec.h"
 
 int avcodec_parameters_to_context(AVCodecContext *codec, const AVCodecParameters *par);
+void avcodec_parameters_free(AVCodecParameters **ppar);
 
 
 #endif

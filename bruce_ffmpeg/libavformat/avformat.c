@@ -18,9 +18,12 @@
 #include "libavutil/thread.h"
 #include "libavutil/mem.h"
 
+#include "libavcodec/utils.h"
+
 #include "avio.h"
 #include "avformat.h"
 #include "id3v2.h"
+#include "avpacket.h"
 
 
 extern AVInputFormat  ff_aac_demuxer;

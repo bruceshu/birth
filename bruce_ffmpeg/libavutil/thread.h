@@ -31,6 +31,11 @@
 #define AVMutex char
 #define AV_MUTEX_INITIALIZER 0
 
+static inline int ff_mutex_init(AVMutex *mutex, const void *attr){ return 0; }
+static inline int ff_mutex_lock(AVMutex *mutex){ return 0; }
+static inline int ff_mutex_unlock(AVMutex *mutex){ return 0; }
+static inline int ff_mutex_destroy(AVMutex *mutex){ return 0; }
+
 #define AVOnce char
 #define AV_ONCE_INIT 0
 
