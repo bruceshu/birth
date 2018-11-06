@@ -10,16 +10,21 @@
 
 #include <pthread.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "libavutil/rational.h"
 #include "libavutil/log.h"
 #include "libavutil/dict.h"
 #include "libavutil/mem.h"
 #include "libavutil/error.h"
+#include "libavutil/assert.h"
 
 #include "libavcodec/avcodec.h"
+#include "libavcodec/utils.h"
 
 #include "libavformat/avformat.h"
+#include "libavformat/utils.h"
+#include "libavformat/dump.h"
 
 #include "fftools/cmdutil.h"
 
@@ -104,7 +109,7 @@ static int find_stream_info  = 1;
 
 static const char *input_filename = NULL;
 
-static const Writer *registered_writers[MAX_REGISTERED_WRITERS_NB + 1];
+//static const Writer *registered_writers[MAX_REGISTERED_WRITERS_NB + 1];
 
 static void (*program_exit)(int ret);
 
@@ -352,6 +357,7 @@ static void show_usage(void)
     av_log(NULL, AV_LOG_INFO, "\n");
 }
 
+#if 0
 static void show_error(WriterContext *w, int err)
 {
     char errbuf[128];
@@ -365,6 +371,7 @@ static void show_error(WriterContext *w, int err)
     //print_str("string", errbuf_ptr);
     //writer_print_section_footer(w);
 }
+#endif
 
 static int open_input_file(InputFile *ifile, const char *filename)
 {
@@ -613,7 +620,7 @@ int main(int argc, char **argv)
 #endif
 
     //show_banner(argc, argv, options);
-    parse_options(NULL, argc, argv, options, opt_input_file);
+    parse_options(NULL, argc, argv, NULL, opt_input_file);
 
     //if (do_show_log)
     //    av_log_set_callback(log_callback);
@@ -708,7 +715,7 @@ int main(int argc, char **argv)
         av_log(NULL, AV_LOG_ERROR, "Use -h to get full help or, even better, run 'man %s'.\n", program_name);
         ret = AVERROR(EINVAL);
     } else if (input_filename) {
-        probe_file(NULL, input_filename);
+        probe_file(input_filename);
         //if (ret < 0 && do_show_error)
         //    show_error(NULL, ret);
     }

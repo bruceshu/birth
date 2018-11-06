@@ -45,5 +45,6 @@ void av_url_split(char *proto, int proto_size,
                  const char *url);
 
 int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info);
+int avcodec_parameters_to_context(AVCodecContext *codec, const AVCodecParameters *par);
 
 #endif

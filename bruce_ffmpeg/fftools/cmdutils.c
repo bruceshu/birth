@@ -21,11 +21,6 @@
 #include "cmdutil.h"
 #include "config.h"
 
-#define INDENT        1
-#define SHOW_VERSION  2
-#define SHOW_CONFIG   4
-#define SHOW_COPYRIGHT 8
-
 #if 0
 #define PRINT_LIB_INFO(libname, LIBNAME, flags, level)                  \
     if (CONFIG_##LIBNAME) {                                             \
@@ -163,7 +158,7 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt, cons
 }
 #endif
 
-static const OptionDef *find_option(const OptionDef *po, const char *name)
+const OptionDef *find_option(const OptionDef *po, const char *name)
 {
     const char *p = strchr(name, ':');
     int len = p ? p - name : strlen(name);

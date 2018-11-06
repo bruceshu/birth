@@ -652,4 +652,11 @@ typedef struct AVCodecParser {
 };
 #endif
 
+
+AVCodec *avcodec_find_decoder(enum AVCodecID id);
+AVCodecContext *avcodec_alloc_context3(const AVCodec *codec);
+void avcodec_free_context(AVCodecContext **pavctx);
+
+
+
 #endif

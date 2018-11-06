@@ -12,6 +12,11 @@
 
 #include <stddef.h>
 
+#define INDENT        1
+#define SHOW_VERSION  2
+#define SHOW_CONFIG   4
+#define SHOW_COPYRIGHT 8
+
 typedef struct OptionDef {
     const char *name;
     int flags;
@@ -50,6 +55,10 @@ extern const int program_birth_year;
 extern const char program_name[];
 
 void exit_program(int ret);
+const OptionDef *find_option(const OptionDef *po, const char *name);
+void print_program_info(int flags, int level);
+void print_all_libs_info(int flags, int level);
+int parse_option(void *optctx, const char *opt, const char *arg, const OptionDef *options);
 
 void print_error(const char *filename, int err);
 
