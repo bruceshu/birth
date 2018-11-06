@@ -18,6 +18,8 @@
 
 #include "libavcodec/avcodec.h"
 
+#include "libavdevice/avdevice.h"
+
 #include "avio.h"
 #include "internal.h"
 

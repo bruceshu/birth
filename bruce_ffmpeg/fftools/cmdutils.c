@@ -41,7 +41,7 @@
                    AV_VERSION_MICRO(version));                          \
         }                                                               \
 
-#if 0 //后续需要再放开
+/* //后续需要再放开
         if (flags & SHOW_CONFIG) {                                      \
             const char *cfg = libname##_configuration();                \
             if (strcmp(FFMPEG_CONFIGURATION, cfg)) {                    \
@@ -55,7 +55,7 @@
                         indent, #libname, cfg);                         \
             }                                                           \
         }                                                               
-#endif
+*/
     }
 
 
