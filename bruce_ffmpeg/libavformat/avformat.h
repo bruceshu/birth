@@ -278,7 +278,7 @@ typedef struct AVOutputFormat {
     struct AVOutputFormat *next;
 } AVOutputFormat;
 
-typedef struct AVFormatContext {
+struct AVFormatContext {
     const AVClass *av_class;
     struct AVInputFormat *iformat;
     struct AVOutputFormat *oformat;
@@ -364,7 +364,7 @@ typedef struct AVFormatContext {
     int format_probesize;
     char *codec_whitelist;
     char *format_whitelist;
-    AVFormatInternal *internal;
+    struct AVFormatInternal *internal;
     int io_repositioned;
     AVCodec *video_codec;
     AVCodec *audio_codec;
@@ -382,7 +382,7 @@ typedef struct AVFormatContext {
     char *protocol_blacklist;
     int max_streams;
     int skip_estimate_duration_from_pts;
-} AVFormatContext;
+};
 
 AVFormatContext *avformat_alloc_context();
 

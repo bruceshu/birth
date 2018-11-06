@@ -9,10 +9,12 @@
 
 #include <stddef.h>
 #include <errno.h>
+#include <string.h>
 
 #include "libavutil/log.h"
 #include "libavutil/ffversion.h"
 #include "libavutil/dict.h"
+#include "libavutil/error.h"
 
 #include "libavformat/avformat.h"
 

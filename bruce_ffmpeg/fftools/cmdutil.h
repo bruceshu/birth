@@ -47,6 +47,7 @@ typedef struct OptionDef {
 } OptionDef;
 
 extern const int program_birth_year;
+extern const char program_name[];
 
 void exit_program(int ret);
 

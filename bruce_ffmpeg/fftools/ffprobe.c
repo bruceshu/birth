@@ -81,7 +81,7 @@ typedef struct InputFile {
 pthread_mutex_t log_mutex;
 #endif
 
-static const char program_name[] = "ffprobe";
+const char program_name[] = "ffprobe";
 const int program_birth_year = 2007;
 
 static int do_show_error   = 0;

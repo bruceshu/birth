@@ -154,19 +154,19 @@ typedef struct AVCodec {
     const AVProfile *profiles;              ///< array of recognized profiles, or NULL if unknown, array is terminated by {FF_PROFILE_UNKNOWN}
     const char *wrapper_name;
     int priv_data_size;
-    int (*init_thread_copy)(AVCodecContext *);
-    int (*update_thread_context)(AVCodecContext *dst, const AVCodecContext *src);
+    int (*init_thread_copy)(struct AVCodecContext *);
+    int (*update_thread_context)(struct AVCodecContext *dst, const struct AVCodecContext *src);
     const AVCodecDefault *defaults;
     void (*init_static_data)(struct AVCodec *codec);
-    int (*init)(AVCodecContext *);
+    int (*init)(struct AVCodecContext *);
     //int (*encode_sub)(AVCodecContext *, uint8_t *buf, int buf_size, const struct AVSubtitle *sub);
     //int (*encode2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
-    int (*decode)(AVCodecContext *, void *outdata, int *outdata_size, AVPacket *avpkt);
-    int (*close)(AVCodecContext *);
-    int (*send_frame)(AVCodecContext *avctx, const AVFrame *frame);
-    int (*receive_packet)(AVCodecContext *avctx, AVPacket *avpkt);
-    int (*receive_frame)(AVCodecContext *avctx, AVFrame *frame);
-    void (*flush)(AVCodecContext *);
+    int (*decode)(struct AVCodecContext *, void *outdata, int *outdata_size, AVPacket *avpkt);
+    int (*close)(struct AVCodecContext *);
+    int (*send_frame)(struct AVCodecContext *avctx, const AVFrame *frame);
+    int (*receive_packet)(struct AVCodecContext *avctx, AVPacket *avpkt);
+    int (*receive_frame)(struct AVCodecContext *avctx, AVFrame *frame);
+    void (*flush)(struct AVCodecContext *);
     int caps_internal;
     const char *bsfs;
     //const struct AVCodecHWConfigInternal **hw_configs;
