@@ -102,9 +102,10 @@ int url_get_multi_file_handle(URLContext *h, int **handles, int *numhandles);
 int url_get_short_seek(URLContext *pstUrlCtx);
 
 
-
-
 int url_closep(URLContext **ppstUrlCtx);
 int url_close(URLContext *pstUrlCtx);
+
+extern const AVClass url_context_class;
+
 
 #endif

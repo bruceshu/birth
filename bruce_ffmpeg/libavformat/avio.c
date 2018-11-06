@@ -12,13 +12,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #include "libavutil/error.h"
 #include "libavutil/avstring.h"
 #include "libavutil/mem.h"
 #include "libavutil/opt.h"
 #include "libavutil/time.h"
+#include "libavutil/assert.h"
+#include "libavutil/utils.h"
+#include "libavutil/version.h"
 
+#include "url.h"
 #include "avio.h"
 
 #if 0 //编译测试暂时屏蔽
@@ -298,26 +303,6 @@ static int64_t avio_read_seek(void *opaque, int stream_index, int64_t timestamp,
     return internal->h->pstUrlProt->url_read_seek(internal->h, stream_index, timestamp, flags);
 }
 
-#define OFFSET(x) offsetof(AVIOContext,x)
-#define E AV_OPT_FLAG_ENCODING_PARAM
-#define D AV_OPT_FLAG_DECODING_PARAM
-static const AVOption avio_options[] = {
-    {"protocol_whitelist", "List of protocols that are allowed to be used", OFFSET(protocol_whitelist), AV_OPT_TYPE_STRING, { .str = NULL },  CHAR_MIN, CHAR_MAX, D },
-    { NULL },
-};
-
-static void *avio_child_next(void *obj, void *prev)
-{
-    AVIOContext *s = obj;
-    AVIOInternal *internal = s->opaque;
-    return prev ? NULL : internal->h;
-}
-
-static const AVClass *avio_child_class_next(const AVClass *prev)
-{
-    return prev ? NULL : &url_context_class;
-}
-
 static int url_resetbuf(AVIOContext *s, int flags)
 {
     av_assert1(flags == AVIO_FLAG_WRITE || flags == AVIO_FLAG_READ);
@@ -382,6 +367,7 @@ static int avio_init_context(AVIOContext *s,
     return 0;
 }
 
+
 static AVIOContext *avio_alloc_context(
                   unsigned char *buffer,
                   int buffer_size,
@@ -394,8 +380,8 @@ static AVIOContext *avio_alloc_context(
     AVIOContext *s = av_malloc(sizeof(AVIOContext));
     if (!s)
         return NULL;
-    io_init_context(s, buffer, buffer_size, write_flag, opaque,
-                  read_packet, write_packet, seek);
+    
+    avio_init_context(s, buffer, buffer_size, write_flag, opaque, read_packet, write_packet, seek);
     return s;
 }
 
@@ -632,10 +618,51 @@ int avio_read(AVIOContext *s, unsigned char *buf, int size)
     return size1 - size;
 }
 
+static void writeout(AVIOContext *s, const uint8_t *data, int len)
+{
+    if (!s->error) {
+        int ret = 0;
+        if (s->write_data_type)
+            ret = s->write_data_type(s->opaque, (uint8_t *)data, len, s->current_type, s->last_time);
+        else if (s->write_packet)
+            ret = s->write_packet(s->opaque, (uint8_t *)data, len);
+        
+        if (ret < 0) {
+            s->error = ret;
+        } else {
+            if (s->pos + len > s->written)
+                s->written = s->pos + len;
+        }
+    }
+    
+    if (s->current_type == AVIO_DATA_MARKER_SYNC_POINT || s->current_type == AVIO_DATA_MARKER_BOUNDARY_POINT) {
+        s->current_type = AVIO_DATA_MARKER_UNKNOWN;
+    }
+    
+    s->last_time = AV_NOPTS_VALUE;
+    s->writeout_count ++;
+    s->pos += len;
+}
+
+static void avio_flush_buffer(AVIOContext *s)
+{
+    s->buf_ptr_max = FFMAX(s->buf_ptr, s->buf_ptr_max);
+    if (s->write_flag && s->buf_ptr_max > s->buffer) {
+        writeout(s, s->buffer, s->buf_ptr_max - s->buffer);
+        if (s->update_checksum) {
+            s->checksum     = s->update_checksum(s->checksum, s->checksum_ptr, s->buf_ptr_max - s->checksum_ptr);
+            s->checksum_ptr = s->buffer;
+        }
+    }
+    s->buf_ptr = s->buf_ptr_max = s->buffer;
+    if (!s->write_flag)
+        s->buf_end = s->buffer;
+}
+
 void avio_flush(AVIOContext *s)
 {
     int seekback = s->write_flag ? FFMIN(0, s->buf_ptr - s->buf_ptr_max) : 0;
-    flush_buffer(s);
+    avio_flush_buffer(s);
     if (seekback)
         avio_seek(s, seekback, SEEK_CUR);
 }

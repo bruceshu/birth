@@ -31,47 +31,6 @@ extern AVOutputFormat ff_mpegts_demuxer;
 extern AVOutputFormat ff_rtp_demuxer;
 extern AVOutputFormat ff_rtsp_demuxer;
 
-static void writeout(AVIOContext *s, const uint8_t *data, int len)
-{
-    if (!s->error) {
-        int ret = 0;
-        if (s->write_data_type)
-            ret = s->write_data_type(s->opaque, (uint8_t *)data, len, s->current_type, s->last_time);
-        else if (s->write_packet)
-            ret = s->write_packet(s->opaque, (uint8_t *)data, len);
-        
-        if (ret < 0) {
-            s->error = ret;
-        } else {
-            if (s->pos + len > s->written)
-                s->written = s->pos + len;
-        }
-    }
-    
-    if (s->current_type == AVIO_DATA_MARKER_SYNC_POINT || s->current_type == AVIO_DATA_MARKER_BOUNDARY_POINT) {
-        s->current_type = AVIO_DATA_MARKER_UNKNOWN;
-    }
-    
-    s->last_time = AV_NOPTS_VALUE;
-    s->writeout_count ++;
-    s->pos += len;
-}
-
-static void flush_buffer(AVIOContext *s)
-{
-    s->buf_ptr_max = FFMAX(s->buf_ptr, s->buf_ptr_max);
-    if (s->write_flag && s->buf_ptr_max > s->buffer) {
-        writeout(s, s->buffer, s->buf_ptr_max - s->buffer);
-        if (s->update_checksum) {
-            s->checksum     = s->update_checksum(s->checksum, s->checksum_ptr, s->buf_ptr_max - s->checksum_ptr);
-            s->checksum_ptr = s->buffer;
-        }
-    }
-    s->buf_ptr = s->buf_ptr_max = s->buffer;
-    if (!s->write_flag)
-        s->buf_end = s->buffer;
-}
-
 static int io_open_default(AVFormatContext *s, AVIOContext **pb, const char *url, int flags, AVDictionary **options)
 {
     int loglevel;
