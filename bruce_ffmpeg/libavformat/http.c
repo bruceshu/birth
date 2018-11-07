@@ -26,6 +26,7 @@
 #include "http.h"
 #include "internal.h"
 #include "version.h"
+#include "avio.h"
 
 static int http_averror(int status_code, int default_averror)
 {
@@ -1315,7 +1316,7 @@ static const AVOption http_options[] = {
     { "headers", OFFSET(headers), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
     { "content_type", OFFSET(content_type), AV_OPT_TYPE_STRING, { .str = NULL }, 0, 0, D | E },
     { "user_agent", OFFSET(user_agent), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D },
-#if FF_API_HTTP_USER_AGENT
+#if 0//FF_API_HTTP_USER_AGENT
     { "user-agent", OFFSET(user_agent_deprecated), AV_OPT_TYPE_STRING, { .str = DEFAULT_USER_AGENT }, 0, 0, D|AV_OPT_FLAG_DEPRECATED },
 #endif
     { "multiple_requests", OFFSET(multiple_requests), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, D | E },
