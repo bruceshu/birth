@@ -9,6 +9,8 @@
 #ifndef URL_H
 #define URL_H
 
+#include <stdint.h>
+
 #include "libavutil/log.h"
 #include "libavutil/dict.h"
 
