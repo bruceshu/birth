@@ -9,7 +9,7 @@
 #ifndef URL_H
 #define URL_H
 
-#include <stdint.h>
+//#include <stdint.h>
 
 #include "libavutil/log.h"
 #include "libavutil/dict.h"
@@ -29,7 +29,7 @@ typedef struct URLContext {
     int max_packet_size;        /**< if non zero, the stream is packetized with this max packet size */
     int is_streamed;            /**< true if streamed (no seek possible), default = false */
     int is_connected;
-    AVIOInterruptCB interrupt_callback;
+    //AVIOInterruptCB interrupt_callback;
     int64_t rw_timeout;         /**< maximum time to wait for (network) read/write operation completion, in mcs */
     const char *protocol_whitelist;
     const char *protocol_blacklist;
