@@ -668,7 +668,7 @@ find_stream_info_err:
     return ret;
 }
 
-static int update_stream_avctx(AVFormatContext *s)
+int update_stream_avctx(AVFormatContext *s)
 {
     int i, ret;
     for (i = 0; i < s->nb_streams; i++) {

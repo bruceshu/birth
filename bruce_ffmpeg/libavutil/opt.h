@@ -13,6 +13,7 @@
 
 #include "common.h"
 #include "rational.h"
+#include "dict.h"
 
 #define AV_OPT_SEARCH_CHILDREN   (1 << 0)
 #define AV_OPT_SEARCH_FAKE_OBJ   (1 << 1)
@@ -88,6 +89,8 @@ const AVOption *av_opt_find2(void *obj, const char *name, const char *unit, int 
 const AVOption *av_opt_next(const void *obj, const AVOption *last);
 int av_opt_copy(void *dst, const void *src);
 int av_opt_set(void *obj, const char *name, const char *val, int search_flags);
+int av_opt_get(void *obj, const char *name, int search_flags, uint8_t **out_val);
+int av_opt_set_dict(void *obj, AVDictionary **options);
 
 void av_opt_free(void *obj);
 

@@ -17,6 +17,8 @@
 #include "libavutil/error.h"
 #include "libavutil/thread.h"
 #include "libavutil/mem.h"
+#include "libavutil/assert.h"
+#include "libavutil/avstring.h"
 
 #include "libavcodec/utils.h"
 
@@ -24,6 +26,7 @@
 #include "avformat.h"
 #include "id3v2.h"
 #include "avpacket.h"
+#include "utils.h"
 
 
 extern AVInputFormat  ff_aac_demuxer;

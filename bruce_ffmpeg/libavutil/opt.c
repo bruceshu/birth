@@ -7,7 +7,10 @@
 *********************************/
 
 
+#include <stdio.h>
+
 #include "opt.h"
+
 
 static int write_number(void *obj, const AVOption *o, void *dst, double num, int den, int64_t intnum)
 {

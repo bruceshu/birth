@@ -1,3 +1,1 @@
-/********************************* * Copyright (c) 2018 Bruceshu 3350207067@qq.com * Auther:Bruceshu * Date:  2018-10-23 * Description: *********************************/#ifndef AVFORMAT_UTILS_H#define AVFORMAT_UTILS_Hint avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options);
-
-#endif
+/********************************* * Copyright (c) 2018 Bruceshu 3350207067@qq.com * Auther:Bruceshu * Date:  2018-10-23 * Description: *********************************/#ifndef AVFORMAT_UTILS_H#define AVFORMAT_UTILS_H#include "libavutil/internal.h"#include "avformat.h"int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options);void flush_packet_queue(AVFormatContext *s);int packet_list_put(AVPacketList **packet_buffer, AVPacketList **plast_pktl, AVPacket *pkt, int flags);int update_stream_avctx(AVFormatContext *s);#endif
