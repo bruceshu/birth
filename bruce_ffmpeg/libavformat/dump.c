@@ -7,6 +7,9 @@
 *********************************/
 
 
+#include "libavutil/dict.h"
+
+#include "dump.h"
 
 static void dump_metadata(void *ctx, AVDictionary *m, const char *indent)
 {
