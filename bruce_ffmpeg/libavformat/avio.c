@@ -26,238 +26,6 @@
 #include "url.h"
 #include "avio.h"
 
-#if 0 //编译测试暂时屏蔽
-int url_handshake(URLContext *pstUrlCtx)
-{
-    int ret;
-    if (pstUrlCtx->pstProt->url_handshake) {
-        ret = pstUrlCtx->pstProt->url_handshake(pstUrlCtx);
-        if (ret)
-            return ret;
-    }
-    pstUrlCtx->is_connected = 1;
-    
-    return 0;
-}
-
-
-
-
-static const struct URLProtocol *url_find_protocol(const char *filename)
-{
-    const URLProtocol **protocols;
-    char proto_str[128], proto_nested[128], *ptr;
-    size_t proto_len = strspn(filename, URL_SCHEME_CHARS);
-    int i;
-
-    if (filename[proto_len] != ':' && (strncmp(filename, "subfile,", 8) || !strchr(filename + proto_len + 1, ':')))
-        //|| is_dos_path(filename))
-        strcpy(proto_str, "file");
-    else
-        av_strlcpy(proto_str, filename, FFMIN(proto_len + 1, sizeof(proto_str)));
-
-    av_strlcpy(proto_nested, proto_str, sizeof(proto_nested));
-    if ((ptr = strchr(proto_nested, '+')))
-        *ptr = '\0';
-
-    protocols = ffurl_get_protocols(NULL, NULL);
-    if (!protocols)
-        return NULL;
-    
-    for (i = 0; protocols[i]; i++) {
-        const URLProtocol *up = protocols[i];
-        
-        if (!strcmp(proto_str, up->name)) {
-            av_freep(&protocols);
-            return up;
-        }
-        if (up->flags & URL_PROTOCOL_FLAG_NESTED_SCHEME && !strcmp(proto_nested, up->name)) {
-            av_freep(&protocols);
-            return up;
-        }
-    }
-    av_freep(&protocols);
-
-    return NULL;
-}
-
-
-
-
-
-int ffurl_read_complete(URLContext *pstUrlCtx, unsigned char *buf, int size)
-{
-    if (!(pstUrlCtx->flags & AVIO_FLAG_READ))
-        return AVERROR(EIO);
-    return retry_transfer_wrapper(pstUrlCtx, buf, size, size, pstUrlCtx->pstUrlProt->url_read);
-}
-
-int ffurl_alloc(URLContext **puc, const char *filename, int flags, const AVIOInterruptCB *int_cb)
-{
-    const URLProtocol *p = NULL;
-
-    p = url_find_protocol(filename);
-    if (p)
-       return url_alloc_for_protocol(puc, p, filename, flags, int_cb);
-
-    *puc = NULL;
-    if (av_strstart(filename, "https:", NULL))
-        av_log(NULL, AV_LOG_WARNING, "https protocol not found, recompile FFmpeg with "
-                                     "openssl, gnutls "
-                                     "or securetransport enabled.\n");
-    return AVERROR_PROTOCOL_NOT_FOUND;
-}
-
-int ffurl_connect(URLContext *uc, AVDictionary **options)
-{
-    int err;
-    AVDictionary *tmp_opts = NULL;
-    AVDictionaryEntry *e;
-
-    if (!options)
-        options = &tmp_opts;
-
-    // Check that URLContext was initialized correctly and lists are matching if set
-    av_assert0(!(e=av_dict_get(*options, "protocol_whitelist", NULL, 0)) ||
-               (uc->protocol_whitelist && !strcmp(uc->protocol_whitelist, e->value)));
-    av_assert0(!(e=av_dict_get(*options, "protocol_blacklist", NULL, 0)) ||
-               (uc->protocol_blacklist && !strcmp(uc->protocol_blacklist, e->value)));
-
-    if (uc->protocol_whitelist && av_match_list(uc->pstUrlProt->url_name, uc->protocol_whitelist, ',') <= 0) {
-        av_log(uc, AV_LOG_ERROR, "Protocol '%s' not on whitelist '%s'!\n", uc->pstUrlProt->url_name, uc->protocol_whitelist);
-        return AVERROR(EINVAL);
-    }
-
-    if (uc->protocol_blacklist && av_match_list(uc->pstUrlProt->url_name, uc->protocol_blacklist, ',') > 0) {
-        av_log(uc, AV_LOG_ERROR, "Protocol '%s' on blacklist '%s'!\n", uc->pstUrlProt->url_name, uc->protocol_blacklist);
-        return AVERROR(EINVAL);
-    }
-
-    if (!uc->protocol_whitelist && uc->pstUrlProt->default_whitelist) {
-        av_log(uc, AV_LOG_DEBUG, "Setting default whitelist '%s'\n", uc->pstUrlProt->default_whitelist);
-        uc->protocol_whitelist = av_strdup(uc->pstUrlProt->default_whitelist);
-        if (!uc->protocol_whitelist) {
-            return AVERROR(ENOMEM);
-        }
-    } else if (!uc->protocol_whitelist)
-        av_log(uc, AV_LOG_DEBUG, "No default whitelist set\n"); // This should be an error once all declare a default whitelist
-
-    if ((err = av_dict_set(options, "protocol_whitelist", uc->protocol_whitelist, 0)) < 0)
-        return err;
-    if ((err = av_dict_set(options, "protocol_blacklist", uc->protocol_blacklist, 0)) < 0)
-        return err;
-
-    err =
-        uc->pstUrlProt->url_open2 ? uc->pstUrlProt->url_open2(uc, uc->filename, uc->flags, options) :
-        uc->pstUrlProt->url_open(uc, uc->filename, uc->flags);
-
-    av_dict_set(options, "protocol_whitelist", NULL, 0);
-    av_dict_set(options, "protocol_blacklist", NULL, 0);
-
-    if (err)
-        return err;
-    uc->is_connected = 1;
-    /* We must be careful here as ffurl_seek() could be slow,
-     * for example for http */
-    if ((uc->flags & AVIO_FLAG_WRITE) || !strcmp(uc->prot->name, "file"))
-        if (!uc->is_streamed && ffurl_seek(uc, 0, SEEK_SET) < 0)
-            uc->is_streamed = 1;
-    return 0;
-}
-
-int ff_check_interrupt(AVIOInterruptCB *cb)
-{
-    if (cb && cb->callback)
-        return cb->callback(cb->opaque);
-    return 0;
-}
-
-int ffurl_closep(URLContext **hh)
-{
-    URLContext *h= *hh;
-    int ret = 0;
-    if (!h)
-        return 0;
-
-    if (h->is_connected && h->pstUrlProt->url_close)
-        ret = h->pstUrlProt->url_close(h);
-#if CONFIG_NETWORK
-    if (h->pstUrlProt->flags & URL_PROTOCOL_FLAG_NETWORK) {
-        ff_network_close();
-    }
-#endif
-
-    if (h->pstUrlProt->priv_data_size) {
-        if (h->pstUrlProt->pstPrivDataClass)
-            av_opt_free(h->pstPrivData);
-        av_freep(&h->pstPrivData);
-    }
-    
-    av_opt_free(h);
-    av_freep(hh);
-    return ret;
-}
-
-int ffurl_open_whitelist(URLContext **puc, const char *filename, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options, const char *whitelist, const char* blacklist, URLContext *parent)
-{
-    AVDictionary *tmp_opts = NULL;
-    AVDictionaryEntry *e;
-    int ret = ffurl_alloc(puc, filename, flags, int_cb);
-    if (ret < 0)
-        return ret;
-    if (parent)
-        av_opt_copy(*puc, parent);
-    if (options &&
-        (ret = av_opt_set_dict(*puc, options)) < 0)
-        goto fail;
-    if (options && (*puc)->prot->priv_data_class &&
-        (ret = av_opt_set_dict((*puc)->priv_data, options)) < 0)
-        goto fail;
-
-    if (!options)
-        options = &tmp_opts;
-
-    av_assert0(!whitelist ||
-               !(e=av_dict_get(*options, "protocol_whitelist", NULL, 0)) ||
-               !strcmp(whitelist, e->value));
-    av_assert0(!blacklist ||
-               !(e=av_dict_get(*options, "protocol_blacklist", NULL, 0)) ||
-               !strcmp(blacklist, e->value));
-
-    if ((ret = av_dict_set(options, "protocol_whitelist", whitelist, 0)) < 0)
-        goto fail;
-
-    if ((ret = av_dict_set(options, "protocol_blacklist", blacklist, 0)) < 0)
-        goto fail;
-
-    if ((ret = av_opt_set_dict(*puc, options)) < 0)
-        goto fail;
-
-    ret = ffurl_connect(*puc, options);
-
-    if (!ret)
-        return 0;
-fail:
-    ffurl_close(*puc);
-    *puc = NULL;
-    return ret;
-}
-
-int ffurl_read(URLContext *h, unsigned char *buf, int size)
-{
-   if (!(h->flags & AVIO_FLAG_READ))
-       return AVERROR(EIO);
-   
-   return retry_transfer_wrapper(h, buf, size, 1, h->pstUrlProt->url_read);
-}
-
-int ffurl_close(URLContext *h)
-{
-    return ffurl_closep(&h);
-}
-
-#endif
-
 static int avio_read_packet(void *opaque, uint8_t *buf, int buf_size)
 {
     AVIOInternal *internal = opaque;
@@ -303,7 +71,7 @@ static int64_t avio_read_seek(void *opaque, int stream_index, int64_t timestamp,
     return internal->h->pstUrlProt->url_read_seek(internal->h, stream_index, timestamp, flags);
 }
 
-static int url_resetbuf(AVIOContext *s, int flags)
+static int avio_resetbuf(AVIOContext *s, int flags)
 {
     av_assert1(flags == AVIO_FLAG_WRITE || flags == AVIO_FLAG_READ);
 
@@ -316,6 +84,35 @@ static int url_resetbuf(AVIOContext *s, int flags)
     }
     return 0;
 }
+
+static void *avio_child_next(void *obj, void *prev)
+{
+    AVIOContext *s = obj;
+    AVIOInternal *internal = s->opaque;
+    return prev ? NULL : internal->h;
+}
+
+static const AVClass *avio_child_class_next(const AVClass *prev)
+{
+    return prev ? NULL : &url_context_class;
+}
+
+#define OFFSET(x) offsetof(AVIOContext,x)
+#define E AV_OPT_FLAG_ENCODING_PARAM
+#define D AV_OPT_FLAG_DECODING_PARAM
+static const AVOption avio_options[] = {
+    {"protocol_whitelist", OFFSET(protocol_whitelist), AV_OPT_TYPE_STRING, { .str = NULL },  CHAR_MIN, CHAR_MAX, D },
+    { NULL },
+};
+
+const AVClass avio_class = {
+    .class_name = "AVIOContext",
+    .item_name  = av_default_item_name,
+    .version    = LIBAVUTIL_VERSION_INT,
+    .option     = avio_options,
+    .child_next = avio_child_next,
+    .child_class_next = avio_child_class_next,
+};
 
 static int avio_init_context(AVIOContext *s,
                   unsigned char *buffer,
@@ -336,7 +133,7 @@ static int avio_init_context(AVIOContext *s,
     s->opaque      = opaque;
     s->direct      = 0;
 
-    url_resetbuf(s, write_flag ? AVIO_FLAG_WRITE : AVIO_FLAG_READ);
+    avio_resetbuf(s, write_flag ? AVIO_FLAG_WRITE : AVIO_FLAG_READ);
 
     s->write_packet    = write_packet;
     s->read_packet     = read_packet;
@@ -367,7 +164,6 @@ static int avio_init_context(AVIOContext *s,
     return 0;
 }
 
-
 static AVIOContext *avio_alloc_context(
                   unsigned char *buffer,
                   int buffer_size,
@@ -397,6 +193,7 @@ static int avio_fdopen(AVIOContext **s, URLContext *h)
     } else {
         buffer_size = IO_BUFFER_SIZE;
     }
+    
     buffer = av_malloc(buffer_size);
     if (!buffer)
         return AVERROR(ENOMEM);
@@ -438,7 +235,7 @@ int avio_open_whitelist(AVIOContext **ppstIOCtx, const char *filename, int flags
     URLContext *pstUrlCtx;
     int err;
 
-    err = url_open_whitelist(&pstUrlCtx, filename, flags, int_cb, options, NULL);
+    err = url_open_whitelist(&pstUrlCtx, filename, flags, options, NULL);
     if (err < 0)
         return err;
     err = avio_fdopen(ppstIOCtx, pstUrlCtx);
@@ -506,15 +303,15 @@ static int avio_set_buf_size(AVIOContext *s, int buf_size)
     s->buffer = buffer;
     s->orig_buffer_size = s->buffer_size = buf_size;
     s->buf_ptr = s->buf_ptr_max = buffer;
-    url_resetbuf(s, s->write_flag ? AVIO_FLAG_WRITE : AVIO_FLAG_READ);
+    avio_resetbuf(s, s->write_flag ? AVIO_FLAG_WRITE : AVIO_FLAG_READ);
     return 0;
 }
 
 static void avio_fill_buffer(AVIOContext *s)
 {
     int max_buffer_size = s->max_packet_size ? s->max_packet_size : IO_BUFFER_SIZE;
-    uint8_t *dst        = s->buf_end - s->buffer + max_buffer_size < s->buffer_size ? s->buf_end : s->buffer;
-    int len             = s->buffer_size - (dst - s->buffer);
+    uint8_t *dst = s->buf_end - s->buffer + max_buffer_size < s->buffer_size ? s->buf_end : s->buffer;
+    int len = s->buffer_size - (dst - s->buffer);
 
     /* can't fill the buffer without read_packet, just set EOF if appropriate */
     if (!s->read_packet && s->buf_ptr >= s->buf_end)
@@ -654,6 +451,7 @@ static void avio_flush_buffer(AVIOContext *s)
             s->checksum_ptr = s->buffer;
         }
     }
+    
     s->buf_ptr = s->buf_ptr_max = s->buffer;
     if (!s->write_flag)
         s->buf_end = s->buffer;
@@ -677,7 +475,7 @@ int avio_close(AVIOContext *s)
 
     avio_flush(s);
     internal = s->opaque;
-    h        = internal->h;
+    h = internal->h;
 
     av_freep(&s->opaque);
     av_freep(&s->buffer);
@@ -746,33 +544,3 @@ int avio_rewind_with_probe_data(AVIOContext *s, unsigned char **bufp, int buf_si
 
     return 0;
 }
-
-static void *avio_child_next(void *obj, void *prev)
-{
-    AVIOContext *s = obj;
-    AVIOInternal *internal = s->opaque;
-    return prev ? NULL : internal->h;
-}
-
-static const AVClass *avio_child_class_next(const AVClass *prev)
-{
-    return prev ? NULL : &url_context_class;
-}
-
-#define OFFSET(x) offsetof(AVIOContext,x)
-#define E AV_OPT_FLAG_ENCODING_PARAM
-#define D AV_OPT_FLAG_DECODING_PARAM
-static const AVOption avio_options[] = {
-    {"protocol_whitelist", "List of protocols that are allowed to be used", OFFSET(protocol_whitelist), AV_OPT_TYPE_STRING, { .str = NULL },  CHAR_MIN, CHAR_MAX, D },
-    { NULL },
-};
-
-const AVClass avio_class = {
-    .class_name = "AVIOContext",
-    .item_name  = av_default_item_name,
-    .version    = LIBAVUTIL_VERSION_INT,
-    .option     = avio_options,
-    .child_next = avio_child_next,
-    .child_class_next = avio_child_class_next,
-};
-

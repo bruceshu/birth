@@ -20,6 +20,7 @@
 #include "libavutil/error.h"
 #include "libavutil/mem.h"
 #include "libavutil/time.h"
+#include "libavutil/common.h"
 
 void url_split(char *proto, int proto_size, char *authorization, int authorization_size, char *hostname, int hostname_size, int *port_ptr, char *path, int path_size, const char *url)
 {
@@ -354,8 +355,8 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
         }
     }
     
-    if (int_cb)
-        pstUrlCtx->interrupt_callback = *int_cb;
+    //if (int_cb)
+    //    pstUrlCtx->interrupt_callback = *int_cb;
 
     *ppstUrlCtx = pstUrlCtx;
     return 0;
@@ -559,6 +560,7 @@ int64_t url_seek(URLContext *pstUrlCtx, int64_t pos, int whence)
 
     if (!pstUrlCtx->pstUrlProt->url_seek)
         return -1;
+    
     ret = pstUrlCtx->pstUrlProt->url_seek(pstUrlCtx, pos, whence & ~AVSEEK_FORCE);
     
     return ret;

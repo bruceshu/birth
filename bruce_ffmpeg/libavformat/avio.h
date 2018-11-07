@@ -42,10 +42,10 @@ enum AVIODataMarkerType {
     AVIO_DATA_MARKER_TRAILER
 };
 
-struct AVIOInterruptCB {
+typedef struct AVIOInterruptCB {
     int (*callback)(void*);
     void *opaque;
-};
+} AVIOInterruptCB;
 
 typedef struct AVIOContext {
     const AVClass *av_class;

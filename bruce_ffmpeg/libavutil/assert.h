@@ -10,6 +10,8 @@
 #ifndef ASSERT_H
 #define ASSERT_H
 
+#include <stdlib.h>
+
 #include "macros.h"
 
 #define av_assert0(cond) do {                                           \
