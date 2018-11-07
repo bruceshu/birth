@@ -13,7 +13,7 @@
 #include "libavutil/dict.h"
 #include "libavutil/avstring.h"
 #include "libavutil/mem.h"
-#include "libavutil/mathmatics.h"
+#include "libavutil/mathematics.h"
 
 #include "dump.h"
 

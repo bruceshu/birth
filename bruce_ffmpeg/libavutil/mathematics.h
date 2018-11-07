@@ -7,8 +7,8 @@
 *********************************/
 
 
-#ifndef MATHMATICS_H
-#define MATHMATICS_H
+#ifndef MATHEMATICS_H
+#define MATHEMATICS_H
 
 #include <stdint.h>
 

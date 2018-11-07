@@ -10,7 +10,7 @@
 #include <limits.h>
 
 #include "assert.h"
-#include "mathmatics.h"
+#include "mathematics.h"
 
 int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding rnd)
 {
