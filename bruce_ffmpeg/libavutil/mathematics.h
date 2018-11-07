@@ -7,7 +7,10 @@
 *********************************/
 
 
+#ifndef MATHMATICS_H
+#define MATHMATICS_H
 
+#include <stdint.h>
 
 enum AVRounding {
     AV_ROUND_ZERO     = 0, ///< Round toward zero.
@@ -19,3 +22,7 @@ enum AVRounding {
     AV_ROUND_PASS_MINMAX = 8192,
 };
 
+int64_t av_rescale(int64_t a, int64_t b, int64_t c);
+
+
+#endif

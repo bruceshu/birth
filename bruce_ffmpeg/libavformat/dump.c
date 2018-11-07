@@ -7,7 +7,12 @@
 *********************************/
 
 
+#include <stdlib.h>
+#include <inttypes.h>
+
 #include "libavutil/dict.h"
+#include "libavutil/avstring.h"
+#include "libavutil/mem.h"
 
 #include "dump.h"
 

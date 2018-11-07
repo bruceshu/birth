@@ -7,7 +7,6 @@
 *********************************/
 
 
-#include <string.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdarg.h>

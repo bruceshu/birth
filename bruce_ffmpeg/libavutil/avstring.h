@@ -11,6 +11,7 @@
 #define AVSTRING_H
 
 #include <stddef.h>
+#include <string.h>
 
 static inline int av_isdigit(int c)
 {
