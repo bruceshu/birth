@@ -13,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <limits.h>
 
 #include "libavutil/error.h"
 #include "libavutil/avstring.h"
