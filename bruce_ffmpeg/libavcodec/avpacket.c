@@ -7,6 +7,9 @@
 *********************************/
 
 
+#include <stdint.h>
+#include <stddef.h>
+
 int av_packet_add_side_data(AVPacket *pkt, enum AVPacketSideDataType type, uint8_t *data, size_t size)
 {
     AVPacketSideData *tmp;
@@ -209,6 +212,24 @@ int av_packet_ref(AVPacket *dst, const AVPacket *src)
 fail:
     av_packet_free_side_data(dst);
     return ret;
+}
+
+void av_init_packet(AVPacket *pkt)
+{
+    pkt->pts                  = AV_NOPTS_VALUE;
+    pkt->dts                  = AV_NOPTS_VALUE;
+    pkt->pos                  = -1;
+    pkt->duration             = 0;
+#if 0//FF_API_CONVERGENCE_DURATION
+FF_DISABLE_DEPRECATION_WARNINGS
+    pkt->convergence_duration = 0;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+    pkt->flags                = 0;
+    pkt->stream_index         = 0;
+    pkt->buf                  = NULL;
+    pkt->side_data            = NULL;
+    pkt->side_data_elems      = 0;
 }
 
 void av_packet_unref(AVPacket *pkt)

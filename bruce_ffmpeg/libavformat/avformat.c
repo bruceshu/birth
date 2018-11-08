@@ -23,11 +23,10 @@
 #include "libavcodec/utils.h"
 
 #include "avio.h"
-#include "avformat.h"
 #include "id3v2.h"
 #include "avpacket.h"
 #include "utils.h"
-
+#include "avformat.h"
 
 extern AVInputFormat  ff_aac_demuxer;
 extern AVInputFormat  ff_ac3_demuxer;

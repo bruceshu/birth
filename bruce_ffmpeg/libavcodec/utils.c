@@ -14,6 +14,11 @@ int av_codec_is_decoder(const AVCodec *codec)
     return codec && (codec->decode || codec->receive_frame);
 }
 
+int avcodec_is_open(AVCodecContext *s)
+{
+    return !!s->internal;
+}
+
 int avcodec_parameters_to_context(AVCodecContext *codec, const AVCodecParameters *par)
 {
     codec->codec_type = par->codec_type;

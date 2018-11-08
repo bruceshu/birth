@@ -7,6 +7,8 @@
 *********************************/
 
 
+#include "avcodec.h"
+
 #if CONFIG_OSSFUZZ
 AVCodec * codec_list[] = {
     NULL,
@@ -229,5 +231,28 @@ void avcodec_free_context(AVCodecContext **pavctx)
     av_freep(&avctx->rc_override);
 
     av_freep(pavctx);
+}
+
+static AVCodec *find_codec_by_name(const char *name, int (*x)(const AVCodec *))
+{
+    void *i = 0;
+    const AVCodec *p;
+
+    if (!name)
+        return NULL;
+
+    while ((p = av_codec_iterate(&i))) {
+        if (!x(p))
+            continue;
+        if (strcmp(name, p->name) == 0)
+            return (AVCodec*)p;
+    }
+
+    return NULL;
+}
+
+AVCodec *avcodec_find_decoder_by_name(const char *name)
+{
+    return find_codec_by_name(name, av_codec_is_decoder);
 }
 

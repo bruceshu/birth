@@ -25,7 +25,6 @@
 #include "libavutil/version.h"
 
 #include "url.h"
-#include "avio.h"
 
 static int avio_read_packet(void *opaque, uint8_t *buf, int buf_size)
 {
@@ -239,11 +238,13 @@ int avio_open_whitelist(AVIOContext **ppstIOCtx, const char *filename, int flags
     err = url_open_whitelist(&pstUrlCtx, filename, flags, options, NULL);
     if (err < 0)
         return err;
+    
     err = avio_fdopen(ppstIOCtx, pstUrlCtx);
     if (err < 0) {
         url_close(pstUrlCtx);
         return err;
     }
+    
     return 0;
 }
 

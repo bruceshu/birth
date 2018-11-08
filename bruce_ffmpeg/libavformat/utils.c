@@ -7,6 +7,16 @@
 *********************************/
 
 
+#include <string.h>
+#include <inttypes.h>
+
+#include "libavutil/mem.h"
+#include "libavutil/error.h"
+#include "libavutil/opt.h"
+
+#include "libavcodec/avpacket.h"
+#include "libavcodec/utils.h"
+
 #include "utils.h"
 
 int packet_list_put(AVPacketList **packet_buffer, AVPacketList **plast_pktl, AVPacket *pkt, int flags)
@@ -39,7 +49,6 @@ int packet_list_put(AVPacketList **packet_buffer, AVPacketList **plast_pktl, AVP
     return 0;
 }
 
-#if 0
 static const AVCodec *find_probe_decoder(AVFormatContext *s, const AVStream *st, enum AVCodecID codec_id)
 {
     const AVCodec *codec;
@@ -68,7 +77,102 @@ static const AVCodec *find_probe_decoder(AVFormatContext *s, const AVStream *st,
 
     return codec;
 }
-#endif
+
+static int try_decode_frame(AVFormatContext *s, AVStream *st, AVPacket *avpkt, AVDictionary **options)
+{
+    AVCodecContext *avctx = st->internal->avctx;
+    const AVCodec *codec;
+    int got_picture = 1, ret = 0;
+    AVFrame *frame = av_frame_alloc();
+    //AVSubtitle subtitle;
+    AVPacket pkt = *avpkt;
+    int do_skip_frame = 0;
+    enum AVDiscard skip_frame;
+
+    if (!frame)
+        return AVERROR(ENOMEM);
+
+    if (!avcodec_is_open(avctx) && st->info->found_decoder <= 0 
+                                && (st->codecpar->codec_id != -st->info->found_decoder || !st->codecpar->codec_id)) {
+        AVDictionary *thread_opt = NULL;
+
+        codec = find_probe_decoder(s, st, st->codecpar->codec_id);
+
+        if (!codec) {
+            st->info->found_decoder = -st->codecpar->codec_id;
+            ret                     = -1;
+            goto fail;
+        }
+
+        /* Force thread count to 1 since the H.264 decoder will not extract
+         * SPS and PPS to extradata during multi-threaded decoding. */
+        av_dict_set(options ? options : &thread_opt, "threads", "1", 0);
+        if (s->codec_whitelist)
+            av_dict_set(options ? options : &thread_opt, "codec_whitelist", s->codec_whitelist, 0);
+        ret = avcodec_open2(avctx, codec, options ? options : &thread_opt);
+        if (!options)
+            av_dict_free(&thread_opt);
+        if (ret < 0) {
+            st->info->found_decoder = -avctx->codec_id;
+            goto fail;
+        }
+        st->info->found_decoder = 1;
+    } else if (!st->info->found_decoder)
+        st->info->found_decoder = 1;
+
+    if (st->info->found_decoder < 0) {
+        ret = -1;
+        goto fail;
+    }
+
+    if (avpriv_codec_get_cap_skip_frame_fill_param(avctx->codec)) {
+        do_skip_frame = 1;
+        skip_frame = avctx->skip_frame;
+        avctx->skip_frame = AVDISCARD_ALL;
+    }
+
+    while ((pkt.size > 0 || (!pkt.data && got_picture)) &&
+           ret >= 0 &&
+           (!has_codec_parameters(st, NULL) || !has_decode_delay_been_guessed(st) ||
+            (!st->codec_info_nb_frames &&
+             (avctx->codec->capabilities & AV_CODEC_CAP_CHANNEL_CONF)))) {
+        got_picture = 0;
+        if (avctx->codec_type == AVMEDIA_TYPE_VIDEO ||
+            avctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+            ret = avcodec_send_packet(avctx, &pkt);
+            if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF)
+                break;
+            if (ret >= 0)
+                pkt.size = 0;
+            ret = avcodec_receive_frame(avctx, frame);
+            if (ret >= 0)
+                got_picture = 1;
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+                ret = 0;
+        } else if (avctx->codec_type == AVMEDIA_TYPE_SUBTITLE) {
+            ret = avcodec_decode_subtitle2(avctx, &subtitle,
+                                           &got_picture, &pkt);
+            if (ret >= 0)
+                pkt.size = 0;
+        }
+        if (ret >= 0) {
+            if (got_picture)
+                st->nb_decoded_frames++;
+            ret       = got_picture;
+        }
+    }
+
+    if (!pkt.data && !got_picture)
+        ret = -1;
+
+fail:
+    if (do_skip_frame) {
+        avctx->skip_frame = skip_frame;
+    }
+
+    av_frame_free(&frame);
+    return ret;
+}
 
 int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
 {
@@ -115,8 +219,7 @@ int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)
         st = ic->streams[i];
         avctx = st->internal->avctx;
 
-        if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO ||
-            st->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE) {
+        if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO || st->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE) {
 /*            if (!st->time_base.num)
                 st->time_base = */
             if (!avctx->time_base.num)
@@ -157,6 +260,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         ret = avcodec_parameters_to_context(avctx, st->codecpar);
         if (ret < 0)
             goto find_stream_info_err;
+        
         if (st->request_probe <= 0)
             st->internal->avctx_inited = 1;
 
@@ -253,18 +357,18 @@ FF_ENABLE_DEPRECATION_WARNINGS
         }
         analyzed_all_streams = 0;
         if (!missing_streams || !*missing_streams)
-        if (i == ic->nb_streams) {
-            analyzed_all_streams = 1;
-            /* NOTE: If the format has no header, then we need to read some
-             * packets to get most of the streams, so we cannot stop here. */
-            //if (!(ic->ctx_flags & AVFMTCTX_NOHEADER)) {
-                /* If we found the info for all the codecs, we can stop. */
-            /*    ret = count;
-                av_log(ic, AV_LOG_DEBUG, "All info found\n");
-                flush_codecs = 0;
-                break;
-            }*/
-        }
+            if (i == ic->nb_streams) {
+                analyzed_all_streams = 1;
+                /* NOTE: If the format has no header, then we need to read some
+                 * packets to get most of the streams, so we cannot stop here. */
+                //if (!(ic->ctx_flags & AVFMTCTX_NOHEADER)) {
+                    /* If we found the info for all the codecs, we can stop. */
+                /*    ret = count;
+                    av_log(ic, AV_LOG_DEBUG, "All info found\n");
+                    flush_codecs = 0;
+                    break;
+                }*/
+            }
         /* We did not get all the codec info, but we read too much data. */
         if (read_size >= probesize) {
             ret = count;
@@ -352,25 +456,31 @@ FF_ENABLE_DEPRECATION_WARNINGS
 
             if (st->time_base.den > 0)
                 t = av_rescale_q(st->info->codec_info_duration, st->time_base, AV_TIME_BASE_Q);
-            if (st->avg_frame_rate.num > 0)
-                t = FFMAX(t, av_rescale_q(st->codec_info_nb_frames, av_inv_q(st->avg_frame_rate), AV_TIME_BASE_Q));
 
-            if (   t == 0
-                && st->codec_info_nb_frames>30
-                && st->info->fps_first_dts != AV_NOPTS_VALUE
-                && st->info->fps_last_dts  != AV_NOPTS_VALUE)
+            /*if (st->avg_frame_rate.num > 0)
+                t = FFMAX(t, av_rescale_q(st->codec_info_nb_frames, av_inv_q(st->avg_frame_rate), AV_TIME_BASE_Q));
+            */
+
+            if (t == 0 && st->codec_info_nb_frames>30
+                       && st->info->fps_first_dts != AV_NOPTS_VALUE
+                       && st->info->fps_last_dts  != AV_NOPTS_VALUE)
                 t = FFMAX(t, av_rescale_q(st->info->fps_last_dts - st->info->fps_first_dts, st->time_base, AV_TIME_BASE_Q));
 
-            if (analyzed_all_streams)                                limit = max_analyze_duration;
-            else if (avctx->codec_type == AVMEDIA_TYPE_SUBTITLE) limit = max_subtitle_analyze_duration;
-            else                                                     limit = max_stream_analyze_duration;
+            if (analyzed_all_streams) {
+                limit = max_analyze_duration;
+            } else if (avctx->codec_type == AVMEDIA_TYPE_SUBTITLE) {
+                limit = max_subtitle_analyze_duration;
+            } else {
+                limit = max_stream_analyze_duration;
+            }
 
             if (t >= limit) {
                 av_log(ic, AV_LOG_VERBOSE, "max_analyze_duration %"PRId64" reached at %"PRId64" microseconds st:%d\n",
-                       limit,
-                       t, pkt->stream_index);
+                       limit,  t, pkt->stream_index);
+                
                 if (ic->flags & AVFMT_FLAG_NOBUFFER)
                     av_packet_unref(pkt);
+                
                 break;
             }
             if (pkt->duration) {
@@ -378,16 +488,18 @@ FF_ENABLE_DEPRECATION_WARNINGS
                     st->info->codec_info_duration = FFMIN(pkt->pts - st->start_time, st->info->codec_info_duration + pkt->duration);
                 } else
                     st->info->codec_info_duration += pkt->duration;
-                st->info->codec_info_duration_fields += st->parser && st->need_parsing && avctx->ticks_per_frame ==2 ? st->parser->repeat_pict + 1 : 2;
+                //st->info->codec_info_duration_fields += st->parser && st->need_parsing && avctx->ticks_per_frame ==2 ? st->parser->repeat_pict + 1 : 2;
             }
         }
+
         if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-#if FF_API_R_FRAME_RATE
+#if 0//FF_API_R_FRAME_RATE
             ff_rfps_add_frame(ic, st, pkt->dts);
 #endif
-            if (pkt->dts != pkt->pts && pkt->dts != AV_NOPTS_VALUE && pkt->pts != AV_NOPTS_VALUE)
-                st->info->frame_delay_evidence = 1;
+            /*if (pkt->dts != pkt->pts && pkt->dts != AV_NOPTS_VALUE && pkt->pts != AV_NOPTS_VALUE)
+                st->info->frame_delay_evidence = 1;*/
         }
+        
         if (!st->internal->avctx->extradata) {
             ret = extract_extradata(st, pkt);
             if (ret < 0)
@@ -403,8 +515,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
          * least one frame of codec data, this makes sure the codec initializes
          * the channel configuration and does not only trust the values from
          * the container. */
-        try_decode_frame(ic, st, pkt,
-                         (options && i < orig_nb_streams) ? &options[i] : NULL);
+        try_decode_frame(ic, st, pkt, (options && i < orig_nb_streams) ? &options[i] : NULL);
 
         if (ic->flags & AVFMT_FLAG_NOBUFFER)
             av_packet_unref(pkt);
