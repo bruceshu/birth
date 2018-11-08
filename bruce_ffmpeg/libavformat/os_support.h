@@ -10,6 +10,7 @@
 #ifndef OS_SUPPORT_C
 #define OS_SUPPORT_C
 
+#include <unistd.h>
 #include "config.h"
 
 /* events & revents */

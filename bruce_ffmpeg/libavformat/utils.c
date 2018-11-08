@@ -7,6 +7,7 @@
 *********************************/
 
 
+#include "utils.h"
 
 int packet_list_put(AVPacketList **packet_buffer, AVPacketList **plast_pktl, AVPacket *pkt, int flags)
 {
