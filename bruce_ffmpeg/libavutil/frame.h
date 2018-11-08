@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "avutils.h"
+#include "utils.h"
 #include "buffer.h"
 #include "dict.h"
 #include "internal.h"
