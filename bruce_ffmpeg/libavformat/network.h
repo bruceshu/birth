@@ -119,6 +119,9 @@ void ff_log_net_error(void *ctx, int level, const char* prefix);
 int ff_socket(int af, int type, int proto);
 int ff_listen(int fd, const struct sockaddr *addr, socklen_t addrlen);
 int ff_accept(int fd, int timeout, URLContext *h);
+int ff_listen_bind(int fd, const struct sockaddr *addr, socklen_t addrlen, int timeout, URLContext *h);
+int ff_network_wait_fd_timeout(int fd, int write, int64_t timeout, AVIOInterruptCB *int_cb);
+
 
 
 

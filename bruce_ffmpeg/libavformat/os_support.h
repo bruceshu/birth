@@ -7,7 +7,10 @@
 *********************************/
 
 
+#ifndef OS_SUPPORT_C
+#define OS_SUPPORT_C
 
+#include "config.h"
 
 /* events & revents */
 #define POLLIN     0x0001  /* any readable data available */
@@ -28,13 +31,16 @@
 #define SHUT_RD SD_RECEIVE
 #define SHUT_WR SD_SEND
 #define SHUT_RDWR SD_BOTH
-
 #ifndef S_IRUSR
 #define S_IRUSR S_IREAD
 #endif
 #ifndef S_IWUSR
 #define S_IWUSR S_IWRITE
 #endif
+#endif
+
+#if !HAVE_CLOSESOCKET
+#define closesocket close
 #endif
 
 #if 0 //后续需要时放开
@@ -46,4 +52,6 @@ static inline int is_dos_path(const char *path)
 #endif
     return 0;
 }
+#endif
+
 #endif

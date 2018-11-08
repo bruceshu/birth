@@ -9,8 +9,7 @@
 
 #include <fcntl.h>
 
-#include "config.h"
-
+#include "os_support.h"
 
 int ff_socket_nonblock(int socket, int enable)
 {

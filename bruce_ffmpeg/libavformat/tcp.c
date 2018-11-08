@@ -8,6 +8,8 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
 
 #include "libavutil/error.h"
 #include "libavutil/opt.h"
@@ -16,7 +18,6 @@
 
 #include "tcp.h"
 #include "network.h"
-#include "url.h"
 
 static void customize_fd(void *ctx, int fd)
 {
@@ -198,7 +199,7 @@ static int tcp_accept(URLContext *s, URLContext **c)
     return 0;
 }
 
-static int tcp_read(URLContext *h, uint8_t *buf, int size)
+static int tcp_read(URLContext *h, unsigned char *buf, int size)
 {
     TCPContext *s = h->pstPrivData;
     int ret;
@@ -217,7 +218,7 @@ static int tcp_read(URLContext *h, uint8_t *buf, int size)
     return ret < 0 ? ff_neterrno() : ret;
 }
 
-static int tcp_write(URLContext *h, const uint8_t *buf, int size)
+static int tcp_write(URLContext *h, const unsigned char *buf, int size)
 {
     TCPContext *s = h->pstPrivData;
     int ret;

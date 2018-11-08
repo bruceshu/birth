@@ -153,7 +153,6 @@ int ff_accept(int fd, int timeout, URLContext *h)
     return ret;
 }
 
-
 int ff_listen_bind(int fd, const struct sockaddr *addr, socklen_t addrlen, int timeout, URLContext *h)
 {
     int ret;
@@ -201,7 +200,6 @@ int ff_network_wait_fd_timeout(int fd, int write, int64_t timeout, AVIOInterrupt
         }
     }
 }
-
 
 #if 0
 int ff_connect_parallel(struct addrinfo *addrs, int timeout_ms_per_address,

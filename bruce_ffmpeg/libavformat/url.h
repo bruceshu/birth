@@ -31,7 +31,7 @@ typedef struct URLContext {
 } URLContext;
 
 typedef struct URLProtocol {
-    const char *url_name;
+    const char *name;
     const AVClass *pstPrivDataClass;
     int priv_data_size;
     int flags;
@@ -55,7 +55,7 @@ typedef struct URLProtocol {
      * retry_transfer_wrapper in avio.c.
      */
     int     (*url_read)( URLContext *pstUrlCtx, unsigned char *pBuf, int size);
-    int     (*url_write)(URLContext *pstUrlCtx, unsigned char *pBuf, int size);
+    int     (*url_write)(URLContext *pstUrlCtx, const unsigned char *pBuf, int size);
     int64_t (*url_seek)( URLContext *pstUrlCtx, int64_t pos, int whence);
     int     (*url_close)(URLContext *pstUrlCtx);
     int (*url_read_pause)(URLContext *h, int pause);
