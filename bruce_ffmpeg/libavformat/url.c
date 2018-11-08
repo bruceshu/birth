@@ -8,19 +8,17 @@
 
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <netdb.h>
 #include <stdarg.h>
-#include <string.h>
-
-#include "config.h"
-#include "url.h"
 
 #include "libavutil/avstring.h"
 #include "libavutil/error.h"
 #include "libavutil/mem.h"
 #include "libavutil/time.h"
 #include "libavutil/common.h"
+
+#include "config.h"
+#include "url.h"
 
 void url_split(char *proto, int proto_size, 
               char *authorization, int authorization_size, 

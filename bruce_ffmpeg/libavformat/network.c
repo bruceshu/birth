@@ -115,8 +115,8 @@ static int ff_poll_interrupt(struct pollfd *p, nfds_t nfds, int timeout, AVIOInt
     int ret = 0;
 
     do {
-        if (ff_check_interrupt(cb))
-            return AVERROR_EXIT;
+        //if (ff_check_interrupt(cb))
+        //    return AVERROR_EXIT;
         
         ret = poll(p, nfds, POLLING_TIME);
         if (ret != 0) {
@@ -139,7 +139,7 @@ int ff_accept(int fd, int timeout, URLContext *h)
     int ret;
     struct pollfd lp = { fd, POLLIN, 0 };
 
-    ret = ff_poll_interrupt(&lp, 1, timeout, &h->interrupt_callback);
+    ret = ff_poll_interrupt(&lp, 1, timeout, NULL);
     if (ret < 0)
         return ret;
 
@@ -184,8 +184,8 @@ int ff_network_wait_fd_timeout(int fd, int write, int64_t timeout, AVIOInterrupt
     int64_t wait_start = 0;
 
     while (1) {
-        if (ff_check_interrupt(int_cb))
-            return AVERROR_EXIT;
+        //if (ff_check_interrupt(int_cb))
+        //    return AVERROR_EXIT;
         
         ret = ff_network_wait_fd(fd, write);
         if (ret != AVERROR(EAGAIN))
@@ -203,6 +203,7 @@ int ff_network_wait_fd_timeout(int fd, int write, int64_t timeout, AVIOInterrupt
 }
 
 
+#if 0
 int ff_connect_parallel(struct addrinfo *addrs, int timeout_ms_per_address,
                         int parallel, URLContext *h, int *fd,
                         void (*customize_fd)(void *, int), void *customize_ctx)
@@ -327,4 +328,4 @@ int ff_connect_parallel(struct addrinfo *addrs, int timeout_ms_per_address,
     }
     return last_err;
 }
-
+#endif

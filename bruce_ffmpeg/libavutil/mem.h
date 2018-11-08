@@ -11,6 +11,7 @@
 #define MEM_H
 
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "error.h"
 

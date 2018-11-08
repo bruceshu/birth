@@ -10,6 +10,8 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
+#include "url.h"
+
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16
 #endif
@@ -114,6 +116,10 @@ int ff_neterrno(void);
 int ff_network_init(void);
 int ff_tls_init(void);
 void ff_log_net_error(void *ctx, int level, const char* prefix);
+int ff_socket(int af, int type, int proto);
+int ff_listen(int fd, const struct sockaddr *addr, socklen_t addrlen);
+int ff_accept(int fd, int timeout, URLContext *h);
+
 
 
 

@@ -6,9 +6,13 @@
  
 *********************************/
 
+#include <string.h>
+#include <stdio.h>
+
 #include "libavutil/error.h"
 #include "libavutil/opt.h"
 #include "libavutil/version.h"
+#include "libavutil/utils.h"
 
 #include "tcp.h"
 #include "network.h"
@@ -151,12 +155,12 @@ static int tcp_open(URLContext *h, const char *uri, int flags)
         
         // Socket descriptor already closed here. Safe to overwrite to client one.
         fd = ret;
-    } else {
+    } /*else {
         ret = ff_connect_parallel(ai, s->open_timeout / 1000, 3, h, &fd, customize_fd, s);
         if (ret < 0) {
             goto fail1;
         }
-    }
+    }*/
 
     h->is_streamed = 1;
     s->fd = fd;
@@ -179,13 +183,13 @@ static int tcp_accept(URLContext *s, URLContext **c)
     TCPContext *cc;
     int ret;
 
-    if ((ret = ffurl_alloc(c, s->filename, s->flags, &s->interrupt_callback)) < 0) {
+    if ((ret = url_alloc(c, s->filename, s->flags, NULL)) < 0) {
         return ret;
     }
     
     ret = ff_accept(sc->fd, sc->listen_timeout, s);
     if (ret < 0) {
-        ffurl_closep(c);
+        url_closep(c);
         return ret;
     }
 
