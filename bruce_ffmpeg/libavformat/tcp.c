@@ -18,6 +18,7 @@
 
 #include "tcp.h"
 #include "network.h"
+#include "os_support.h"
 
 static void customize_fd(void *ctx, int fd)
 {
