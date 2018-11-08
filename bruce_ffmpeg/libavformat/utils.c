@@ -49,6 +49,30 @@ int packet_list_put(AVPacketList **packet_buffer, AVPacketList **plast_pktl, AVP
     return 0;
 }
 
+static const AVCodec *find_decoder(AVFormatContext *s, const AVStream *st, enum AVCodecID codec_id)
+{
+#if 0//FF_API_LAVF_AVCTX
+FF_DISABLE_DEPRECATION_WARNINGS
+    if (st->codec->codec)
+        return st->codec->codec;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
+    switch (st->codecpar->codec_type) {
+    case AVMEDIA_TYPE_VIDEO:
+        if (s->video_codec)    return s->video_codec;
+        break;
+    case AVMEDIA_TYPE_AUDIO:
+        if (s->audio_codec)    return s->audio_codec;
+        break;
+    case AVMEDIA_TYPE_SUBTITLE:
+        if (s->subtitle_codec) return s->subtitle_codec;
+        break;
+    }
+
+    return avcodec_find_decoder(codec_id);
+}
+
 static const AVCodec *find_probe_decoder(AVFormatContext *s, const AVStream *st, enum AVCodecID codec_id)
 {
     const AVCodec *codec;
@@ -67,15 +91,79 @@ static const AVCodec *find_probe_decoder(AVFormatContext *s, const AVStream *st,
     if (codec->capabilities & AV_CODEC_CAP_AVOID_PROBING) {
         const AVCodec *probe_codec = NULL;
         while (probe_codec = av_codec_next(probe_codec)) {
-            if (probe_codec->id == codec_id &&
-                    av_codec_is_decoder(probe_codec) &&
-                    !(probe_codec->capabilities & (AV_CODEC_CAP_AVOID_PROBING | AV_CODEC_CAP_EXPERIMENTAL))) {
+            if (probe_codec->id == codec_id && av_codec_is_decoder(probe_codec) 
+                                            && !(probe_codec->capabilities & (AV_CODEC_CAP_AVOID_PROBING | AV_CODEC_CAP_EXPERIMENTAL))) {
                 return probe_codec;
             }
         }
     }
 
     return codec;
+}
+
+static int has_codec_parameters(AVStream *st, const char **errmsg_ptr)
+{
+    AVCodecContext *avctx = st->internal->avctx;
+
+#define FAIL(errmsg) do {                                         \
+        if (errmsg_ptr)                                           \
+            *errmsg_ptr = errmsg;                                 \
+        return 0;                                                 \
+    } while (0)
+
+    if (avctx->codec_id == AV_CODEC_ID_NONE && avctx->codec_type != AVMEDIA_TYPE_DATA)
+        FAIL("unknown codec");
+    
+    switch (avctx->codec_type) {
+    case AVMEDIA_TYPE_AUDIO:
+        if (!avctx->frame_size && determinable_frame_size(avctx))
+            FAIL("unspecified frame size");
+        if (st->info->found_decoder >= 0 &&
+            avctx->sample_fmt == AV_SAMPLE_FMT_NONE)
+            FAIL("unspecified sample format");
+        if (!avctx->sample_rate)
+            FAIL("unspecified sample rate");
+        if (!avctx->channels)
+            FAIL("unspecified number of channels");
+        if (st->info->found_decoder >= 0 && !st->nb_decoded_frames && avctx->codec_id == AV_CODEC_ID_DTS)
+            FAIL("no decodable DTS frames");
+        break;
+    case AVMEDIA_TYPE_VIDEO:
+        if (!avctx->width)
+            FAIL("unspecified size");
+        if (st->info->found_decoder >= 0 && avctx->pix_fmt == AV_PIX_FMT_NONE)
+            FAIL("unspecified pixel format");
+        if (st->codecpar->codec_id == AV_CODEC_ID_RV30 || st->codecpar->codec_id == AV_CODEC_ID_RV40)
+            if (!st->sample_aspect_ratio.num && !st->codecpar->sample_aspect_ratio.num && !st->codec_info_nb_frames)
+                FAIL("no frame in rv30/40 and no sar");
+        break;
+    case AVMEDIA_TYPE_SUBTITLE:
+        if (avctx->codec_id == AV_CODEC_ID_HDMV_PGS_SUBTITLE && !avctx->width)
+            FAIL("unspecified size");
+        break;
+    case AVMEDIA_TYPE_DATA:
+        if (avctx->codec_id == AV_CODEC_ID_NONE) return 1;
+    }
+
+    return 1;
+}
+
+static int has_decode_delay_been_guessed(AVStream *st)
+{
+    if (st->codecpar->codec_id != AV_CODEC_ID_H264) return 1;
+    if (!st->info) // if we have left find_stream_info then nb_decoded_frames won't increase anymore for stream copy
+        return 1;
+#if 0//CONFIG_H264_DECODER
+    if (st->internal->avctx->has_b_frames &&
+       avpriv_h264_has_num_reorder_frames(st->internal->avctx) == st->internal->avctx->has_b_frames)
+        return 1;
+#endif
+    if (st->internal->avctx->has_b_frames<3)
+        return st->nb_decoded_frames >= 7;
+    else if (st->internal->avctx->has_b_frames<4)
+        return st->nb_decoded_frames >= 18;
+    else
+        return st->nb_decoded_frames >= 20;
 }
 
 static int try_decode_frame(AVFormatContext *s, AVStream *st, AVPacket *avpkt, AVDictionary **options)
@@ -137,7 +225,8 @@ static int try_decode_frame(AVFormatContext *s, AVStream *st, AVPacket *avpkt, A
             (!st->codec_info_nb_frames &&
              (avctx->codec->capabilities & AV_CODEC_CAP_CHANNEL_CONF)))) {
         got_picture = 0;
-        if (avctx->codec_type == AVMEDIA_TYPE_VIDEO ||
+        
+        /*if (avctx->codec_type == AVMEDIA_TYPE_VIDEO ||
             avctx->codec_type == AVMEDIA_TYPE_AUDIO) {
             ret = avcodec_send_packet(avctx, &pkt);
             if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF)
@@ -159,7 +248,7 @@ static int try_decode_frame(AVFormatContext *s, AVStream *st, AVPacket *avpkt, A
             if (got_picture)
                 st->nb_decoded_frames++;
             ret       = got_picture;
-        }
+        }*/
     }
 
     if (!pkt.data && !got_picture)

@@ -14,6 +14,8 @@
 
 int avcodec_parameters_to_context(AVCodecContext *codec, const AVCodecParameters *par);
 void avcodec_parameters_free(AVCodecParameters **ppar);
+int av_codec_is_decoder(const AVCodec *codec);
+int avcodec_is_open(AVCodecContext *s);
 
 
 #endif

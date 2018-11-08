@@ -58,3 +58,62 @@ AVFrame *av_frame_alloc(void)
     return frame;
 }
 
+static void free_side_data(AVFrameSideData **ptr_sd)
+{
+    AVFrameSideData *sd = *ptr_sd;
+
+    av_buffer_unref(&sd->buf);
+    av_dict_free(&sd->metadata);
+    av_freep(ptr_sd);
+}
+
+static void wipe_side_data(AVFrame *frame)
+{
+    int i;
+
+    for (i = 0; i < frame->nb_side_data; i++) {
+        free_side_data(&frame->side_data[i]);
+    }
+    frame->nb_side_data = 0;
+
+    av_freep(&frame->side_data);
+}
+
+void av_frame_unref(AVFrame *frame)
+{
+    int i;
+
+    if (!frame)
+        return;
+
+    wipe_side_data(frame);
+
+    for (i = 0; i < FF_ARRAY_ELEMS(frame->buf); i++)
+        av_buffer_unref(&frame->buf[i]);
+    for (i = 0; i < frame->nb_extended_buf; i++)
+        av_buffer_unref(&frame->extended_buf[i]);
+    av_freep(&frame->extended_buf);
+    av_dict_free(&frame->metadata);
+#if 0//FF_API_FRAME_QP
+FF_DISABLE_DEPRECATION_WARNINGS
+    av_buffer_unref(&frame->qp_table_buf);
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
+    av_buffer_unref(&frame->hw_frames_ctx);
+
+    av_buffer_unref(&frame->opaque_ref);
+    av_buffer_unref(&frame->private_ref);
+
+    get_frame_defaults(frame);
+}
+
+void av_frame_free(AVFrame **frame)
+{
+    if (!frame || !*frame)
+        return;
+
+    av_frame_unref(*frame);
+    av_freep(frame);
+}
+

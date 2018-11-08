@@ -161,7 +161,7 @@ typedef struct AVCodec {
     void (*init_static_data)(struct AVCodec *codec);
     int (*init)(struct AVCodecContext *);
     //int (*encode_sub)(AVCodecContext *, uint8_t *buf, int buf_size, const struct AVSubtitle *sub);
-    //int (*encode2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
+    int (*encode2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
     int (*decode)(struct AVCodecContext *, void *outdata, int *outdata_size, AVPacket *avpkt);
     int (*close)(struct AVCodecContext *);
     int (*send_frame)(struct AVCodecContext *avctx, const AVFrame *frame);
@@ -656,6 +656,7 @@ typedef struct AVCodecParser {
 AVCodec *avcodec_find_decoder(enum AVCodecID id);
 AVCodecContext *avcodec_alloc_context3(const AVCodec *codec);
 void avcodec_free_context(AVCodecContext **pavctx);
+AVCodec *avcodec_find_decoder_by_name(const char *name);
 
 
 

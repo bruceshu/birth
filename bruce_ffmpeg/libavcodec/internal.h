@@ -16,6 +16,20 @@
 #include "libavutil/thread.h"
 #include "libavutil/frame.h"
 
+
+#define FF_MAX_EXTRADATA_SIZE ((1 << 28) - AV_INPUT_BUFFER_PADDING_SIZE)
+
+#define FF_CODEC_CAP_INIT_THREADSAFE        (1 << 0)
+
+#define FF_SANE_NB_CHANNELS 256U
+
+#define FF_CODEC_CAP_INIT_THREADSAFE        (1 << 0)
+#define FF_CODEC_CAP_INIT_CLEANUP           (1 << 1)
+#define FF_CODEC_CAP_SETS_PKT_DTS           (1 << 2)
+#define FF_CODEC_CAP_SKIP_FRAME_FILL_PARAM  (1 << 3)
+#define FF_CODEC_CAP_EXPORTS_CROPPING       (1 << 4)
+#define FF_CODEC_CAP_SLICE_THREAD_HAS_MF    (1 << 5)
+
 typedef struct DecodeSimpleContext {
     AVPacket *in_pkt;
     AVFrame  *out_frame;

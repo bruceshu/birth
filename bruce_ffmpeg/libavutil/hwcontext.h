@@ -24,5 +24,28 @@ enum AVHWDeviceType {
     AV_HWDEVICE_TYPE_MEDIACODEC,
 };
 
+typedef struct AVHWDeviceContext {
+    const AVClass *av_class;
+    //AVHWDeviceInternal *internal;
+    enum AVHWDeviceType type;
+    void *hwctx;
+    void (*free)(struct AVHWDeviceContext *ctx);
+    void *user_opaque;
+} AVHWDeviceContext;
+
+typedef struct AVHWFramesContext {
+    const AVClass *av_class;
+    //AVHWFramesInternal *internal;
+    AVBufferRef *device_ref;
+    AVHWDeviceContext *device_ctx;
+    void *hwctx;
+    void (*free)(struct AVHWFramesContext *ctx);
+    void *user_opaque;
+    AVBufferPool *pool;
+    int initial_pool_size;
+    enum AVPixelFormat format;
+    enum AVPixelFormat sw_format;
+    int width, height;
+} AVHWFramesContext;
 
 #endif

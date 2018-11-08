@@ -43,4 +43,9 @@ enum AVPictureType {
 
 int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info);
 
+static inline void *av_x_if_null(const void *p, const void *x)
+{
+    return (void *)(intptr_t)(p ? p : x);
+}
+
 #endif

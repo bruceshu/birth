@@ -341,4 +341,5 @@ enum AVChromaLocation {
     AVCHROMA_LOC_NB               ///< Not part of ABI
 };
 
+
 #endif

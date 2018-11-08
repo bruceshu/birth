@@ -82,5 +82,6 @@ typedef struct AVFrame {
     AVBufferRef *private_ref;
 } AVFrame;
 
+AVFrame *av_frame_alloc(void);
 
 #endif

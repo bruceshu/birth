@@ -256,3 +256,50 @@ AVCodec *avcodec_find_decoder_by_name(const char *name)
     return find_codec_by_name(name, av_codec_is_decoder);
 }
 
+#if FF_API_NEXT
+//FF_DISABLE_DEPRECATION_WARNINGS
+static AVOnce av_codec_next_init = AV_ONCE_INIT;
+
+static void av_codec_init_next(void)
+{
+    AVCodec *prev = NULL, *p;
+    void *i = 0;
+    while ((p = (AVCodec*)av_codec_iterate(&i))) {
+        if (prev)
+            prev->next = p;
+        prev = p;
+    }
+}
+
+void avcodec_register(AVCodec *codec)
+{
+    ff_thread_once(&av_codec_next_init, av_codec_init_next);
+}
+
+AVCodec *av_codec_next(const AVCodec *c)
+{
+    ff_thread_once(&av_codec_next_init, av_codec_init_next);
+
+    if (c)
+        return c->next;
+    else
+        return (AVCodec*)codec_list[0];
+}
+
+void avcodec_register_all(void)
+{
+    ff_thread_once(&av_codec_next_init, av_codec_init_next);
+}
+//FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
+AVCodec *av_codec_next(const AVCodec *c)
+{
+    ff_thread_once(&av_codec_next_init, av_codec_init_next);
+
+    if (c)
+        return c->next;
+    else
+        return (AVCodec*)codec_list[0];
+}
+

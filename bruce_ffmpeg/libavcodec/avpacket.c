@@ -141,7 +141,7 @@ int av_buffer_realloc(AVBufferRef **pbuf, int size)
     return 0;
 }
 
-static int av_packet_alloc(AVBufferRef **buf, int size)
+int av_packet_alloc(AVBufferRef **buf, int size)
 {
     int ret;
     if (size < 0 || size >= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE)

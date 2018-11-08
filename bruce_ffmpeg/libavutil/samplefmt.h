@@ -29,5 +29,12 @@ enum AVSampleFormat {
     AV_SAMPLE_FMT_NB           ///< Number of sample formats. DO NOT USE if linking dynamically
 };
 
+typedef struct SampleFmtInfo {
+    char name[8];
+    int bits;
+    int planar;
+    enum AVSampleFormat altform; ///< planar<->packed alternative form
+} SampleFmtInfo;
+
 
 #endif
