@@ -7,6 +7,13 @@
 *********************************/
 
 
+#ifndef TCP_H
+#define TCP_H
+
+#include "libavutil/log.h"
+
+#include "config.h"
+
 typedef struct TCPContext {
     const AVClass *class;
     int fd;
@@ -22,3 +29,4 @@ typedef struct TCPContext {
 #endif
 } TCPContext;
 
+#endif

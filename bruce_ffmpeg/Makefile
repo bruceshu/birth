@@ -2,7 +2,7 @@ MAIN_MAKEFILE=1
 include ffbuild/config.mak
 
 #在指定SRC_PATH路径中查找 *.c 和 *.h 文件
-vpath %.c $(SRC_PATH)
+#vpath %.c $(SRC_PATH)
 vpath %.h $(SRC_PATH)
 
 #目标编译的库名称

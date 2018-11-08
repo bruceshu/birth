@@ -37,13 +37,6 @@ enum AVPictureType {
     AV_PICTURE_TYPE_BI,    ///< BI type
 };
 
-void av_url_split(char *proto, int proto_size, 
-                 char *authorization, int authorization_size,
-                 char *hostname, int hostname_size, 
-                 int *port_ptr, 
-                 char *path, int path_size, 
-                 const char *url);
-
 int av_find_info_tag(char *arg, int arg_size, const char *tag1, const char *info);
 
 #endif

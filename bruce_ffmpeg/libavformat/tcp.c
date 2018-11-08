@@ -6,6 +6,14 @@
  
 *********************************/
 
+#include "libavutil/error.h"
+#include "libavutil/opt.h"
+#include "libavutil/version.h"
+
+#include "tcp.h"
+#include "network.h"
+#include "url.h"
+
 static void customize_fd(void *ctx, int fd)
 {
     TCPContext *s = ctx;
@@ -49,7 +57,7 @@ static int tcp_open(URLContext *h, const char *uri, int flags)
     char portstr[10];
     s->open_timeout = 5000000;
 
-    av_url_split(proto, sizeof(proto), NULL, 0, hostname, sizeof(hostname), &port, path, sizeof(path), uri);
+    url_split(proto, sizeof(proto), NULL, 0, hostname, sizeof(hostname), &port, path, sizeof(path), uri);
     if (strcmp(proto, "tcp")) {
         return AVERROR(EINVAL);
     }

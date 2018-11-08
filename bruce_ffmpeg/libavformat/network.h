@@ -113,6 +113,7 @@ int ff_neterrno(void);
 
 int ff_network_init(void);
 int ff_tls_init(void);
+void ff_log_net_error(void *ctx, int level, const char* prefix);
 
 
 
