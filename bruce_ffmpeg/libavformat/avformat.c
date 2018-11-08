@@ -21,10 +21,10 @@
 #include "libavutil/avstring.h"
 
 #include "libavcodec/utils.h"
+#include "libavcodec/avpacket.h"
 
 #include "avio.h"
 #include "id3v2.h"
-#include "avpacket.h"
 #include "utils.h"
 #include "avformat.h"
 

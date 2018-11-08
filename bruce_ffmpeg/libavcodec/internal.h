@@ -14,6 +14,7 @@
 
 #include "libavutil/internal.h"
 #include "libavutil/thread.h"
+#include "libavutil/frame.h"
 
 typedef struct DecodeSimpleContext {
     AVPacket *in_pkt;
