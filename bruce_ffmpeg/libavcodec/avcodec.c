@@ -276,16 +276,6 @@ void avcodec_register(AVCodec *codec)
     ff_thread_once(&av_codec_next_init, av_codec_init_next);
 }
 
-AVCodec *av_codec_next(const AVCodec *c)
-{
-    ff_thread_once(&av_codec_next_init, av_codec_init_next);
-
-    if (c)
-        return c->next;
-    else
-        return (AVCodec*)codec_list[0];
-}
-
 void avcodec_register_all(void)
 {
     ff_thread_once(&av_codec_next_init, av_codec_init_next);

@@ -83,5 +83,7 @@ typedef struct AVFrame {
 } AVFrame;
 
 AVFrame *av_frame_alloc(void);
+void av_frame_free(AVFrame **frame);
+
 
 #endif

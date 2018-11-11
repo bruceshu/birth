@@ -778,7 +778,8 @@ void avcodec_parameters_free(AVCodecParameters **ppar)
     av_freep(ppar);
 }
 
-int avpriv_codec_get_cap_skip_frame_fill_param(const AVCodec *codec){
+int avpriv_codec_get_cap_skip_frame_fill_param(const AVCodec *codec)
+{
     return !!(codec->caps_internal & FF_CODEC_CAP_SKIP_FRAME_FILL_PARAM);
 }
 

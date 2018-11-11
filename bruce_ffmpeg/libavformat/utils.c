@@ -17,6 +17,9 @@
 #include "libavcodec/avpacket.h"
 #include "libavcodec/utils.h"
 
+#include "libavutil/frame.h"
+#include "libavutil/mathematics.h"
+
 #include "utils.h"
 
 int packet_list_put(AVPacketList **packet_buffer, AVPacketList **plast_pktl, AVPacket *pkt, int flags)
@@ -99,6 +102,19 @@ static const AVCodec *find_probe_decoder(AVFormatContext *s, const AVStream *st,
     }
 
     return codec;
+}
+
+static int determinable_frame_size(AVCodecContext *avctx)
+{
+    switch(avctx->codec_id) {
+    case AV_CODEC_ID_MP1:
+    case AV_CODEC_ID_MP2:
+    case AV_CODEC_ID_MP3:
+    case AV_CODEC_ID_CODEC2:
+        return 1;
+    }
+
+    return 0;
 }
 
 static int has_codec_parameters(AVStream *st, const char **errmsg_ptr)
@@ -261,6 +277,80 @@ fail:
 
     av_frame_free(&frame);
     return ret;
+}
+
+static AVPacketList *get_next_pkt(AVFormatContext *s, AVStream *st, AVPacketList *pktl)
+{
+    if (pktl->next)
+        return pktl->next;
+    if (pktl == s->internal->packet_buffer_end)
+        return s->internal->parse_queue;
+    return NULL;
+}
+
+static int64_t select_from_pts_buffer(AVStream *st, int64_t *pts_buffer, int64_t dts) {
+    int onein_oneout = st->codecpar->codec_id != AV_CODEC_ID_H264 && st->codecpar->codec_id != AV_CODEC_ID_HEVC;
+
+    if(!onein_oneout) {
+        int delay = st->internal->avctx->has_b_frames;
+        int i;
+
+        if (dts == AV_NOPTS_VALUE) {
+            int64_t best_score = INT64_MAX;
+            for (i = 0; i<delay; i++) {
+                if (st->pts_reorder_error_count[i]) {
+                    int64_t score = st->pts_reorder_error[i] / st->pts_reorder_error_count[i];
+                    if (score < best_score) {
+                        best_score = score;
+                        dts = pts_buffer[i];
+                    }
+                }
+            }
+        } else {
+            for (i = 0; i<delay; i++) {
+                if (pts_buffer[i] != AV_NOPTS_VALUE) {
+                    int64_t diff =  FFABS(pts_buffer[i] - dts) + (uint64_t)st->pts_reorder_error[i];
+                    diff = FFMAX(diff, st->pts_reorder_error[i]);
+                    st->pts_reorder_error[i] = diff;
+                    st->pts_reorder_error_count[i]++;
+                    if (st->pts_reorder_error_count[i] > 250) {
+                        st->pts_reorder_error[i] >>= 1;
+                        st->pts_reorder_error_count[i] >>= 1;
+                    }
+                }
+            }
+        }
+    }
+
+    if (dts == AV_NOPTS_VALUE)
+        dts = pts_buffer[0];
+
+    return dts;
+}
+
+static void update_dts_from_pts(AVFormatContext *s, int stream_index, AVPacketList *pkt_buffer)
+{
+    AVStream *st = s->streams[stream_index];
+    int delay = st->internal->avctx->has_b_frames;
+    int i;
+
+    int64_t pts_buffer[MAX_REORDER_DELAY+1];
+
+    for (i = 0; i<MAX_REORDER_DELAY+1; i++)
+        pts_buffer[i] = AV_NOPTS_VALUE;
+
+    for (; pkt_buffer; pkt_buffer = get_next_pkt(s, st, pkt_buffer)) {
+        if (pkt_buffer->pkt.stream_index != stream_index)
+            continue;
+
+        if (pkt_buffer->pkt.pts != AV_NOPTS_VALUE && delay <= MAX_REORDER_DELAY) {
+            pts_buffer[0] = pkt_buffer->pkt.pts;
+            for (i = 0; i<delay && pts_buffer[i] > pts_buffer[i + 1]; i++)
+                FFSWAP(int64_t, pts_buffer[i], pts_buffer[i + 1]);
+
+            pkt_buffer->pkt.dts = select_from_pts_buffer(st, pts_buffer, pkt_buffer->pkt.dts);
+        }
+    }
 }
 
 int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options)

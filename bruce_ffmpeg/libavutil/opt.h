@@ -91,6 +91,7 @@ int av_opt_copy(void *dst, const void *src);
 int av_opt_set(void *obj, const char *name, const char *val, int search_flags);
 int av_opt_get(void *obj, const char *name, int search_flags, uint8_t **out_val);
 int av_opt_set_dict(void *obj, AVDictionary **options);
+void *av_opt_ptr(const AVClass *pstClass, void *obj, const char *name);
 
 void av_opt_free(void *obj);
 
