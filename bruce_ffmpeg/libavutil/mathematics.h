@@ -12,6 +12,8 @@
 
 #include <stdint.h>
 
+#include "rational.h"
+
 enum AVRounding {
     AV_ROUND_ZERO     = 0, ///< Round toward zero.
     AV_ROUND_INF      = 1, ///< Round away from zero.
