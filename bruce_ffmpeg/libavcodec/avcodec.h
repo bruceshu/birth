@@ -467,7 +467,7 @@ typedef struct AVCodecContext {
     AVRational framerate;
     enum AVPixelFormat sw_pix_fmt;
     AVRational pkt_timebase;
-    const AVCodecDescriptor *codec_descriptor;
+    const struct AVCodecDescriptor *codec_descriptor;
 #if !FF_API_LOWRES
      int lowres;
 #endif
