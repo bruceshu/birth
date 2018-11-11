@@ -138,53 +138,6 @@ typedef struct AVBSFContext {
 } AVBSFContext;
 #endif
 
-struct AVCodecContext;
-typedef struct AVCodec {
-    const AVClass *priv_class;              ///< AVClass for the private context
-    const char *name;
-    const char *long_name;
-    enum AVMediaType type;
-    enum AVCodecID id;
-    int capabilities;
-    const AVRational *supported_framerates; ///< array of supported framerates, or NULL if any, array is terminated by {0,0}
-    const enum AVPixelFormat *pix_fmts;     ///< array of supported pixel formats, or NULL if unknown, array is terminated by -1
-    const int *supported_samplerates;       ///< array of supported audio samplerates, or NULL if unknown, array is terminated by 0
-    const enum AVSampleFormat *sample_fmts; ///< array of supported sample formats, or NULL if unknown, array is terminated by -1
-    const uint64_t *channel_layouts;         ///< array of support channel layouts, or NULL if unknown. array is terminated by 0
-    uint8_t max_lowres;                     ///< maximum value for lowres supported by the decoder
-    const AVProfile *profiles;              ///< array of recognized profiles, or NULL if unknown, array is terminated by {FF_PROFILE_UNKNOWN}
-    const char *wrapper_name;
-    int priv_data_size;
-    int (*init_thread_copy)(struct AVCodecContext *);
-    int (*update_thread_context)(struct AVCodecContext *dst, const struct AVCodecContext *src);
-    const AVCodecDefault *defaults;
-    void (*init_static_data)(struct AVCodec *codec);
-    int (*init)(struct AVCodecContext *);
-    //int (*encode_sub)(AVCodecContext *, uint8_t *buf, int buf_size, const struct AVSubtitle *sub);
-    int (*encode2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
-    int (*decode)(struct AVCodecContext *, void *outdata, int *outdata_size, AVPacket *avpkt);
-    int (*close)(struct AVCodecContext *);
-    int (*send_frame)(struct AVCodecContext *avctx, const AVFrame *frame);
-    int (*receive_packet)(struct AVCodecContext *avctx, AVPacket *avpkt);
-    int (*receive_frame)(struct AVCodecContext *avctx, AVFrame *frame);
-    void (*flush)(struct AVCodecContext *);
-    int caps_internal;
-    const char *bsfs;
-    //const struct AVCodecHWConfigInternal **hw_configs;
-    
-    struct AVCodec *next;
-} AVCodec;
-
-typedef struct AVCodecDescriptor {
-    enum AVCodecID id;
-    enum AVMediaType type;
-    const char *name;
-    const char *long_name;
-    int props;
-    const char *const *mime_types;
-    const struct AVProfile *profiles;
-} AVCodecDescriptor;
-
 typedef struct AVCodecContext {
     const AVClass *av_class;
     int log_level_offset;
@@ -557,6 +510,52 @@ typedef struct AVCodecContext {
     int apply_cropping;
     int extra_hw_frames;
 } AVCodecContext;
+
+typedef struct AVCodec {
+    const AVClass *priv_class;              ///< AVClass for the private context
+    const char *name;
+    const char *long_name;
+    enum AVMediaType type;
+    enum AVCodecID id;
+    int capabilities;
+    const AVRational *supported_framerates; ///< array of supported framerates, or NULL if any, array is terminated by {0,0}
+    const enum AVPixelFormat *pix_fmts;     ///< array of supported pixel formats, or NULL if unknown, array is terminated by -1
+    const int *supported_samplerates;       ///< array of supported audio samplerates, or NULL if unknown, array is terminated by 0
+    const enum AVSampleFormat *sample_fmts; ///< array of supported sample formats, or NULL if unknown, array is terminated by -1
+    const uint64_t *channel_layouts;         ///< array of support channel layouts, or NULL if unknown. array is terminated by 0
+    uint8_t max_lowres;                     ///< maximum value for lowres supported by the decoder
+    const AVProfile *profiles;              ///< array of recognized profiles, or NULL if unknown, array is terminated by {FF_PROFILE_UNKNOWN}
+    const char *wrapper_name;
+    int priv_data_size;
+    int (*init_thread_copy)(AVCodecContext *);
+    int (*update_thread_context)(AVCodecContext *dst, const AVCodecContext *src);
+    const AVCodecDefault *defaults;
+    void (*init_static_data)(struct AVCodec *codec);
+    int (*init)(AVCodecContext *);
+    //int (*encode_sub)(AVCodecContext *, uint8_t *buf, int buf_size, const struct AVSubtitle *sub);
+    int (*encode2)(AVCodecContext *avctx, AVPacket *avpkt, const AVFrame *frame, int *got_packet_ptr);
+    int (*decode)(AVCodecContext *, void *outdata, int *outdata_size, AVPacket *avpkt);
+    int (*close)(AVCodecContext *);
+    int (*send_frame)(AVCodecContext *avctx, const AVFrame *frame);
+    int (*receive_packet)(AVCodecContext *avctx, AVPacket *avpkt);
+    int (*receive_frame)(AVCodecContext *avctx, AVFrame *frame);
+    void (*flush)(AVCodecContext *);
+    int caps_internal;
+    const char *bsfs;
+    //const struct AVCodecHWConfigInternal **hw_configs;
+    
+    struct AVCodec *next;
+} AVCodec;
+
+typedef struct AVCodecDescriptor {
+    enum AVCodecID id;
+    enum AVMediaType type;
+    const char *name;
+    const char *long_name;
+    int props;
+    const char *const *mime_types;
+    const struct AVProfile *profiles;
+} AVCodecDescriptor;
 
 typedef struct AVCodecParameters {
     enum AVMediaType codec_type;
