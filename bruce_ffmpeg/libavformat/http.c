@@ -1355,7 +1355,7 @@ static const AVClass flavor ## _context_class = {   \
 
 HTTP_CLASS(http);
 const URLProtocol http_protocol = {
-    .url_name            = "http",
+    .name            = "http",
     .url_open2           = http_open,
     //.url_accept          = http_accept,
     //.url_handshake       = http_handshake,
