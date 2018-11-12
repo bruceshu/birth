@@ -9,7 +9,7 @@
 
 #include <string.h>
 #include <inttypes.h>
-#include <stdint.h>
+#include <limits.h>
 #include <stdio.h>
 
 #include "libavutil/mem.h"
