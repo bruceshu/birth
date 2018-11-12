@@ -85,6 +85,7 @@ typedef enum {
     AV_CLASS_CATEGORY_NB  ///< not part of ABI/API
 }AVClassCategory;
 
+struct AVOptionRanges;
 typedef struct AVClass {
     const char* class_name;
     const char* (*item_name)(void* ctx);
