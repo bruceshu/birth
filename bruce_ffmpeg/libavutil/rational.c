@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <math.h>
+#include <limits.h>
 
 #include "rational.h"
 #include "common.h"
