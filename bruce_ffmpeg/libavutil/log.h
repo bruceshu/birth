@@ -10,8 +10,6 @@
 #ifndef LOG_H
 #define LOG_H
 
-#include "opt.h"
-
 /**
  * Print no output.
  */
