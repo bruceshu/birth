@@ -26,6 +26,8 @@ enum AVRounding {
 
 int64_t av_rescale(int64_t a, int64_t b, int64_t c);
 int64_t av_rescale_q(int64_t a, AVRational bq, AVRational cq);
+int64_t av_rescale_q_rnd(int64_t a, AVRational bq, AVRational cq, enum AVRounding rnd);
+int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding rnd);
 
 
 #endif

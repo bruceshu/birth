@@ -35,7 +35,7 @@ int64_t av_gcd(int64_t a, int64_t b) {
 }
 #endif
 
-static int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding rnd)
+int64_t av_rescale_rnd(int64_t a, int64_t b, int64_t c, enum AVRounding rnd)
 {
     int64_t r = 0;
     av_assert2(c > 0);

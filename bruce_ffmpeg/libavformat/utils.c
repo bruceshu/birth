@@ -9,10 +9,14 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #include "libavutil/mem.h"
 #include "libavutil/error.h"
 #include "libavutil/opt.h"
+#include "libavutil/assert.h"
+#include "libavutil/time.h"
 
 #include "libavcodec/avpacket.h"
 #include "libavcodec/utils.h"
@@ -458,6 +462,46 @@ no_packet:
     return 0;
 }
 
+int av_find_default_stream_index(AVFormatContext *s)
+{
+    int i;
+    AVStream *st;
+    int best_stream = 0;
+    int best_score = INT_MIN;
+
+    if (s->nb_streams <= 0)
+        return -1;
+    
+    for (i = 0; i < s->nb_streams; i++) {
+        int score = 0;
+        st = s->streams[i];
+        if (st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+            if (st->disposition & AV_DISPOSITION_ATTACHED_PIC)
+                score -= 400;
+            if (st->codecpar->width && st->codecpar->height)
+                score += 50;
+            score+= 25;
+        }
+        
+        if (st->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            if (st->codecpar->sample_rate)
+                score += 50;
+        }
+        
+        if (st->codec_info_nb_frames)
+            score += 12;
+
+        if (st->discard != AVDISCARD_ALL)
+            score += 200;
+
+        if (score > best_score) {
+            best_score = score;
+            best_stream = i;
+        }
+    }
+    return best_stream;
+}
+
 static int update_wrap_reference(AVFormatContext *s, AVStream *st, int stream_index, AVPacket *pkt)
 {
     int64_t ref = pkt->dts;
@@ -690,6 +734,7 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
 
 void ff_compute_frame_duration(AVFormatContext *s, int *pnum, int *pden, AVStream *st, AVCodecParserContext *pc, AVPacket *pkt)
 {
+    #if 0
     AVRational codec_framerate = s->iformat ? st->internal->avctx->framerate : av_mul_q(av_inv_q(st->internal->avctx->time_base), (AVRational){1, st->internal->avctx->ticks_per_frame});
     int frame_size, sample_rate;
 
@@ -747,6 +792,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
     default:
         break;
     }
+    #endif
 }
 
 AVProgram *av_find_program_from_stream(AVFormatContext *ic, AVProgram *last, int s)
@@ -1673,7 +1719,7 @@ find_stream_info_err:
             av_freep(&st->info->duration_error);
         avcodec_close(ic->streams[i]->internal->avctx);
         av_freep(&ic->streams[i]->info);
-        av_bsf_free(&ic->streams[i]->internal->extract_extradata.bsf);
+        //av_bsf_free(&ic->streams[i]->internal->extract_extradata.bsf);
         av_packet_free(&ic->streams[i]->internal->extract_extradata.pkt);
     }
     if (ic->pb)

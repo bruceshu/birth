@@ -38,7 +38,7 @@ static int avio_write_packet(void *opaque, uint8_t *buf, int buf_size)
     return url_write(internal->h, buf, buf_size);
 }
 
-static int64_t avio_seek(void *opaque, int64_t offset, int whence)
+int64_t avio_seek(void *opaque, int64_t offset, int whence)
 {
     AVIOInternal *internal = opaque;
     return url_seek(internal->h, offset, whence);

@@ -99,6 +99,8 @@ int avio_ensure_seekback(AVIOContext *s, int64_t buf_size);
 int avio_close(AVIOContext *s);
 int64_t avio_skip(AVIOContext *s, int64_t offset);
 int64_t avio_tell(AVIOContext *s);
+int64_t avio_size(AVIOContext *s);
+int64_t avio_seek(void *opaque, int64_t offset, int whence);
 
 int avio_read(AVIOContext *s, unsigned char *buf, int size);
 int avio_feof(AVIOContext *s);

@@ -155,7 +155,7 @@ int avcodec_close(AVCodecContext *avctx)
 
     if (!avctx)
         return 0;
-
+#if 0
     if (avcodec_is_open(avctx)) {
         FramePool *pool = avctx->internal->pool;
         if (CONFIG_FRAME_THREAD_ENCODER &&
@@ -211,6 +211,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
     avctx->codec = NULL;
     avctx->active_thread_type = 0;
+#endif
 
     return 0;
 }

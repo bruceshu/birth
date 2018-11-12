@@ -17,6 +17,7 @@ void av_packet_free(AVPacket **pkt);
 int av_packet_ref(AVPacket *dst, const AVPacket *src);
 void av_init_packet(AVPacket *pkt);
 int av_packet_alloc(AVBufferRef **buf, int size);
+int av_packet_make_refcounted(AVPacket *pkt);
 
 
 

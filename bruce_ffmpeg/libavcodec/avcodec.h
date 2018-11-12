@@ -653,7 +653,7 @@ typedef struct AVCodecParser {
     void (*parser_close)(AVCodecParserContext *s);
     int (*split)(AVCodecContext *avctx, const uint8_t *buf, int buf_size);
     struct AVCodecParser *next;
-};
+} AVCodecParser;
 
 
 
@@ -662,6 +662,7 @@ AVCodecContext *avcodec_alloc_context3(const AVCodec *codec);
 void avcodec_free_context(AVCodecContext **pavctx);
 AVCodec *avcodec_find_decoder_by_name(const char *name);
 AVCodec *av_codec_next(const AVCodec *c);
+int avcodec_close(AVCodecContext *avctx);
 
 
 
