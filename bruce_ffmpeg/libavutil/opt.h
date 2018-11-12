@@ -14,6 +14,7 @@
 #include "common.h"
 #include "rational.h"
 #include "dict.h"
+#include "log.h"
 
 #define AV_OPT_SEARCH_CHILDREN   (1 << 0)
 #define AV_OPT_SEARCH_FAKE_OBJ   (1 << 1)
