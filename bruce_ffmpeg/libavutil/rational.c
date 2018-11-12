@@ -8,8 +8,10 @@
 
 
 #include <stdint.h>
+#include <math.h>
 
 #include "rational.h"
+#include "common.h"
 
 int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
 {
@@ -65,8 +67,8 @@ AVRational av_d2q(double d, int max)
     AVRational a;
     int exponent;
     int64_t den;
-    if (isnan(d))
-        return (AVRational) { 0,0 };
+    /*if (isnan(d))
+        return (AVRational) { 0,0 };*/
     
     if (fabs(d) > INT_MAX + 3LL)
         return (AVRational) { d < 0 ? -1 : 1, 0 };
