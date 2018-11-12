@@ -1,11 +1,11 @@
-/*
-copyright bruceshu
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-11-12
+ * Description:
+ 
+*********************************/
 
-author:bruceshu
-date:2018-07-05
-description:
-
-*/
 
 
 #include "protocol.h"
@@ -14,9 +14,9 @@ description:
 #include "libavutils/error.h"
 
 
-static int file_open(URLContext *url_ctx, const char *filename, int flags)
+static int file_open(URLContext *pstUrlCtx, const char *filename, int flags)
 {
-    FileContext *file_ctx = url_ctx->priv_data;
+    FileContext *file_ctx = pstUrlCtx->pstPrivData;
     int access;
     int fd;
     struct stat st;
@@ -42,12 +42,12 @@ static int file_open(URLContext *url_ctx, const char *filename, int flags)
         return AVERROR(errno);
     file_ctx->fd = fd;
 
-    //不知道is_streamed有什么作用，当前注释掉
-    //url_ctx->is_streamed = !fstat(fd, &st) && S_ISFIFO(st.st_mode);
+  
+    pstUrlCtx->is_streamed = !fstat(fd, &st) && S_ISFIFO(st.st_mode);
 
     /* Buffer writes more than the default 32k to improve throughput especially with networked file systems */
-    //!url_ctx->is_streamed && flags & AVIO_FLAG_WRITE)
-    //  url_ctx->min_packet_size = url_ctx->max_packet_size = 262144;
+    if(!pstUrlCtx->is_streamed && flags & AVIO_FLAG_WRITE)
+        pstUrlCtx->min_packet_size = pstUrlCtx->max_packet_size = 262144;
 
     return 0;
 }

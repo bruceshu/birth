@@ -244,7 +244,9 @@ void show_banner(int argc, char **argv, const OptionDef *options)
 void parse_options(void *optctx, int argc, char **argv, const OptionDef *options, void (*parse_arg_function)(void *, const char*))
 {
     const char *opt;
-    int optindex, handleoptions = 1, ret;
+    int optindex;
+    int handleoptions = 1;
+    int ret;
 
     /* perform system-dependent conversions for arguments list */
     //prepare_app_arguments(&argc, &argv);
@@ -432,6 +434,7 @@ static int open_input_file(InputFile *ifile, const char *filename)
     
     ifile->nb_streams = fmt_ctx->nb_streams;
 
+#if 0
     /* bind a decoder to each input stream */
     for (i = 0; i < fmt_ctx->nb_streams; i++) {
         InputStream *ist = &ifile->streams[i];
@@ -487,6 +490,7 @@ static int open_input_file(InputFile *ifile, const char *filename)
         }
         */
     }
+#endif
 
     ifile->fmt_ctx = fmt_ctx;
     return 0;

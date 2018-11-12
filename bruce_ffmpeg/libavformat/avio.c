@@ -151,9 +151,9 @@ static int avio_init_context(AVIOContext *s,
         s->pos     = buffer_size;
         s->buf_end = s->buffer + buffer_size;
     }
+    
     s->read_pause = NULL;
     s->read_seek  = NULL;
-
     s->write_data_type       = NULL;
     s->ignore_boundary_point = 0;
     s->current_type          = AVIO_DATA_MARKER_UNKNOWN;
@@ -204,8 +204,7 @@ static int avio_fdopen(AVIOContext **s, URLContext *h)
 
     internal->h = h;
 
-    *s = avio_alloc_context(buffer, buffer_size, h->flags & AVIO_FLAG_WRITE,
-                            internal, avio_read_packet, avio_write_packet, avio_seek);
+    *s = avio_alloc_context(buffer, buffer_size, h->flags & AVIO_FLAG_WRITE, internal, avio_read_packet, avio_write_packet, avio_seek);
     if (!*s)
         goto fail;
 

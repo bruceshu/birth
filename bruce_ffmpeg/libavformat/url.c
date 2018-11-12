@@ -357,8 +357,8 @@ static int url_alloc_for_protocol(URLContext **ppstUrlCtx, const URLProtocol *ps
         }
     }
     
-    //if (int_cb)
-    //    pstUrlCtx->interrupt_callback = *int_cb;
+    if (int_cb)
+        pstUrlCtx->interrupt_callback = *int_cb;
 
     *ppstUrlCtx = pstUrlCtx;
     return 0;
@@ -437,7 +437,7 @@ int url_connect(URLContext *pstUrlCtx, AVDictionary **options)
             pstUrlCtx->is_streamed = 1;
         }
     }
-        
+
     return 0;
 }
 

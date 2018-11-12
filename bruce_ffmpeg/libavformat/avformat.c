@@ -461,6 +461,7 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt, const char *fil
     if (offset >= max_probe_size)
         return AVERROR(EINVAL);
 
+    //配置数据的扩展类型，目前不知道有什么用
     if (pb->av_class) {
         uint8_t *mime_type_opt = NULL;
         char *semi;
@@ -506,8 +507,7 @@ int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt, const char *fil
                 av_log(logctx, AV_LOG_WARNING, "Format %s detected only with low score of %d, "
                        "misdetection possible!\n", (*fmt)->name, score);
             } else
-                av_log(logctx, AV_LOG_DEBUG, "Format %s probed with size=%d and score=%d\n",
-                       (*fmt)->name, probe_size, score);
+                av_log(logctx, AV_LOG_DEBUG, "Format %s probed with size=%d and score=%d\n", (*fmt)->name, probe_size, score);
 #if 0
             FILE *f = fopen("probestat.tmp", "ab");
             fprintf(f, "probe_size:%d format:%s score:%d filename:%s\n", probe_size, (*fmt)->name, score, filename);
@@ -679,10 +679,8 @@ int avformat_queue_attached_pictures(AVFormatContext *s)
                 continue;
             }
 
-            ret = packet_list_put(&s->internal->raw_packet_buffer,
-                                     &s->internal->raw_packet_buffer_end,
-                                     &s->streams[i]->attached_pic,
-                                     FF_PACKETLIST_FLAG_REF_PACKET);
+            ret = packet_list_put(&s->internal->raw_packet_buffer, &s->internal->raw_packet_buffer_end,
+                                     &s->streams[i]->attached_pic, FF_PACKETLIST_FLAG_REF_PACKET);
             if (ret < 0)
                 return ret;
         }
