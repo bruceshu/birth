@@ -15,6 +15,7 @@
 
 #include "libavutil/log.h"
 #include "libavutil/internal.h"
+#include "libavutil/common.h"
 
 #include "libavcodec/avcodec.h"
 
