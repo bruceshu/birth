@@ -10,6 +10,7 @@
 #include <limits.h>
 
 #include "assert.h"
+#include "common.h"
 #include "mathematics.h"
 
 #if 0
