@@ -20,5 +20,7 @@ static inline double av_q2d(AVRational a){
     return a.num / (double) a.den;
 }
 
+AVRational av_mul_q(AVRational b, AVRational c);
+
 
 #endif

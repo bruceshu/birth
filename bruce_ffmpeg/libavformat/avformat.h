@@ -68,6 +68,10 @@
 #define AV_DISPOSITION_DEPENDENT    0x80000 ///< dependent audio stream (mix_type=0 in mpegts)
 #define AV_DISPOSITION_STILL_IMAGE 0x100000 ///< still images in video stream (still_picture_flag=1 in mpegts)
 
+#define AV_PTS_WRAP_IGNORE      0   ///< ignore the wrap
+#define AV_PTS_WRAP_ADD_OFFSET  1   ///< add the format specific offset on wrap detection
+#define AV_PTS_WRAP_SUB_OFFSET  -1  ///< subtract the format specific offset on wrap detection
+
 enum AVStreamParseType {
     AVSTREAM_PARSE_NONE,
     AVSTREAM_PARSE_FULL,       /**< full parsing and repack */
@@ -152,7 +156,7 @@ typedef struct AVStream {
     int probe_packets;
     int codec_info_nb_frames;
     enum AVStreamParseType need_parsing;
-    //struct AVCodecParserContext *parser;
+    struct AVCodecParserContext *parser;
     struct AVPacketList *last_in_packet_buffer;
     AVProbeData probe_data;
 #define MAX_REORDER_DELAY 16

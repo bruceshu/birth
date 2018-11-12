@@ -49,6 +49,12 @@
 #define AV_CODEC_CAP_HARDWARE            (1 << 18)
 #define AV_CODEC_CAP_HYBRID              (1 << 19)
 
+#define AV_PKT_FLAG_KEY     0x0001 ///< The packet contains a keyframe
+#define AV_PKT_FLAG_CORRUPT 0x0002 ///< The packet content is corrupted
+#define AV_PKT_FLAG_DISCARD   0x0004
+#define AV_PKT_FLAG_TRUSTED   0x0008
+#define AV_PKT_FLAG_DISPOSABLE 0x0010
+
 enum AVDiscard{
     AVDISCARD_NONE    =-16, ///< discard nothing
     AVDISCARD_DEFAULT =  0, ///< discard useless packets like 0 size packets in avi
@@ -591,7 +597,6 @@ typedef struct AVCodecParameters {
     int seek_preroll;
 } AVCodecParameters;
 
-#if 0
 typedef struct AVCodecParserContext {
     void *priv_data;
     struct AVCodecParser *parser;
@@ -649,7 +654,7 @@ typedef struct AVCodecParser {
     int (*split)(AVCodecContext *avctx, const uint8_t *buf, int buf_size);
     struct AVCodecParser *next;
 };
-#endif
+
 
 
 AVCodec *avcodec_find_decoder(enum AVCodecID id);

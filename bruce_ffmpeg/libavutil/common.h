@@ -18,7 +18,7 @@
 #define FF_ARRAY_ELEMS(a) (sizeof(a) / sizeof((a)[0]))
 
 #define FFSWAP(type,a,b) do{type SWAP_tmp = b; b = a; a = SWAP_tmp;}while(0)
-
+#define FFABS(a) ((a) >= 0 ? (a) : (-(a)))
 #define FFMAX(a,b) ((a) > (b) ? (a) : (b))
 #define FFMAX3(a,b,c) FFMAX(FFMAX(a,b),c)
 #define FFMIN(a,b) ((a) > (b) ? (b) : (a))

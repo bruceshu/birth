@@ -369,6 +369,28 @@ int avio_feof(AVIOContext *s)
     return s->eof_reached;
 }
 
+int64_t avio_size(AVIOContext *s)
+{
+    int64_t size;
+
+    if (!s)
+        return AVERROR(EINVAL);
+
+    if (s->written)
+        return s->written;
+
+    if (!s->seek)
+        return AVERROR(ENOSYS);
+    size = s->seek(s->opaque, 0, AVSEEK_SIZE);
+    if (size < 0) {
+        if ((size = s->seek(s->opaque, -1, SEEK_END)) < 0)
+            return size;
+        size++;
+        s->seek(s->opaque, s->pos, SEEK_SET);
+    }
+    return size;
+}
+
 int avio_read(AVIOContext *s, unsigned char *buf, int size)
 {
     int len, size1;

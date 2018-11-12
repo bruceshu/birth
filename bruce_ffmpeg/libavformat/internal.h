@@ -30,6 +30,9 @@
 
 #define FF_PACKETLIST_FLAG_REF_PACKET (1 << 0)
 
+#define FFERROR_REDO FFERRTAG('R','E','D','O')
+
+
 #if 0
 #ifdef __GNUC__
 #define dynarray_add(tab, nb_ptr, elem)\

@@ -1,8 +1,15 @@
+/*********************************
+ * Copyright (c) 2018 Bruceshu 3350207067@qq.com
+ * Auther:Bruceshu
+ * Date:  2018-11-12
+ * Description:
+ 
+*********************************/
 
 
-#if 0
 int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
 {
+    #if 0
     AVRational a0 = { 0, 1 }, a1 = { 1, 0 };
     int sign = (num < 0) ^ (den < 0);
     int64_t gcd = av_gcd(FFABS(num), FFABS(den));
@@ -11,6 +18,7 @@ int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
         num = FFABS(num) / gcd;
         den = FFABS(den) / gcd;
     }
+    
     if (num <= max && den <= max) {
         a1 = (AVRational) { num, den };
         den = 0;
@@ -36,11 +44,13 @@ int av_reduce(int *dst_num, int *dst_den, int64_t num, int64_t den, int64_t max)
         num = den;
         den = next_den;
     }
-    av_assert2(av_gcd(a1.num, a1.den) <= 1U);
+    
+    //av_assert2(av_gcd(a1.num, a1.den) <= 1U);
     av_assert2(a1.num <= max && a1.den <= max);
 
     *dst_num = sign ? -a1.num : a1.num;
     *dst_den = a1.den;
+#endif
 
     return den == 0;
 }
@@ -68,7 +78,12 @@ AVRational av_d2q(double d, int max)
 
     return a;
 }
-#endif
 
-
+AVRational av_mul_q(AVRational b, AVRational c)
+{
+    av_reduce(&b.num, &b.den,
+               b.num * (int64_t) c.num,
+               b.den * (int64_t) c.den, INT_MAX);
+    return b;
+}
 

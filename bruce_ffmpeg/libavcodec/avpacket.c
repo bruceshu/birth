@@ -42,6 +42,40 @@ int av_packet_add_side_data(AVPacket *pkt, enum AVPacketSideDataType type, uint8
     return 0;
 }
 
+static int packet_alloc(AVBufferRef **buf, int size)
+{
+    int ret;
+    if (size < 0 || size >= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
+        return AVERROR(EINVAL);
+
+    ret = av_buffer_realloc(buf, size + AV_INPUT_BUFFER_PADDING_SIZE);
+    if (ret < 0)
+        return ret;
+
+    memset((*buf)->data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+
+    return 0;
+}
+
+int av_packet_make_refcounted(AVPacket *pkt)
+{
+    int ret;
+
+    if (pkt->buf)
+        return 0;
+
+    ret = packet_alloc(&pkt->buf, pkt->size);
+    if (ret < 0)
+        return ret;
+    
+    if (pkt->size)
+        memcpy(pkt->buf->data, pkt->data, pkt->size);
+
+    pkt->data = pkt->buf->data;
+
+    return 0;
+}
+
 uint8_t *av_packet_new_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
                                  int size)
 {
