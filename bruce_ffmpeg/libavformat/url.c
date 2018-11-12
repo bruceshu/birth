@@ -16,6 +16,7 @@
 #include "libavutil/mem.h"
 #include "libavutil/time.h"
 #include "libavutil/common.h"
+#include "libavutil/opt.h"
 
 #include "config.h"
 #include "url.h"
