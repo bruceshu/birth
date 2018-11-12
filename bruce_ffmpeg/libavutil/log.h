@@ -89,7 +89,7 @@ typedef struct AVClass {
     const char* class_name;
     const char* (*item_name)(void* ctx);
 
-    const AVOption *option;
+    const struct AVOption *option;
 
     int version;
     int log_level_offset_offset;
@@ -102,7 +102,7 @@ typedef struct AVClass {
     AVClassCategory category;
     AVClassCategory (*get_category)(void* ctx);
 
-    int (*query_ranges)(AVOptionRanges **, void *obj, const char *key, int flags);
+    int (*query_ranges)(struct AVOptionRanges **, void *obj, const char *key, int flags);
 } AVClass;
 
 
