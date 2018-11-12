@@ -19,7 +19,7 @@ OBJS = error.o \
 	   avstring.o \
 	   rational.o \
 	   time.o \
-	   mathmatics.o \
+	   mathematics.o \
 	   
 	   
 OBJS-$(CONFIG_CUDA) += hwcontext_cuda.o
