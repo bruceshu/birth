@@ -9,7 +9,7 @@
 
 #include <string.h>
 
-#include "avutils.h"
+#include "utils.h"
 #include "mem.h"
 #include "pixfmt.h"
 #include "frame.h"
