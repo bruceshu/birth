@@ -13,6 +13,7 @@
 #include "mem.h"
 #include "pixfmt.h"
 #include "frame.h"
+#include "common.h"
 
 
 static void get_frame_defaults(AVFrame *frame)

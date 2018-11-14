@@ -30,6 +30,8 @@
 #define CONFIG_AVDEVICE 1
 #define CONFIG_OSSFUZZ 0
 #define CONFIG_H264_DECODER 1
+#define CONFIG_SMALL 0
+
 
 
 

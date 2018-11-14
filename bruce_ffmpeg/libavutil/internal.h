@@ -18,6 +18,12 @@
 #include "dict.h"
 #include "utils.h"
 
+#if CONFIG_SMALL
+#   define NULL_IF_CONFIG_SMALL(x) NULL
+#else
+#   define NULL_IF_CONFIG_SMALL(x) x
+#endif
+
 enum AVCodecID {
     AV_CODEC_ID_NONE,
     /* video codecs */

@@ -6,9 +6,9 @@ prefix=/usr/local
 LIBDIR=$(DESTDIR)${prefix}/lib
 INCDIR=$(DESTDIR)${prefix}/include
 PKGCONFIGDIR=$(DESTDIR)${prefix}/lib/pkgconfig
-
 SRC_PATH=.
 SRC_LINK=.
+
 ifndef MAIN_MAKEFILE
 SRC_PATH:=$(SRC_PATH:.%=..%)
 endif
@@ -25,11 +25,12 @@ PROGSSUF=
 EXESUF=
 
 # tool
-ARCH=x86
+#ARCH=x86
 CC=gcc
 CC_C=-c
 CC_E=-E -o $@
 CC_O=-o $@
+
 CXX=g++
 AR=ar
 ARFLAGS=rcD
@@ -43,12 +44,18 @@ STRIPTYPE=direct
 # config prog
 CONFIG_FFPROBE=yes
 
-# config format
+# config lib
 CONFIG_AVFORMAT=yes
+
+# config format
 CONFIG_HTTP_PROTOCOL=yes
 CONFIG_TCP_PROTOCOL=yes
+CONFIG_MPEGTS_DEMUXER=yes
+
+# config codec
+CONFIG_AVCODEC=yes
 
 # config compile
 CONFIG_STATIC=yes
 
-endif # FFMPEG_CONFIG_MAK
+endif

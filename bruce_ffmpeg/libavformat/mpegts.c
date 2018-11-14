@@ -9,7 +9,7 @@
 
 
 
-
+#if 0
 MpegTSContext *avpriv_mpegts_parse_open(AVFormatContext *s)
 {
     MpegTSContext *ts;
@@ -26,4 +26,18 @@ MpegTSContext *avpriv_mpegts_parse_open(AVFormatContext *s)
 
     return ts;
 }
+#endif
+
+AVInputFormat ff_mpegts_demuxer = {
+    .name           = "mpegts",
+    .long_name      = NULL_IF_CONFIG_SMALL("MPEG-TS (MPEG-2 Transport Stream)"),
+    /*.priv_data_size = sizeof(MpegTSContext),
+    .read_probe     = mpegts_probe,
+    .read_header    = mpegts_read_header,
+    .read_packet    = mpegts_read_packet,
+    .read_close     = mpegts_read_close,
+    .read_timestamp = mpegts_get_dts,
+    .flags          = AVFMT_SHOW_IDS | AVFMT_TS_DISCONT,
+    .priv_class     = &mpegts_class,*/
+};
 
