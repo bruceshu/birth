@@ -11,6 +11,9 @@ description:
 #ifndef RATIONAL_H
 #define RATIONAL_H
 
+
+#include <stdint.h>
+
 typedef struct AVRational{
     int num;
     int den;
