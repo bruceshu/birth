@@ -7,7 +7,7 @@
 *********************************/
 
 
-
+#include "avformat.h"
 
 #if 0
 MpegTSContext *avpriv_mpegts_parse_open(AVFormatContext *s)
