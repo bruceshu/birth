@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <limits.h>
 
 #include "libavutil/thread.h"
 #include "libavutil/error.h"
@@ -19,6 +20,7 @@
 #include "libavutil/avstring.h"
 #include "libavutil/samplefmt.h"
 #include "libavutil/assert.h"
+#include "libavutil/hwcontext.h"
 
 
 #include "internal.h"

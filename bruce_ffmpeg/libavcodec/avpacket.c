@@ -175,19 +175,15 @@ int av_buffer_realloc(AVBufferRef **pbuf, int size)
     return 0;
 }
 
-int av_packet_alloc(AVBufferRef **buf, int size)
+AVPacket *av_packet_alloc(void)
 {
-    int ret;
-    if (size < 0 || size >= INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
-        return AVERROR(EINVAL);
+    AVPacket *pkt = av_mallocz(sizeof(AVPacket));
+    if (!pkt)
+        return pkt;
 
-    ret = av_buffer_realloc(buf, size + AV_INPUT_BUFFER_PADDING_SIZE);
-    if (ret < 0)
-        return ret;
+    av_packet_unref(pkt);
 
-    memset((*buf)->data + size, 0, AV_INPUT_BUFFER_PADDING_SIZE);
-
-    return 0;
+    return pkt;
 }
 
 AVBufferRef *av_buffer_ref(AVBufferRef *buf)
