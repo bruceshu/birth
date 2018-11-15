@@ -10,6 +10,11 @@
 #ifndef HWCONTEXT_H
 #define HWCONTEXT_H
 
+#include "libavcodec/internal.h"
+
+#include "log.h"
+#include "buffer.h"
+
 enum AVHWDeviceType {
     AV_HWDEVICE_TYPE_NONE,
     AV_HWDEVICE_TYPE_VDPAU,
