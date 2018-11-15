@@ -85,6 +85,10 @@
 #define AV_CODEC_FLAG2_SKIP_MANUAL    (1 << 29)
 #define AV_CODEC_FLAG2_RO_FLUSH_NOOP  (1 << 30)
 
+#define AV_HWACCEL_FLAG_IGNORE_LEVEL (1 << 0)
+#define AV_HWACCEL_FLAG_ALLOW_HIGH_DEPTH (1 << 1)
+#define AV_HWACCEL_FLAG_ALLOW_PROFILE_MISMATCH (1 << 2)
+
 enum AVDiscard{
     AVDISCARD_NONE    =-16, ///< discard nothing
     AVDISCARD_DEFAULT =  0, ///< discard useless packets like 0 size packets in avi
@@ -281,7 +285,8 @@ typedef struct AVCodecContext {
     enum AVAudioServiceType audio_service_type;
     enum AVSampleFormat request_sample_fmt;
     int (*get_buffer2)(struct AVCodecContext *s, AVFrame *frame, int flags);
-    /* - encoding parameters */
+
+    int refcounted_frames;
     float qcompress;  ///< amount of qscale change between easy & hard scenes (0.0-1.0)
     float qblur;      ///< amount of qscale smoothing over time (0.0-1.0)
     int qmin;
@@ -693,6 +698,7 @@ void avcodec_free_context(AVCodecContext **pavctx);
 AVCodec *avcodec_find_decoder_by_name(const char *name);
 AVCodec *av_codec_next(const AVCodec *c);
 int avcodec_close(AVCodecContext *avctx);
+int avcodec_default_get_buffer2(AVCodecContext *avctx, AVFrame *frame, int flags);
 
 
 

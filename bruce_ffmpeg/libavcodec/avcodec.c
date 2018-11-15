@@ -10,6 +10,8 @@
 #include <string.h>
 
 #include "libavutil/error.h"
+#include "libavutil/mem.h"
+#include "libavutil/assert.h"
 
 #include "utils.h"
 #include "avcodec.h"
@@ -116,6 +118,18 @@ static const AVClass *codec_child_class_next(const AVClass *prev)
             return c->priv_class;
         
     return NULL;
+}
+
+static AVClassCategory get_category(void *ptr)
+{
+    AVCodecContext* avctx = ptr;
+    
+    if(avctx->codec && avctx->codec->decode) {
+        return AV_CLASS_CATEGORY_DECODER;
+    }
+    else {
+        return AV_CLASS_CATEGORY_ENCODER;
+    }
 }
 
 static const AVClass av_codec_context_class = {
