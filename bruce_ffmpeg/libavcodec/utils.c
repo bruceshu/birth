@@ -15,7 +15,7 @@
 #include "libavutil/frame.h"
 #include "libavutil/pixdes.h"
 #include "libavutil/mem.h"
-#include "libavtuil/opt.h"
+#include "libavutil/opt.h"
 #include "libavutil/avstring.h"
 #include "libavutil/samplefmt.h"
 #include "libavutil/assert.h"
