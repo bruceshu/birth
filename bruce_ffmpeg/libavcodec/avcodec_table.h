@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "libavutil/opt.h"
+
 #include "avcodec.h"
 
 #define OFFSET(x) offsetof(AVCodecContext,x)
