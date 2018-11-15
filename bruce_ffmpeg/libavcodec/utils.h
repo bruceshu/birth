@@ -21,6 +21,7 @@ int avcodec_is_open(AVCodecContext *s);
 int avcodec_open2(AVCodecContext *avctx, const AVCodec *codec, AVDictionary **options);
 int avpriv_codec_get_cap_skip_frame_fill_param(const AVCodec *codec);
 int av_get_bits_per_sample(enum AVCodecID codec_id);
+AVCodec *avcodec_find_encoder(enum AVCodecID id);
 
 
 

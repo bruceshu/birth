@@ -12,6 +12,7 @@
 #include "libavutil/frame.h"
 
 #include "internal.h"
+#include "avcodec.h"
 
 static AVMutex codec_mutex = AV_MUTEX_INITIALIZER;
 
