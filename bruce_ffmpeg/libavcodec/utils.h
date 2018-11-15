@@ -24,5 +24,4 @@ int av_get_bits_per_sample(enum AVCodecID codec_id);
 AVCodec *avcodec_find_encoder(enum AVCodecID id);
 
 
-
 #endif

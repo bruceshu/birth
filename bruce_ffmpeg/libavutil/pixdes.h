@@ -7,6 +7,9 @@
 *********************************/
 
 
+#ifndef PIXDES_H
+#define PIXDES_H
+
 #include <stdint.h>
 
 #include "version.h"
@@ -45,3 +48,6 @@ typedef struct AVPixFmtDescriptor {
     const char *alias;
 } AVPixFmtDescriptor;
 
+const AVPixFmtDescriptor *av_pix_fmt_desc_get(enum AVPixelFormat pix_fmt);
+
+#endif

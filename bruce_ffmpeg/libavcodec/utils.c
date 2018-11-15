@@ -7,12 +7,24 @@
 *********************************/
 
 
+#include <stdio.h>
+#include <inttypes.h>
+
 #include "libavutil/thread.h"
 #include "libavutil/error.h"
 #include "libavutil/frame.h"
+#include "libavutil/pixdes.h"
+#include "libavutil/mem.h"
+#include "libavtuil/opt.h"
+#include "libavutil/avstring.h"
+#include "libavutil/samplefmt.h"
+#include "libavutil/assert.h"
+
 
 #include "internal.h"
+#include "avpacket.h"
 #include "avcodec.h"
+#include "utils.h"
 
 static AVMutex codec_mutex = AV_MUTEX_INITIALIZER;
 
@@ -490,8 +502,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
         }*/
         
         if (avctx->channels < 0) {
-            av_log(avctx, AV_LOG_ERROR, "Specified number of channels %d is not supported\n",
-                    avctx->channels);
+            av_log(avctx, AV_LOG_ERROR, "Specified number of channels %d is not supported\n", avctx->channels);
             ret = AVERROR(EINVAL);
             goto free_and_end;
         }
@@ -685,6 +696,26 @@ FF_ENABLE_DEPRECATION_WARNINGS
     goto end;
 }
 
+static void codec_parameters_reset(AVCodecParameters *par)
+{
+    av_freep(&par->extradata);
+
+    memset(par, 0, sizeof(*par));
+
+    par->codec_type          = AVMEDIA_TYPE_UNKNOWN;
+    par->codec_id            = AV_CODEC_ID_NONE;
+    par->format              = -1;
+    par->field_order         = AV_FIELD_UNKNOWN;
+    par->color_range         = AVCOL_RANGE_UNSPECIFIED;
+    par->color_primaries     = AVCOL_PRI_UNSPECIFIED;
+    par->color_trc           = AVCOL_TRC_UNSPECIFIED;
+    par->color_space         = AVCOL_SPC_UNSPECIFIED;
+    par->chroma_location     = AVCHROMA_LOC_UNSPECIFIED;
+    par->sample_aspect_ratio = (AVRational){ 0, 1 };
+    par->profile             = FF_PROFILE_UNKNOWN;
+    par->level               = FF_LEVEL_UNKNOWN;
+}
+
 int avcodec_parameters_from_context(AVCodecParameters *par, const AVCodecContext *codec)
 {
     codec_parameters_reset(par);
@@ -796,31 +827,6 @@ int avcodec_parameters_to_context(AVCodecContext *codec, const AVCodecParameters
     }
 
     return 0;
-}
-
-AVCodec *avcodec_find_encoder(enum AVCodecID id)
-{
-    return find_codec(id, av_codec_is_encoder);
-}
-
-static void codec_parameters_reset(AVCodecParameters *par)
-{
-    av_freep(&par->extradata);
-
-    memset(par, 0, sizeof(*par));
-
-    par->codec_type          = AVMEDIA_TYPE_UNKNOWN;
-    par->codec_id            = AV_CODEC_ID_NONE;
-    par->format              = -1;
-    par->field_order         = AV_FIELD_UNKNOWN;
-    par->color_range         = AVCOL_RANGE_UNSPECIFIED;
-    par->color_primaries     = AVCOL_PRI_UNSPECIFIED;
-    par->color_trc           = AVCOL_TRC_UNSPECIFIED;
-    par->color_space         = AVCOL_SPC_UNSPECIFIED;
-    par->chroma_location     = AVCHROMA_LOC_UNSPECIFIED;
-    par->sample_aspect_ratio = (AVRational){ 0, 1 };
-    par->profile             = FF_PROFILE_UNKNOWN;
-    par->level               = FF_LEVEL_UNKNOWN;
 }
 
 void avcodec_parameters_free(AVCodecParameters **ppar)

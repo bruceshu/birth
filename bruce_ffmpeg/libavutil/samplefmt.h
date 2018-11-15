@@ -36,5 +36,8 @@ typedef struct SampleFmtInfo {
     enum AVSampleFormat altform; ///< planar<->packed alternative form
 } SampleFmtInfo;
 
+enum AVSampleFormat av_get_planar_sample_fmt(enum AVSampleFormat sample_fmt);
+const char *av_get_pix_fmt_name(enum AVPixelFormat pix_fmt);
+
 
 #endif
