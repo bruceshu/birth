@@ -55,6 +55,36 @@
 #define AV_PKT_FLAG_TRUSTED   0x0008
 #define AV_PKT_FLAG_DISPOSABLE 0x0010
 
+#define AV_CODEC_FLAG_UNALIGNED       (1 <<  0)
+#define AV_CODEC_FLAG_QSCALE          (1 <<  1)
+#define AV_CODEC_FLAG_4MV             (1 <<  2)
+#define AV_CODEC_FLAG_OUTPUT_CORRUPT  (1 <<  3)
+#define AV_CODEC_FLAG_QPEL            (1 <<  4)
+#define AV_CODEC_FLAG_PASS1           (1 <<  9)
+#define AV_CODEC_FLAG_PASS2           (1 << 10)
+#define AV_CODEC_FLAG_LOOP_FILTER     (1 << 11)
+#define AV_CODEC_FLAG_GRAY            (1 << 13)
+#define AV_CODEC_FLAG_PSNR            (1 << 15)
+#define AV_CODEC_FLAG_TRUNCATED       (1 << 16)
+#define AV_CODEC_FLAG_INTERLACED_DCT  (1 << 18)
+#define AV_CODEC_FLAG_LOW_DELAY       (1 << 19)
+#define AV_CODEC_FLAG_GLOBAL_HEADER   (1 << 22)
+#define AV_CODEC_FLAG_BITEXACT        (1 << 23)
+#define AV_CODEC_FLAG_AC_PRED         (1 << 24)
+#define AV_CODEC_FLAG_INTERLACED_ME   (1 << 29)
+#define AV_CODEC_FLAG_CLOSED_GOP      (1U << 31)
+
+#define AV_CODEC_FLAG2_FAST           (1 <<  0)
+#define AV_CODEC_FLAG2_NO_OUTPUT      (1 <<  2)
+#define AV_CODEC_FLAG2_LOCAL_HEADER   (1 <<  3)
+#define AV_CODEC_FLAG2_DROP_FRAME_TIMECODE (1 << 13)
+#define AV_CODEC_FLAG2_CHUNKS         (1 << 15)
+#define AV_CODEC_FLAG2_IGNORE_CROP    (1 << 16)
+#define AV_CODEC_FLAG2_SHOW_ALL       (1 << 22)
+#define AV_CODEC_FLAG2_EXPORT_MVS     (1 << 28)
+#define AV_CODEC_FLAG2_SKIP_MANUAL    (1 << 29)
+#define AV_CODEC_FLAG2_RO_FLUSH_NOOP  (1 << 30)
+
 enum AVDiscard{
     AVDISCARD_NONE    =-16, ///< discard nothing
     AVDISCARD_DEFAULT =  0, ///< discard useless packets like 0 size packets in avi

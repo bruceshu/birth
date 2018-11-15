@@ -7,6 +7,13 @@
 *********************************/
 
 
+#ifndef AVCODEC_TABLE_H
+#define AVCODEC_TABLE_H
+
+#include <stdint.h>
+#include <stddef.h>
+
+#include "avcodec.h"
 
 #define OFFSET(x) offsetof(AVCodecContext,x)
 #define DEFAULT 0 //should be NAN but it does not work as it is not a constant in glibc as required by ANSI/ISO C
@@ -462,3 +469,4 @@ static const AVOption avcodec_options[] = {
 #undef DEFAULT
 #undef OFFSET
 
+#endif
