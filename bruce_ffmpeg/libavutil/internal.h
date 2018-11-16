@@ -18,6 +18,8 @@
 #include "dict.h"
 #include "utils.h"
 
+#include "config.h"
+
 #if CONFIG_SMALL
 #   define NULL_IF_CONFIG_SMALL(x) NULL
 #else

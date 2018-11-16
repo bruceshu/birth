@@ -28,13 +28,14 @@
 #include "utils.h"
 #include "avformat.h"
 
-extern AVInputFormat  ff_aac_demuxer;
+/*extern AVInputFormat  ff_aac_demuxer;
 extern AVInputFormat  ff_ac3_demuxer;
 extern AVInputFormat  ff_flv_demuxer;
 extern AVOutputFormat ff_hls_demuxer;
-extern AVOutputFormat ff_mpegts_demuxer;
 extern AVOutputFormat ff_rtp_demuxer;
-extern AVOutputFormat ff_rtsp_demuxer;
+extern AVOutputFormat ff_rtsp_demuxer;*/
+
+extern const AVOutputFormat ff_mpegts_demuxer;
 
 static int io_open_default(AVFormatContext *s, AVIOContext **pb, const char *url, int flags, AVDictionary **options)
 {
@@ -857,7 +858,7 @@ void avformat_close_input(AVFormatContext **ps)
     avio_close(pb);
 }
 
-AVFormatContext *avformat_alloc_context()
+AVFormatContext *avformat_alloc_context(void)
 {
     AVFormatContext *pstFmtCtx;
     

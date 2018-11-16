@@ -215,7 +215,8 @@ void av_dump_format(AVFormatContext *ic, int index, const char *url, int is_outp
     }
 
     if (ic->nb_programs) {
-        int j, k, total = 0;
+        int j;
+        int total = 0;
         for (j = 0; j < ic->nb_programs; j++) {
             AVDictionaryEntry *name = av_dict_get(ic->programs[j]->metadata, "name", NULL, 0);
             

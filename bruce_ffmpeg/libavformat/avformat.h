@@ -395,7 +395,7 @@ typedef struct AVOutputFormat {
     struct AVOutputFormat *next;
 } AVOutputFormat;
 
-AVFormatContext *avformat_alloc_context();
+AVFormatContext *avformat_alloc_context(void);
 AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened, int *score_max);
 int av_probe_input_buffer2(AVIOContext *pb, AVInputFormat **fmt, const char *filename, void *logctx, unsigned int offset, unsigned int max_probe_size);
 void avformat_free_context(AVFormatContext *s);

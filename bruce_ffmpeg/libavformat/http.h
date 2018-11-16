@@ -6,8 +6,11 @@
  
 *********************************/
 
+
 #ifndef HTTP_H
 #define HTTP_H
+
+#include "config.h"
 
 #if CONFIG_ZLIB
 #include <zlib.h>

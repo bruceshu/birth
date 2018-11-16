@@ -1147,6 +1147,7 @@ static int http_store_icy(URLContext *h, int size)
 
     return FFMIN(size, remaining);
 #endif
+    return 0;
 }
 
 #if CONFIG_ZLIB
