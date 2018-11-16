@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <netdb.h>
 
 #include "libavutil/error.h"
 #include "libavutil/opt.h"
