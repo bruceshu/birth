@@ -4,7 +4,7 @@ include ffbuild/config.mak
 #在指定SRC_PATH路径中查找 *.c 和 *.h 文件
 vpath %.c $(SRC_PATH)
 vpath %.h $(SRC_PATH)
-vpath %.v    $(SRC_PATH)
+vpath %.v $(SRC_PATH)
 
 #目标编译的库名称
 #FFLIBS-$(CONFIG_AVDEVICE) += avdevice
@@ -17,18 +17,16 @@ FFLIBS-$(CONFIG_AVCODEC)  += avcodec
 #FFLIBS-$(CONFIG_SWSCALE) += swscale
 FFLIBS := avutil
 
-#$(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
-
 #first so "all" becomes default target
 all : all-yes
 
-include $(SRC_PATH)/ffbuild/common.mak
+include $(SRC_PATH)/ffbuild/common_compile.mak
 
-#$(warning main_makefile FFLIBS-yes=$(FFLIBS-yes))
-#$(warning main_makefile FFLIBS=$(FFLIBS))
+FF_EXTRALIBS := $(FFEXTRALIBS)
+FF_DEP_LIBS  := $(DEP_LIBS)
+FF_STATIC_DEP_LIBS := $(STATIC_DEP_LIBS)
 
-SUBDIR_VARS := OBJS
-
+SUBDIR_VARS := OBJS HEADERS
 
 define RESET
 $(1) :=
@@ -48,7 +46,7 @@ $(foreach P,$(FFLIBS),$(eval $(call DOSUBDIR,lib$(P))))
 
 include $(SRC_PATH)/fftools/Makefile
 
-#libavcodec/utils.o libavformat/utils.o libavdevice/avdevice.o libavfilter/avfilter.o libavutil/utils.o libpostproc/postprocess.o libswresample/swresample.o libswscale/utils.o : libavutil/ffversion.h
+libavcodec/utils.o libavformat/utils.o libavdevice/avdevice.o libavfilter/avfilter.o libavutil/utils.o libpostproc/postprocess.o libswresample/swresample.o libswscale/utils.o : libavutil/ffversion.h
 
 $(PROGS): %$(PROGSSUF)$(EXESUF): %$(PROGSSUF)_g$(EXESUF)
 ifeq ($(STRIPTYPE),direct)

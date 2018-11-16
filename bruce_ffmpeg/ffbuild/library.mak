@@ -1,4 +1,4 @@
-include $(SRC_PATH)/ffbuild/common.mak
+include $(SRC_PATH)/ffbuild/common_library.mak
 
 #$(warning library.mak MAKECMDGOALS=$(MAKECMDGOALS))
 ifeq (,$(filter %clean config,$(MAKECMDGOALS)))
@@ -48,7 +48,7 @@ $(SUBDIR)lib$(NAME).version: $(SUBDIR)version.h | $(SUBDIR)
 	$$(M) $$(SRC_PATH)/ffbuild/libversion.sh $(NAME) $$< > $$@
 
 #$(warning library.mak compile $(SUBDIR)lib$(FULLNAME).pc)
-	
+
 $(SUBDIR)lib$(FULLNAME).pc: $(SUBDIR)version.h ffbuild/config.sh | $(SUBDIR)
 	$$(M) $$(SRC_PATH)/ffbuild/pkgconfig_generate.sh $(NAME) "$(DESC)"
 

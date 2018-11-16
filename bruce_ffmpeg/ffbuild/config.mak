@@ -24,7 +24,7 @@ LIBNAME=$(LIBPREF)$(FULLNAME)$(LIBSUF)
 PROGSSUF=
 EXESUF=
 
-# tool
+# compile tool chain
 #ARCH=x86
 CC=gcc
 CC_C=-c
@@ -40,6 +40,11 @@ LIB_INSTALL_EXTRA_CMD=$$(RANLIB) "$(LIBDIR)/$(LIBNAME)"
 INSTALL=install
 STRIP=strip
 STRIPTYPE=direct
+
+# compile static option
+LD_LIB=-l%
+
+
 
 # config prog
 CONFIG_FFPROBE=yes
