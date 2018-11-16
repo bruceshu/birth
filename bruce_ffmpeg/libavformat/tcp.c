@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <netdb.h>
 
 #include "libavutil/error.h"
 #include "libavutil/opt.h"
@@ -53,7 +54,9 @@ static void customize_fd(void *ctx, int fd)
 
 static int tcp_open(URLContext *h, const char *uri, int flags)
 {
-    struct addrinfo hints = { 0 }, *ai, *cur_ai;
+    struct addrinfo hints = { 0 };
+    struct addrinfo *ai;
+    struct addrinfo *cur_ai;
     int port, fd = -1;
     TCPContext *s = h->pstPrivData;
     const char *p;
