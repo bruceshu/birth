@@ -196,7 +196,7 @@ extern const AVClass avio_class;
 
 static const AVClass *format_child_class_next(const AVClass *prev)
 {
-    AVInputFormat  *ifmt = NULL;
+    const AVInputFormat  *ifmt = NULL;
     AVOutputFormat *ofmt = NULL;
 
     if (!prev)
@@ -543,7 +543,7 @@ static int av_match_ext(const char *filename, const char *extensions)
     return 0;
 }
 
-AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened, int *score_ret)
+static AVInputFormat *av_probe_input_format3(AVProbeData *pd, int is_opened, int *score_ret)
 {
     AVProbeData lpd = *pd;
     const AVInputFormat *fmt1 = NULL;
