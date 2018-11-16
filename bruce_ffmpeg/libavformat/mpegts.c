@@ -28,7 +28,7 @@ MpegTSContext *avpriv_mpegts_parse_open(AVFormatContext *s)
 }
 #endif
 
-AVInputFormat ff_mpegts_demuxer = {
+const AVInputFormat ff_mpegts_demuxer = {
     .name           = "mpegts",
     .long_name      = NULL_IF_CONFIG_SMALL("MPEG-TS (MPEG-2 Transport Stream)"),
     /*.priv_data_size = sizeof(MpegTSContext),

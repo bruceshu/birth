@@ -88,7 +88,7 @@ static void *format_child_next(void *obj, void *prev)
 static const AVInputFormat * const *indev_list = NULL;
 static const AVOutputFormat * const *outdev_list = NULL;
 
-const AVInputFormat *av_demuxer_iterate(uint32_t *opaque)
+static const AVInputFormat *av_demuxer_iterate(uint32_t *opaque)
 {
     static const uint32_t size = sizeof(demuxer_list)/sizeof(demuxer_list[0]) - 1;
     uint32_t i = *opaque;
@@ -166,7 +166,7 @@ static void av_format_init_next(void)
     ff_mutex_unlock(&avpriv_register_devices_mutex);
 }
 
-AVInputFormat *av_iformat_next(const AVInputFormat *f)
+const AVInputFormat *av_iformat_next(const AVInputFormat *f)
 {
     ff_thread_once(&av_format_next_init, av_format_init_next);
 
@@ -174,7 +174,7 @@ AVInputFormat *av_iformat_next(const AVInputFormat *f)
         return f->next;
     } else {
         uint32_t opaque = 0;
-        return (AVInputFormat *)av_demuxer_iterate(&opaque);
+        return av_demuxer_iterate(&opaque);
     }
 }
 
@@ -529,7 +529,7 @@ fail:
     return ret < 0 ? ret : score;
 }
 
-int av_match_ext(const char *filename, const char *extensions)
+static int av_match_ext(const char *filename, const char *extensions)
 {
     const char *ext;
 
@@ -669,7 +669,7 @@ static int init_input(AVFormatContext *pstFmtCtx, const char *filename, AVDictio
     return av_probe_input_buffer2(pstFmtCtx->pb, &pstFmtCtx->iformat, filename, pstFmtCtx, 0, pstFmtCtx->format_probesize);
 }
 
-int avformat_queue_attached_pictures(AVFormatContext *s)
+static int avformat_queue_attached_pictures(AVFormatContext *s)
 {
     int i, ret;
     for (i = 0; i < s->nb_streams; i++)
@@ -692,7 +692,7 @@ int avformat_open_input(AVFormatContext **ppstFmtCtx, const char *filename, AVIn
     AVFormatContext *pstFmtCtx = *ppstFmtCtx;
     int i, ret = 0;
     AVDictionary *tmp = NULL;
-    ID3v2ExtraMeta *id3v2_extra_meta = NULL;
+    //ID3v2ExtraMeta *id3v2_extra_meta = NULL;
 
     if (!pstFmtCtx && !(pstFmtCtx = avformat_alloc_context()))
         return AVERROR(ENOMEM);
@@ -857,7 +857,7 @@ void avformat_close_input(AVFormatContext **ps)
     avio_close(pb);
 }
 
-AVFormatContext *avformat_alloc_context()
+AVFormatContext * avformat_alloc_context()
 {
     AVFormatContext *pstFmtCtx;
     

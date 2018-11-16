@@ -18,6 +18,7 @@
 #include "libavcodec/avcodec.h"
 #include "libavcodec/internal.h"
 
+#include "version.h"
 
 #define MAX_URL_SIZE 4096
 
