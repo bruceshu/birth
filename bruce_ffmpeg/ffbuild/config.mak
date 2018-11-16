@@ -35,14 +35,20 @@ AR=ar
 ARFLAGS=rcD
 AR_O=$@
 RANLIB=ranlib -D
+LD=gcc
+LD_O=-o $@
+
 LIB_INSTALL_EXTRA_CMD=$$(RANLIB) "$(LIBDIR)/$(LIBNAME)"
 INSTALL=install
 STRIP=strip
 STRIPTYPE=direct
 
 # compile static option
-LD_LIB=-l%
+CFLAGS= -std=c11 -fomit-frame-pointer -pthread -I/usr/include/ -g -Wdeclaration-after-statement -Wall -Wdisabled-optimization -Wpointer-arith -Wredundant-decls -Wwrite-strings -Wtype-limits -Wundef -Wmissing-prototypes -Wno-pointer-to-int-cast -Wstrict-prototypes -Wempty-body -Wno-parentheses -Wno-switch -Wno-format-zero-length -Wno-pointer-sign -O3 -fno-math-errno -fno-signed-zeros -fno-tree-vectorize -Werror=format-security -Werror=implicit-function-declaration -Werror=missing-prototypes -Werror=return-type -Werror=vla -Wformat -Wno-maybe-uninitialized
 
+LD_LIB=-l%
+LDFLAGS=  -Wl,--as-needed -Wl,-z,noexecstack -Wl,--warn-common -Wl,-rpath-link=libavformat:libavcodec:libavutil
+LDEXEFLAGS=
 
 
 # config prog

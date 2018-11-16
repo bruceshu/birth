@@ -56,6 +56,8 @@ else
 	$(STRIP) $@
 endif
 
+#$(warning FF_DEP_LIBS=$(FF_DEP_LIBS))
+
 %$(PROGSSUF)_g$(EXESUF): $(FF_DEP_LIBS)
 	$(LD) $(LDFLAGS) $(LDEXEFLAGS) $(LD_O) $(OBJS-$*) $(FF_EXTRALIBS)
 

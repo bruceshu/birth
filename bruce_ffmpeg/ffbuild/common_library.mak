@@ -1,8 +1,5 @@
 
 
-
-
-
 PATH_LIBNAME = $(foreach NAME,$(1),lib$(NAME)/$($(2)LIBNAME))
 DEP_LIBS := $(foreach lib,$(FFLIBS),$(call PATH_LIBNAME,$(lib),$(CONFIG_SHARED:yes=S)))
 STATIC_DEP_LIBS := $(foreach lib,$(FFLIBS),$(call PATH_LIBNAME,$(lib)))
@@ -31,4 +28,4 @@ LIBSUFFIXES       = *.a *.so *.so.*
 
 #$(eval $(RULES))
 
-#-include $(wildcard $(OBJS:.o=.d) $(HOSTOBJS:.o=.d) $(TESTOBJS:.o=.d) $(HOBJS:.o=.d) $(SLIBOBJS:.o=.d)) $(OBJS:.o=$(DEFAULT_X86ASMD).d)
+-include $(wildcard $(OBJS:.o=.d) $(HOSTOBJS:.o=.d))

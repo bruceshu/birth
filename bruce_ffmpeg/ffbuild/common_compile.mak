@@ -1,7 +1,7 @@
 
 Q      = @
 ECHO   = printf "$(1)\t%s\n" $(2)
-BRIEF  = CC AR LD STRIP
+BRIEF  = CC AR LD STRIP CP
 SILENT = RM RANLIB
 
 MSG    = $@
