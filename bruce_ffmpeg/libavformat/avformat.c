@@ -166,7 +166,7 @@ static void av_format_init_next(void)
     ff_mutex_unlock(&avpriv_register_devices_mutex);
 }
 
-const AVInputFormat *av_iformat_next(const AVInputFormat *f)
+static const AVInputFormat *av_iformat_next(const AVInputFormat *f)
 {
     ff_thread_once(&av_format_next_init, av_format_init_next);
 
@@ -857,7 +857,7 @@ void avformat_close_input(AVFormatContext **ps)
     avio_close(pb);
 }
 
-AVFormatContext * avformat_alloc_context()
+AVFormatContext *avformat_alloc_context()
 {
     AVFormatContext *pstFmtCtx;
     

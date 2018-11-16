@@ -89,8 +89,6 @@ enum AVDurationEstimationMethod {
     AVFMT_DURATION_FROM_BITRATE ///< Duration estimated from bitrate (less accurate)
 };
 
-typedef int (*av_format_control_message)(struct AVFormatContext *s, int type, void *data, size_t data_size);
-
 typedef struct AVProbeData {
     const char *filename;
     unsigned char *buf; 
