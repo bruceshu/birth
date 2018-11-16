@@ -7,7 +7,11 @@
 *********************************/
 
 
+#include "libavutil/error.h"
+#include "libavutil/log.h"
+
 #include "os_support.h"
+#include "network.h"
 
 #include "config.h"
 
@@ -329,3 +333,5 @@ int ff_connect_parallel(struct addrinfo *addrs, int timeout_ms_per_address,
     return last_err;
 }
 #endif
+
+
