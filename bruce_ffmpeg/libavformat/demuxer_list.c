@@ -1,4 +1,4 @@
-static const AVInputFormat * demuxer_list[] = {
+static const AVInputFormat *demuxer_list[] = {
 //&ff_aac_demuxer,
 //&ff_ac3_demuxer,
 //&ff_flv_demuxer,

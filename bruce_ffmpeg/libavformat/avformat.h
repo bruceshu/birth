@@ -25,6 +25,9 @@
 #include "internal.h"
 #include "version.h"
 
+struct AVFormatContext;
+
+
 #define AVPROBE_SCORE_RETRY (AVPROBE_SCORE_MAX/4)
 #define AVPROBE_SCORE_STREAM_RETRY (AVPROBE_SCORE_MAX/4-1)
 #define AVPROBE_SCORE_EXTENSION  50 ///< score for file extension
@@ -225,6 +228,8 @@ typedef struct AVDeviceCapabilitiesQuery {
     AVRational fps;
 } AVDeviceCapabilitiesQuery;
 
+typedef int (*av_format_control_message)(struct AVFormatContext *s, int type, void *data, size_t data_size);
+
 typedef struct AVFormatContext {
     const AVClass *av_class;
     struct AVInputFormat *iformat;
@@ -389,9 +394,6 @@ typedef struct AVOutputFormat {
 
     struct AVOutputFormat *next;
 } AVOutputFormat;
-
-typedef int (*av_format_control_message)(struct AVFormatContext *s, int type, void *data, size_t data_size);
-
 
 AVFormatContext *avformat_alloc_context();
 AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened, int *score_max);
