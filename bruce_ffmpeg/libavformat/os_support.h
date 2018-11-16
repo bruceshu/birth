@@ -55,4 +55,6 @@ static inline int is_dos_path(const char *path)
 }
 #endif
 
+int ff_socket_nonblock(int socket, int enable);
+
 #endif

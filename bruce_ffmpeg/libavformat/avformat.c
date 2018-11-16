@@ -35,7 +35,7 @@ extern AVOutputFormat ff_hls_demuxer;
 extern AVOutputFormat ff_rtp_demuxer;
 extern AVOutputFormat ff_rtsp_demuxer;*/
 
-extern const AVOutputFormat ff_mpegts_demuxer;
+extern const AVInputFormat ff_mpegts_demuxer;
 
 static int io_open_default(AVFormatContext *s, AVIOContext **pb, const char *url, int flags, AVDictionary **options)
 {

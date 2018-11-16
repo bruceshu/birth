@@ -7,6 +7,8 @@
 *********************************/
 
 
+#include "os_support.h"
+
 #include "config.h"
 
 int ff_tls_init(void)
