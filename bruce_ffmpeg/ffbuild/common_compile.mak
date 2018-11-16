@@ -2,7 +2,9 @@
 Q      = @
 ECHO   = printf "$(1)\t%s\n" $(2)
 BRIEF  = CC AR LD STRIP
-SILENT = RM
+SILENT = RM RANLIB
+
+MSG    = $@
 M      = @$(call ECHO,$(TAG),$@);
 
 $(foreach VAR,$(BRIEF), $(eval override $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
