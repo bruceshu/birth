@@ -23,6 +23,10 @@
 #define HAVE_CLOSESOCKET 0
 #define HAVE_STRUCT_SOCKADDR_IN6 1
 #define HAVE_FCNTL 1
+#define HAVE_POLL_H 1
+#define HAVE_SYS_TIME_H 1
+#define HAVE_STRERROR_R 1
+
 
 #define CONFIG_NETWORK 1
 #define CONFIG_TLS_PROTOCOL 0
@@ -35,9 +39,4 @@
 #define CONFIG_SMALL 0
 
 
-
-
-#define HAVE_POLL_H 1
-#define HAVE_SYS_TIME_H 1
-#define HAVE_STRERROR_R 1
 #endif /* FFMPEG_CONFIG_H */

@@ -7,6 +7,9 @@
 *********************************/
 
 
+#include <fcntl.h>
+#include <poll.h>
+
 #include "libavutil/error.h"
 #include "libavutil/log.h"
 
