@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define SERVER_PORT 8888
 #define BUFF_LEN 1024
@@ -13,6 +13,7 @@
 void handle_udp_msg(int fd)
 {
     char buf[BUFF_LEN] = {0};
+    char ip[16] = {0};
     socklen_t len;
     int count;
     struct sockaddr_in client_addr;
@@ -25,7 +26,8 @@ void handle_udp_msg(int fd)
             return;
         }
 
-        printf("receiving msg from client:%s\n", buf);
+	snprintf(ip, 16, "%s", inet_ntoa(client_addr.sin_addr));
+        printf("[receiving msg from client:%s], %s\n",ip, buf);
 	memset(buf, 0, BUFF_LEN);
     }
 }
