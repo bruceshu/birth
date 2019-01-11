@@ -25,7 +25,7 @@ void handle_udp_msg(int fd)
             return;
         }
 
-        printf("client:%s\n", buf);
+        printf("receiving msg from client:%s\n", buf);
 	memset(buf, 0, BUFF_LEN);
     }
 }
