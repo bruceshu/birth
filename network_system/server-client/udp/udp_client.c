@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -13,12 +13,9 @@
 
 void udp_msg_sender(int fd, struct sockaddr *dst)
 {
-    socklen_t len;
-    struct sockaddr_in src;
-
     while(1) {
         char buf[BUFF_LEN] = "test udp msg\n";
-        len = sizeof(*dst);
+        int len = sizeof(*dst);
 
         sendto(fd, buf, BUFF_LEN, 0, dst, len);
         memset(buf, 0, BUFF_LEN);
