@@ -31,7 +31,7 @@ int isNumIP(const char *url)
     return TRUE;
 }
 
-int parse_url(const char *url, char *domain, unsigned short *port)
+int parse_url(const char *url, char *ip, unsigned short *port)
 {
     char *hostname = NULL;
     char *tmp = NULL;
@@ -65,7 +65,7 @@ int parse_url(const char *url, char *domain, unsigned short *port)
         return ERROR;
     }
 
-    strcpy(domain, inet_ntoa( * (struct in_addr*) host->h_addr));        
+    strcpy(ip, inet_ntoa( * (struct in_addr*) host->h_addr));        
 
     return OK;
 }
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     memset(&addr, 0, sizeof(addr));
     
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(argv[1]);
+    addr.sin_addr.s_addr = inet_addr(ip);
     addr.sin_port = htons(port);
 
     int result = connect(client_socket, (struct sockaddr *)&addr, sizeof(addr));
@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
         printf("connect failed\n");
         return -1;
     }
+    
     printf("connect successfully!\n");
-
     char buf[INPUT_SIZE] = {0};
     
     printf("please input \"end\" to exit!\n");  
@@ -125,13 +125,12 @@ int main(int argc, char *argv[])
     }
 
     close(client_socket);
-    
     return 0;
+    
 DETAIL:
     printf("==============================\n");
     printf("please input one paremeter,like this:\n");
-    printf("./client www.baidu.com:1234 or\n");    
-    printf("./client www.baidu.com or\n");
+    printf("./client www.baidu.com or\n");    
     printf("./client 127.0.0.1:1234 or\n");    
     printf("./client 127.0.0.1\n");
     printf("==============================\n");
