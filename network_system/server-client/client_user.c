@@ -41,45 +41,6 @@ int isNumIP(const char *url)
     return TRUE;
 }
 
-#if 0
-int parse_url(const char *url, char *ip)
-{
-    char *hostname = NULL;
-    char *tmp = NULL;
-    
-    hostname = strdup(url);
-    if (!hostname)
-    {
-        return -1;
-    }
-
-    tmp = strchr(hostname, ':');
-    if (tmp)
-    {
-        *tmp = '\0';
-        tmp += 1;
-        *port = (unsigned short)atoi(tmp);
-    }
-
-    if(isNumIP(hostname))
-    {
-        strncpy(ip, hostname, strlen(hostname));
-        return 0;
-    }
-
-    struct hostent *host = NULL;
-    host = gethostbyname(hostname);
-    if (!host)
-    {
-        return -1;
-    }
-
-    strcpy(ip, inet_ntoa( *(struct in_addr*) host->h_addr));        
-
-    return 0;
-}
-#endif
-
 static void* recv_msg(void *arg)
 {
     char buf[BUFFER_SIZE] = {0};
@@ -196,3 +157,4 @@ DETAIL:
     
     return 0;
 }
+
