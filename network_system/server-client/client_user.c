@@ -24,13 +24,13 @@ static void* udp_recv_msg(void *arg)
         
     while(1)  
     {
-        recvfrom(userServer.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
+        recvfrom(userClient.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
         
         memset(buf, 0, sizeof(buf));
         printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
 
         if (exit_signal) {
-            return;
+            return NULL;
         }
     }
 }
@@ -41,10 +41,10 @@ static void* udp_send_msg(void *arg)
     
     while(1) {
         gets(buf);
-        sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, &userClient.ser_addr, sizeof(userClient.ser_addr));
-        if (strncmp(buf, 4, "exit")) {
+        sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&userClient.ser_addr, sizeof(userClient.ser_addr));
+        if (strncmp(buf, "exit", 4)) {
             exit_signal = 1;
-            return;
+            return NULL;
         }
         
         memset(buf, 0, BUFF_SIZE);
