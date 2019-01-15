@@ -162,8 +162,8 @@ int main(int argc, char *argv[])
     pthread_create(&udp_send_t, NULL, udp_send_msg(void * arg), NULL);
     pthread_create(&udp_recv_t, NULL, udp_recv_msg(void * arg), NULL);
 
-    pthread_join(udp_send_t);
-    pthread_join(udp_recv_t);
+    pthread_join(udp_send_t, NULL);
+    pthread_join(udp_recv_t, NULL);
 
     release_server_udp();
     return 0;  
