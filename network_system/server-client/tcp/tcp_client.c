@@ -12,14 +12,6 @@
 #define UDP_LOCAL_PORT 8000
 #define TCP_SERVER_PORT 9999
 
-typedef struct user_client_t {
-    int udp_local_socket;
-    int udp_remotesocket;
-
-    struct sockaddr_in ser_addr;
-} user_client_t;
-
-user_client_t userClient;
 char ip[16] = {0};
 
 int exit_signal = 0;
@@ -112,35 +104,6 @@ static void* send_msg(void *arg)
         memset(buf, 0, BUFFER_SIZE);
         sleep(1);
     }
-}
-
-static void udp_init()
-{
-    int ret = -1;
-    int udp_local_socket = -1;
-    struct sockaddr_in ser_addr;
-    struct sockaddr_in local_addr;
-
-    udp_local_socket = socket(AF_INET, SOCK_DGRAM, 0);
-
-    memset(&local_addr, 0, sizeof(local_addr));
-    local_addr.sin_family = AF_INET;
-    local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    local_addr.sin_port = htons(LOCAL_PORT);
-
-    ret = bind(udp_local_socket, (struct sockaddr*)&local_addr, sizeof(local_addr));
-    if (ret < 0) {
-        printf("socket bind fail!\n");
-        return -1;
-    }
-
-    memset(&ser_addr, 0, sizeof(ser_addr));
-    ser_addr.sin_family = AF_INET;
-    ser_addr.sin_addr.s_addr = inet_addr(ip);
-    ser_addr.sin_port = htons(port);
-
-    userClient.udp_local_socket = udp_local_socket;
-    userClient.ser_addr = ser_addr;
 }
 
 int main(int argc, char *argv[])

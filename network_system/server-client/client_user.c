@@ -8,60 +8,33 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>  
 
-#define BUFFER_SIZE 1024
-#define UDP_LOCAL_PORT 8000
-#define TCP_SERVER_PORT 9999
+static user_t userClient;
+static char server_ip[IP_LEN] = {0};
+static int exit_signal = 0;
 
-typedef struct user_client_t {
-    int udp_local_socket;
-    int udp_remotesocket;
-
-    struct sockaddr_in ser_addr;
-} user_client_t;
-
-user_client_t userClient;
-char ip[16] = {0};
-
-int exit_signal = 0;
-
-int isNumIP(const char *url)
+static void* udp_recv_msg(void *arg)
 {
-    
-    while(*url && (*url <= '9' && *url >= '0' || *url == '.'))
-    {
-        url++;
-    }
-
-    //如果url中有非法字符，则返回错误
-    if(*url)
-    {
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static void* recv_msg(void *arg)
-{
-    char buf[BUFFER_SIZE] = {0};
+    int ret;
+    char buf[BUFF_SIZE] = {0};  
     struct sockaddr_in addr;
-    int addr_len;
-    
-    while(1)
-    {
-        addr_len = sizeof(addr);
-        recvfrom(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&addr, &addr_len);
+    int addr_len = sizeof(addr);
         
-        printf("%s said: %s", inet_ntoa(addr.sin_addr), buf);
+    while(1)  
+    {
+        recvfrom(userServer.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
+        
+        memset(buf, 0, sizeof(buf));
+        printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
+
         if (exit_signal) {
             return;
         }
     }
 }
 
-static void* send_msg(void *arg)
+static void* udp_send_msg(void *arg)
 {
-    char buf[BUFFER_SIZE] = {0};
+    char buf[BUFF_SIZE] = {0};
     
     while(1) {
         gets(buf);
@@ -70,44 +43,46 @@ static void* send_msg(void *arg)
             exit_signal = 1;
             return;
         }
-        memset(buf, 0, BUFFER_SIZE);
+        
+        memset(buf, 0, BUFF_SIZE);
         sleep(1);
     }
 }
 
-static void udp_init()
+static void init_client_udp()
 {
     int ret = -1;
     int udp_local_socket = -1;
-    struct sockaddr_in ser_addr;
-    struct sockaddr_in local_addr;
+    struct sockaddr_in localAddr;
 
     udp_local_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    memset(&local_addr, 0, sizeof(local_addr));
-    local_addr.sin_family = AF_INET;
-    local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    local_addr.sin_port = htons(LOCAL_PORT);
+    memset(&localAddr, 0, sizeof(remoteAddr));
+    localAddr.sin_family = AF_INET;
+    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    localAddr.sin_port = htons(UDP_LOCAL_PORT);
 
-    ret = bind(udp_local_socket, (struct sockaddr*)&local_addr, sizeof(local_addr));
+    ret = bind(udp_local_socket, (struct sockaddr*)&localAddr, sizeof(localAddr));
     if (ret < 0) {
         printf("socket bind fail!\n");
-        return -1;
+        return;
     }
 
-    memset(&ser_addr, 0, sizeof(ser_addr));
-    ser_addr.sin_family = AF_INET;
-    ser_addr.sin_addr.s_addr = inet_addr(ip);
-    ser_addr.sin_port = htons(port);
-
+    // 记录服务器udp socket
     userClient.udp_local_socket = udp_local_socket;
-    userClient.ser_addr = ser_addr;
+}
+
+static void release_client_udp()
+{
+    close(userClient.udp_local_socket);
+    close(userClient.tcp_client_socket);
+    memset(&userClient, 0, sizeof(userClient));
 }
 
 int main(int argc, char *argv[])
 {
     int ret;
-    int client_socket = -1;
+    int tcp_client_socket = -1;
     struct sockaddr_in addr;
     pthread_t pthread_send_t;
     pthread_t pthread_recv_t;
@@ -117,44 +92,45 @@ int main(int argc, char *argv[])
         goto DETAIL;
     }
     
-    strncpy(ip, 16, argv[1]);
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_socket < 0)
+    strncpy(server_ip, 16, argv[1]);
+    tcp_client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcp_client_socket < 0)
     {
         printf("create socket failed!\n");
         return -1;
     }
 
+    userClient.tcp_client_socket = tcp_client_socket;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(ip);
+    addr.sin_addr.s_addr = inet_addr(server_ip);
     addr.sin_port = htons(TCP_SERVER_PORT);
 
     int result = connect(client_socket, (struct sockaddr *)&addr, sizeof(addr));
     if (result == -1)
     {
         printf("connect failed\n");
+        close(userClient.tcp_client_socket);
         return -1;
     }
     
+    userClient.ser_addr = addr;
     printf("connect successfully!\n");
-    udp_init();
-    pthread_create(&pthread_recv_t, NULL, recv_msg, NULL);
-    pthread_create(&pthread_send_t, NULL, send_msg, NULL);
+    init_client_udp();
+    pthread_create(&pthread_recv_t, NULL, udp_recv_msg, NULL);
+    pthread_create(&pthread_send_t, NULL, udp_send_msg, NULL);
 
     pthread_join(pthread_recv_t);
     pthread_join(pthread_send_t);
 
-    close(client_socket);
+    release_client_udp();
     return 0;
     
 DETAIL:
     printf("==============================\n");
     printf("please input one paremeter,like this:\n");
-    //printf("./client www.baidu.com or\n");    
     printf("./client 127.0.0.1\n");
     printf("==============================\n");
     
     return 0;
 }
-

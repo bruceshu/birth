@@ -6,14 +6,12 @@
 #include <arpa/inet.h>  
 #include <pthread.h>
 
-#define TCP_SERVER_PORT 9999
-#define BUFF_SIZE 1024
-#define CLIENT_NUM 1
+static pthread_t udp_recv_t;
+static pthread_t udp_send_t;
+static user_t userServer;
+static int exit_signal = 0;
 
-pthread_t udp_recv_t;
-pthread_t udp_send_t;
-
-int creat_socket()
+int creat_tcp_socket()
 {
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if(server_socket == -1)  
@@ -42,11 +40,12 @@ int creat_socket()
         printf("listen socket failed!\n");
         return -1;  
     }  
-    
-    return server_socket;  
+
+    userServer.tcp_server_socket = server_socket;
+    return 0;  
 }
 
-int wait_client(int server_socket)  
+int wait_client()  
 {  
     struct sockaddr_in cliaddr;  
     int addrlen = sizeof(cliaddr);  
@@ -54,77 +53,114 @@ int wait_client(int server_socket)
     printf("waiting client to connect...\n");  
 
     //创建一个和客户端交流的套接字 
-    int client_socket = accept(server_socket, (struct sockaddr *)&cliaddr, &addrlen); 
+    int client_socket = accept(userServer.tcp_server_socket, (struct sockaddr *)&cliaddr, &addrlen); 
     if(client_socket == -1)  
     {  
         printf("accept socket failed!\n");
         return -1;  
     }
 
+    memset(&userServer, 0, sizeof(userServer));
+    userServer.cli_addr = cliaddr;
+    userServer.tcp_client_socket = client_socket;
+    
     printf("success to recive a client ：%s\n", inet_ntoa(cliaddr.sin_addr));      
-    return client_socket;  
+    return 0;  
 }  
 
-static void * send_msg(void * arg)
+static void * udp_send_msg(void * arg)
 {
     
-}
-//将客户端信息原样输出
-void *hanld_client(void * arg)   
-{  
     char buf[BUFF_SIZE] = {0};  
-    int client_socket = *(int *)arg;
+    
+    while(1)
+    {
+        gets(buf);
+        sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, userServer.cli_addr, sizeof(userServer.cli_addr));
+
+        if (strncmp(buf, 4, "exit")) {
+            exit_signal = 1;
+            return;
+        }
+        
+        memset(buf, 0, BUFF_SIZE);
+        sleep(1);
+    }
+}
+
+void *udp_recv_msg(void * arg)   
+{  
     int ret;
-
+    char buf[BUFF_SIZE] = {0};  
+    struct sockaddr_in addr;
+    int addr_len = sizeof(addr);
+        
     while(1)  
-    {  
-        ret = recv(client_socket, buf, BUFF_SIZE-1, 0);
-        if(ret == -1) {  
-            printf("read from client socket failed!\n");
-            break;  
-        } else if(ret == 0) {  
-            printf("client %d said nothing!\n", client_socket);
-            break;
-        }
+    {
+        recvfrom(userServer.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
         
-        buf[ret] = '\0';
-        printf("client %d said:%s\n", client_socket, buf);
-        
-        if(strncmp(buf, "end", 3) == 0)
-        {  
-            break;  
+        memset(buf, 0, sizeof(buf));
+        printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
+
+        if (exit_signal) {
+            return;
         }
-    }  
-
-    pthread_mutex_lock(&mutex);
-    count_client--;
-    pthread_mutex_unlock(&mutex);
-    printf("current client num is %d\n", count_client);
-
-    close(client_socket);  
+    }
 }  
 
+static void init_server_udp()
+{
+    int ret = -1;
+    int udp_local_socket = -1;
+    struct sockaddr_in localAddr;
+
+    udp_local_socket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    memset(&localAddr, 0, sizeof(remoteAddr));
+    localAddr.sin_family = AF_INET;
+    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    localAddr.sin_port = htons(UDP_LOCAL_PORT);
+
+    ret = bind(udp_local_socket, (struct sockaddr*)&localAddr, sizeof(localAddr));
+    if (ret < 0) {
+        printf("socket bind fail!\n");
+        return;
+    }
+
+    // 记录服务器udp socket
+    userServer.udp_local_socket = udp_local_socket;
+}
+
+static void release_server_udp()
+{
+    close(userServer.udp_local_socket);
+    close(userServer.tcp_server_socket);
+    memset(&userServer, 0, sizeof(userServer));
+}
 
 int main()  
 {  
-    int server_socket = creat_socket();
-    if (server_socket == -1) {
+    int ret = -1;
+    
+    ret = creat_tcp_socket();
+    if (ret < 0) {
         return -1;
     }
 
-    int client_socket = wait_client(server_socket);
-    if (client_socket == -1) {
-        close(server_socket);
+    int ret = wait_client();
+    if (ret == -1) {
+        close(userServer.tcp_server_socket);
         return -1;
     }
 
-    pthread_create(&udp_send_t, NULL, udp_send_msg(void * arg), (void *)&client_socket);
-    pthread_create(&udp_recv_t, NULL, udp_recv_msg(void * arg), (void *)&client_socket);
+    init_server_udp();
+    pthread_create(&udp_send_t, NULL, udp_send_msg(void * arg), NULL);
+    pthread_create(&udp_recv_t, NULL, udp_recv_msg(void * arg), NULL);
 
     pthread_join(udp_send_t);
     pthread_join(udp_recv_t);
 
-    close(server_socket);  
+    release_server_udp();
       
     return 0;  
 }  
