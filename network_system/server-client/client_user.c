@@ -64,7 +64,7 @@ static void init_client_udp()
 
     memset(&serAddr, 0, sizeof(serAddr));
     serAddr.sin_family = AF_INET;
-    serAddr.sin_addr.s_addr = htonl(server_ip);
+    serAddr.sin_addr.s_addr = inet_addr(server_ip);
     serAddr.sin_port = htons(UDP_LOCAL_PORT);
 
     userClient.udp_ser_addr = serAddr;
@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
 {
     int ret;
     int tcp_client_socket = -1;
-    struct sockaddr_in addr;
+    struct sockaddr_in tcp_ser_addr;
+    struct sockaddr_in udp_ser_addr;
     pthread_t pthread_send_t;
     pthread_t pthread_recv_t;
 
@@ -101,9 +102,15 @@ int main(int argc, char *argv[])
 
     userClient.tcp_client_socket = tcp_client_socket;
     memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(server_ip);
-    addr.sin_port = htons(TCP_SERVER_PORT);
+    tcp_ser_addr.sin_family = AF_INET;
+    tcp_ser_addr.sin_addr.s_addr = inet_addr(server_ip);
+    tcp_ser_addr.sin_port = htons(TCP_SERVER_PORT);
+
+    memset(&addr, 0, sizeof(addr));
+    udp_ser_addr.sin_family = AF_INET;
+    udp_ser_addr.sin_addr.s_addr = inet_addr(server_ip);
+    udp_ser_addr.sin_port = htons(UDP_LOCAL_PORT);
+    userClient.udp_ser_addr = udp_ser_addr;
 
     int result = connect(tcp_client_socket, (struct sockaddr *)&addr, sizeof(addr));
     if (result == -1)
@@ -113,7 +120,6 @@ int main(int argc, char *argv[])
         return -1;
     }
     
-    userClient.ser_addr = addr;
     printf("connect successfully!\n");
     init_client_udp();
     pthread_create(&pthread_recv_t, NULL, udp_recv_msg, NULL);

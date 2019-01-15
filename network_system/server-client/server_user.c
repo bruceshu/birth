@@ -69,7 +69,7 @@ int wait_client()
     userServer.tcp_client_socket = client_socket;
 
     udp_cli_addr.sin_family = AF_INET;
-    udp_cli_addr.sin_addr.s_addr = htonl(inet_ntoa(tcp_cli_addr.sin_addr));
+    udp_cli_addr.sin_addr.s_addr = inet_addr(inet_ntoa(tcp_cli_addr.sin_addr));
     udp_cli_addr.sin_port = htons(UDP_LOCAL_PORT);
     userServer.udp_cli_addr = udp_cli_addr;
 
