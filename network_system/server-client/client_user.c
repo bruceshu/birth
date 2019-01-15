@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     udp_ser_addr.sin_port = htons(UDP_LOCAL_PORT);
     userClient.udp_ser_addr = udp_ser_addr;
 
-    int result = connect(tcp_client_socket, (struct sockaddr *)&addr, sizeof(addr));
+    int result = connect(tcp_client_socket, (struct sockaddr *)&tcp_ser_addr, sizeof(tcp_ser_addr));
     if (result == -1)
     {
         printf("connect failed\n");
