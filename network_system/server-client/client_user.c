@@ -60,7 +60,7 @@ static void init_client_udp()
 
     udp_local_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    memset(&localAddr, 0, sizeof(remoteAddr));
+    memset(&localAddr, 0, sizeof(localAddr));
     localAddr.sin_family = AF_INET;
     localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     localAddr.sin_port = htons(UDP_LOCAL_PORT);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
         goto DETAIL;
     }
     
-    strncpy(server_ip, 16, argv[1]);
+    strncpy(server_ip, argv[1], MIN(strlen(argv[1]), IP_LEN));
     tcp_client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_client_socket < 0)
     {
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     addr.sin_addr.s_addr = inet_addr(server_ip);
     addr.sin_port = htons(TCP_SERVER_PORT);
 
-    int result = connect(client_socket, (struct sockaddr *)&addr, sizeof(addr));
+    int result = connect(tcp_client_socket, (struct sockaddr *)&addr, sizeof(addr));
     if (result == -1)
     {
         printf("connect failed\n");

@@ -20,4 +20,7 @@ typedef struct user_t {
     struct sockaddr_in ser_addr;
 } user_t;
 
+
+#define MIN(a, b) (a) > (b) ? (b) : (a) 
+
 #endif
