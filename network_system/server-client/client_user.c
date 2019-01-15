@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <pthread.h>
+
 #include <sys/socket.h>
 #include <sys/types.h>  
 #include <unistd.h>
@@ -40,7 +43,7 @@ static void* udp_send_msg(void *arg)
     char buf[BUFF_SIZE] = {0};
     
     while(1) {
-        gets(buf);
+        scanf("%s", buf);
         sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&userClient.ser_addr, sizeof(userClient.ser_addr));
         if (strncmp(buf, "exit", 4)) {
             exit_signal = 1;

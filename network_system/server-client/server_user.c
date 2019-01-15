@@ -1,9 +1,12 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include <sys/types.h>  
 #include <sys/socket.h>  
-#include <stdio.h>  
 #include <unistd.h>  
-#include <string.h>  
 #include <arpa/inet.h>  
+
 #include <pthread.h>
 
 #include "utils.h"
@@ -75,7 +78,7 @@ static void * udp_send_msg(void * arg)
     
     while(1)
     {
-        gets(buf);
+        scanf("%s", buf);
         sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, userServer.cli_addr, sizeof(userServer.cli_addr));
 
         if (strncmp(buf, 4, "exit")) {
@@ -138,7 +141,7 @@ static void release_server_udp()
     memset(&userServer, 0, sizeof(userServer));
 }
 
-int main()  
+int main(int argc, char *argv[])  
 {  
     int ret = -1;
     pthread_t udp_recv_t;
