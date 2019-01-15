@@ -79,11 +79,11 @@ static void * udp_send_msg(void * arg)
     while(1)
     {
         scanf("%s", buf);
-        sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, userServer.cli_addr, sizeof(userServer.cli_addr));
+        sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, (struct sockaddr*)&userServer.cli_addr, sizeof(userServer.cli_addr));
 
-        if (strncmp(buf, 4, "exit")) {
+        if (strncmp(buf, "exit", 4)) {
             exit_signal = 1;
-            return;
+            return NULL;
         }
         
         memset(buf, 0, BUFF_SIZE);
@@ -106,7 +106,7 @@ void *udp_recv_msg(void * arg)
         printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
 
         if (exit_signal) {
-            return;
+            return NULL;
         }
     }
 }  
@@ -119,7 +119,7 @@ static void init_server_udp()
 
     udp_local_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    memset(&localAddr, 0, sizeof(remoteAddr));
+    memset(&localAddr, 0, sizeof(localAddr));
     localAddr.sin_family = AF_INET;
     localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     localAddr.sin_port = htons(UDP_LOCAL_PORT);
@@ -152,8 +152,8 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    int ret = wait_client();
-    if (ret == -1) {
+    ret = wait_client();
+    if (ret < 0) {
         close(userServer.tcp_server_socket);
         return -1;
     }
