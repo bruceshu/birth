@@ -101,12 +101,12 @@ int main(int argc, char *argv[])
     }
 
     userClient.tcp_client_socket = tcp_client_socket;
-    memset(&addr, 0, sizeof(addr));
+    memset(&tcp_ser_addr, 0, sizeof(tcp_ser_addr));
     tcp_ser_addr.sin_family = AF_INET;
     tcp_ser_addr.sin_addr.s_addr = inet_addr(server_ip);
     tcp_ser_addr.sin_port = htons(TCP_SERVER_PORT);
 
-    memset(&addr, 0, sizeof(addr));
+    memset(&udp_ser_addr, 0, sizeof(udp_ser_addr));
     udp_ser_addr.sin_family = AF_INET;
     udp_ser_addr.sin_addr.s_addr = inet_addr(server_ip);
     udp_ser_addr.sin_port = htons(UDP_LOCAL_PORT);
