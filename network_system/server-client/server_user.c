@@ -50,13 +50,14 @@ int creat_tcp_socket()
 
 int wait_client()  
 {  
-    struct sockaddr_in cliaddr;  
-    int addrlen = sizeof(cliaddr);  
+    struct sockaddr_in tcp_cli_addr;  
+    struct sockaddr_in udp_cli_addr;
+    int addrlen = sizeof(tcp_cli_addr);  
     
     printf("waiting client to connect...\n");  
 
     //创建一个和客户端交流的套接字 
-    int client_socket = accept(userServer.tcp_server_socket, (struct sockaddr *)&cliaddr, &addrlen); 
+    int client_socket = accept(userServer.tcp_server_socket, (struct sockaddr *)&tcp_cli_addr, &addrlen); 
     if(client_socket == -1)  
     {  
         printf("accept socket failed!\n");
@@ -64,10 +65,15 @@ int wait_client()
     }
 
     memset(&userServer, 0, sizeof(userServer));
-    userServer.cli_addr = cliaddr;
+    userServer.tcp_cli_addr = tcp_cli_addr;
     userServer.tcp_client_socket = client_socket;
-    
-    printf("success to recive a client ：%s\n", inet_ntoa(cliaddr.sin_addr));      
+
+    udp_cli_addr.sin_family = AF_INET;
+    udp_cli_addr.sin_addr.s_addr = htonl(inet_ntoa(tcp_cli_addr.sin_addr));
+    udp_cli_addr.sin_port = htons(UDP_LOCAL_PORT);
+    userServer.udp_cli_addr = udp_cli_addr;
+
+    printf("success to recive a client ：%s\n", inet_ntoa(tcp_cli_addr.sin_addr));      
     return 0;  
 }  
 
@@ -79,7 +85,7 @@ static void * udp_send_msg(void * arg)
     while(1)
     {
         scanf("%s", buf);
-        sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, (struct sockaddr*)&userServer.cli_addr, sizeof(userServer.cli_addr));
+        sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, (struct sockaddr*)&userServer.udp_cli_addr, sizeof(userServer.udp_cli_addr));
 
         if (strncmp(buf, "exit", 4)) {
             exit_signal = 1;

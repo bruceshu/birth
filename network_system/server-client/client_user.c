@@ -20,7 +20,6 @@ static int exit_signal = 0;
 
 static void* udp_recv_msg(void *arg)
 {
-    int ret;
     char buf[BUFF_SIZE] = {0};  
     struct sockaddr_in addr;
     int addr_len = sizeof(addr);
@@ -29,9 +28,9 @@ static void* udp_recv_msg(void *arg)
     {
         recvfrom(userClient.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
         
-        memset(buf, 0, sizeof(buf));
         printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
-
+        memset(buf, 0, sizeof(buf));
+        
         if (exit_signal) {
             return NULL;
         }
@@ -44,7 +43,7 @@ static void* udp_send_msg(void *arg)
     
     while(1) {
         scanf("%s", buf);
-        sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&userClient.ser_addr, sizeof(userClient.ser_addr));
+        sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&userClient.udp_ser_addr, sizeof(userClient.udp_ser_addr));
         if (strncmp(buf, "exit", 4)) {
             exit_signal = 1;
             return NULL;
@@ -59,22 +58,16 @@ static void init_client_udp()
 {
     int ret = -1;
     int udp_local_socket = -1;
-    struct sockaddr_in localAddr;
+    struct sockaddr_in serAddr;
 
     udp_local_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    memset(&localAddr, 0, sizeof(localAddr));
-    localAddr.sin_family = AF_INET;
-    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    localAddr.sin_port = htons(UDP_LOCAL_PORT);
+    memset(&serAddr, 0, sizeof(serAddr));
+    serAddr.sin_family = AF_INET;
+    serAddr.sin_addr.s_addr = htonl(server_ip);
+    serAddr.sin_port = htons(UDP_LOCAL_PORT);
 
-    ret = bind(udp_local_socket, (struct sockaddr*)&localAddr, sizeof(localAddr));
-    if (ret < 0) {
-        printf("socket bind fail!\n");
-        return;
-    }
-
-    // 记录服务器udp socket
+    userClient.udp_ser_addr = serAddr;
     userClient.udp_local_socket = udp_local_socket;
 }
 
@@ -137,6 +130,5 @@ DETAIL:
     printf("please input one paremeter,like this:\n");
     printf("./client 127.0.0.1\n");
     printf("==============================\n");
-    
     return 0;
 }

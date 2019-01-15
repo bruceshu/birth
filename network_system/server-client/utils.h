@@ -16,8 +16,11 @@ typedef struct user_t {
     int tcp_client_socket;
     int tcp_server_socket;
 
-    struct sockaddr_in cli_addr;
-    struct sockaddr_in ser_addr;
+    struct sockaddr_in tcp_cli_addr;
+    struct sockaddr_in tcp_ser_addr;
+
+    struct sockaddr_in udp_cli_addr;
+    struct sockaddr_in udp_ser_addr;
 } user_t;
 
 
