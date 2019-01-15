@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <sys/socket.h>
 
 #define BUFF_SIZE 1024
 #define UDP_LOCAL_PORT 8000

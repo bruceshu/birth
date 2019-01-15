@@ -8,6 +8,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>  
 
+#include "utils.h"
+
+
 static user_t userClient;
 static char server_ip[IP_LEN] = {0};
 static int exit_signal = 0;

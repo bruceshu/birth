@@ -6,8 +6,8 @@
 #include <arpa/inet.h>  
 #include <pthread.h>
 
-static pthread_t udp_recv_t;
-static pthread_t udp_send_t;
+#include "utils.h"
+
 static user_t userServer;
 static int exit_signal = 0;
 
@@ -141,6 +141,8 @@ static void release_server_udp()
 int main()  
 {  
     int ret = -1;
+    pthread_t udp_recv_t;
+    pthread_t udp_send_t;
     
     ret = creat_tcp_socket();
     if (ret < 0) {
@@ -161,7 +163,6 @@ int main()
     pthread_join(udp_recv_t);
 
     release_server_udp();
-      
     return 0;  
 }  
 
