@@ -87,7 +87,7 @@ static void * udp_send_msg(void * arg)
         sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, (struct sockaddr*)&userServer.udp_cli_addr, sizeof(userServer.udp_cli_addr));
 
         if (!strncmp(buf, "exit", 4)) {
-            printf("client has closed sending\n", __func__);
+            printf("client has closed sending\n");
             return NULL;
         }
         

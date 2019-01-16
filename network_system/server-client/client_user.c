@@ -27,7 +27,7 @@ static void* udp_recv_msg(void *arg)
     {
         recvfrom(userClient.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);        
         if (!strncmp(buf, "exit", 4)) {
-            printf("server has closed sending\n", __func__);
+            printf("server has closed sending\n");
             return NULL;
         }
 
