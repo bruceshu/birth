@@ -82,7 +82,8 @@ static void * udp_send_msg(void * arg)
     
     while(1)
     {
-        scanf("%[^]", buf);
+        scanf("%[^\n]", buf);
+        fflush(stdin);
         sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, (struct sockaddr*)&userServer.udp_cli_addr, sizeof(userServer.udp_cli_addr));
 
         if (!strncmp(buf, "exit", 4)) {
