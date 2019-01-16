@@ -16,7 +16,6 @@
 
 static user_t userClient;
 static char server_ip[IP_LEN] = {0};
-static int exit_signal = 0;
 
 static void* udp_recv_msg(void *arg)
 {
@@ -26,15 +25,14 @@ static void* udp_recv_msg(void *arg)
         
     while(1)  
     {
-        recvfrom(userClient.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
-        
-        printf("[server %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
-        memset(buf, 0, sizeof(buf));
-        
-        if (exit_signal) {
+        recvfrom(userClient.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);        
+        if (!strncmp(buf, "exit", 4)) {
             printf("exit %s successfully\n", __func__);
             return NULL;
         }
+
+        printf("[server %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
+        memset(buf, 0, sizeof(buf));
     }
 }
 
@@ -46,7 +44,6 @@ static void* udp_send_msg(void *arg)
         scanf("%s", buf);
         sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&userClient.udp_ser_addr, sizeof(userClient.udp_ser_addr));
         if (!strncmp(buf, "exit", 4)) {
-            exit_signal = 1;
             printf("exit %s successfully\n", __func__);
             return NULL;
         }

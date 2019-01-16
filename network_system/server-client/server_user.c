@@ -12,7 +12,6 @@
 #include "utils.h"
 
 static user_t userServer;
-static int exit_signal = 0;
 
 int creat_tcp_socket()
 {
@@ -33,7 +32,7 @@ int creat_tcp_socket()
     int ret = bind(server_socket, (struct sockaddr *)&addr, sizeof(addr));
     if(ret == -1)  
     {  
-        printf("bind socket failed!\n");
+        printf("bind tcp socket failed!\n");
         return -1;  
     } 
 
@@ -87,7 +86,6 @@ static void * udp_send_msg(void * arg)
         sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, (struct sockaddr*)&userServer.udp_cli_addr, sizeof(userServer.udp_cli_addr));
 
         if (!strncmp(buf, "exit", 4)) {
-            exit_signal = 1;
             printf("exit %s successfully\n", __func__);
             return NULL;
         }
@@ -107,14 +105,13 @@ void *udp_recv_msg(void * arg)
     while(1)  
     {
         recvfrom(userServer.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
-        
-        printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
-        memset(buf, 0, sizeof(buf));
-
-        if (exit_signal) {
+        if (!strncmp(buf, "exit", 4)) {
             printf("exit %s successfully\n", __func__);
             return NULL;
         }
+
+        printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
+        memset(buf, 0, sizeof(buf));
     }
 }  
 
@@ -133,7 +130,7 @@ static void init_server_udp()
 
     ret = bind(udp_local_socket, (struct sockaddr*)&localAddr, sizeof(localAddr));
     if (ret < 0) {
-        printf("socket bind fail!\n");
+        printf("bind udp socket failed!\n");
         return;
     }
 
