@@ -27,11 +27,12 @@ static void* udp_recv_msg(void *arg)
     {
         recvfrom(userClient.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);        
         if (!strncmp(buf, "exit", 4)) {
-            printf("exit %s successfully\n", __func__);
+            printf("%s over\n", __func__);
             return NULL;
         }
 
-        printf("[server %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
+        printf("[小焕] said:%s\n", buf);
+        //printf("[server %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
         memset(buf, 0, sizeof(buf));
     }
 }
@@ -41,10 +42,10 @@ static void* udp_send_msg(void *arg)
     char buf[BUFF_SIZE] = {0};
     
     while(1) {
-        scanf("%s", buf);
+        scanf("%s\n", buf);
         sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&userClient.udp_ser_addr, sizeof(userClient.udp_ser_addr));
         if (!strncmp(buf, "exit", 4)) {
-            printf("exit %s successfully\n", __func__);
+            printf("%s over\n", __func__);
             return NULL;
         }
         
