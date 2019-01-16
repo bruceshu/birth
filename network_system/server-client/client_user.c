@@ -42,7 +42,7 @@ static void* udp_send_msg(void *arg)
     char buf[BUFF_SIZE] = {0};
     
     while(1) {
-        scanf("%s[^\n]", buf);
+        scanf("%[^\n]", buf);
         sendto(userClient.udp_local_socket, buf, sizeof(buf), 0, (struct sockaddr*)&userClient.udp_ser_addr, sizeof(userClient.udp_ser_addr));
         if (!strncmp(buf, "exit", 4)) {
             printf("%s over\n", __func__);
