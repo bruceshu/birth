@@ -75,6 +75,27 @@ int wait_client()
     return 0;  
 }  
 
+void *udp_recv_msg(void * arg)   
+{  
+    int ret;
+    char buf[BUFF_SIZE] = {0};  
+    struct sockaddr_in addr;
+    int addr_len = sizeof(addr);
+        
+    while(1)  
+    {
+        recvfrom(userServer.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
+        if (!strncmp(buf, "exit", 4)) {
+            printf("client has closed sending\n");
+            return NULL;
+        }
+
+        printf("[小默] said:%s\n", buf);
+        //printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
+        memset(buf, 0, sizeof(buf));
+    }
+}  
+
 static void * udp_send_msg(void * arg)
 {
     
@@ -87,7 +108,6 @@ static void * udp_send_msg(void * arg)
         sendto(userServer.udp_local_socket, buf, BUFF_SIZE, 0, (struct sockaddr*)&userServer.udp_cli_addr, sizeof(userServer.udp_cli_addr));
 
         if (!strncmp(buf, "exit", 4)) {
-            printf("client has closed sending\n");
             return NULL;
         }
         
@@ -95,26 +115,6 @@ static void * udp_send_msg(void * arg)
         sleep(1);
     }
 }
-
-void *udp_recv_msg(void * arg)   
-{  
-    int ret;
-    char buf[BUFF_SIZE] = {0};  
-    struct sockaddr_in addr;
-    int addr_len = sizeof(addr);
-        
-    while(1)  
-    {
-        recvfrom(userServer.udp_local_socket, buf, sizeof(buf) - 1, 0, (struct sockaddr*)&addr, &addr_len);
-        if (!strncmp(buf, "exit", 4)) {
-            return NULL;
-        }
-
-        printf("[小默] said:%s\n", buf);
-        //printf("[client %s] said:%s\n", inet_ntoa(addr.sin_addr), buf);
-        memset(buf, 0, sizeof(buf));
-    }
-}  
 
 static void init_server_udp()
 {
