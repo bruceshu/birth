@@ -64,7 +64,6 @@ int wait_client()
         return -1;  
     }
 
-    memset(&userServer, 0, sizeof(userServer));
     userServer.tcp_cli_addr = tcp_cli_addr;
     userServer.tcp_client_socket = client_socket;
 
@@ -80,7 +79,7 @@ int wait_client()
 static void * udp_send_msg(void * arg)
 {
     
-    char buf[BUFF_SIZE] = {0};  
+    char buf[BUFF_SIZE] = {0};
     
     while(1)
     {
@@ -89,6 +88,7 @@ static void * udp_send_msg(void * arg)
 
         if (!strncmp(buf, "exit", 4)) {
             exit_signal = 1;
+            printf("exit %s successfully\n", __func__);
             return NULL;
         }
         
@@ -112,6 +112,7 @@ void *udp_recv_msg(void * arg)
         memset(buf, 0, sizeof(buf));
 
         if (exit_signal) {
+            printf("exit %s successfully\n", __func__);
             return NULL;
         }
     }
@@ -136,7 +137,6 @@ static void init_server_udp()
         return;
     }
 
-    // 记录服务器udp socket
     userServer.udp_local_socket = udp_local_socket;
 }
 
