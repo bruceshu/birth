@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         return -1; 
     }
 
-    FILE *fp=fopen("../NocturneNo2inEflat_44.1k_s16le.pcm","rb+");
+    FILE *fp=fopen("eric_stb.pcm","rb+");
     if(fp==NULL){
         printf("cannot open this file\n");
         return -1;
