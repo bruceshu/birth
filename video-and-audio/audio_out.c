@@ -43,8 +43,6 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    printf("bruce >>> current_audio is: %p\n", current_audio);
-
     SDL_AudioSpec wanted_spec;
     wanted_spec.freq = 8000; 
     wanted_spec.format = AUDIO_S16MSB; 
