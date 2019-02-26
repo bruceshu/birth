@@ -4,7 +4,8 @@ description:调用sdl库，实现pcm文件播放
 */
 
 #include "include/sdl/SDL.h"
- 
+#include "include/sdl/SDL_sysaudio.h"
+
 #define MAX_AUDIO_FRAME_SIZE 192000 // 1 second of 48khz 32bit audio
  
 //Buffer:
@@ -41,6 +42,8 @@ int main(int argc, char* argv[])
         printf( "Could not initialize SDL - %s\n", SDL_GetError()); 
         return -1;
     }
+
+    printf("bruce >>> current_audio is: %p\n", current_audio);
 
     SDL_AudioSpec wanted_spec;
     wanted_spec.freq = 44100; 
@@ -91,4 +94,5 @@ int main(int argc, char* argv[])
  
     return 0;
 }
+
 
