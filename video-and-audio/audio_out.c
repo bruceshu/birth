@@ -46,9 +46,9 @@ int main(int argc, char* argv[])
     printf("bruce >>> current_audio is: %p\n", current_audio);
 
     SDL_AudioSpec wanted_spec;
-    wanted_spec.freq = 44100; 
-    wanted_spec.format = AUDIO_S16SYS; 
-    wanted_spec.channels = 2; 
+    wanted_spec.freq = 8000; 
+    wanted_spec.format = AUDIO_U16MSB; 
+    wanted_spec.channels = 1; 
     wanted_spec.silence = 0; 
     wanted_spec.samples = 1024; 
     wanted_spec.callback = fill_audio;
