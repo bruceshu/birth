@@ -76,6 +76,7 @@ int main(int argc, char* argv[])
     while(1){
         if (!fread(pcm_buffer, 1, pcm_buffer_size, fp)){
             printf("fread error or read EOF\n");
+	    break;
         }
         
         printf("Now Playing %10d Bytes data.\n",data_count);
