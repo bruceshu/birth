@@ -34,7 +34,6 @@ void  fill_audio(void *udata,Uint8 *stream,int len){
  
 int main(int argc, char* argv[])
 {
-    char url[]="eric_stb.pcm";
     int data_count = 0;
 
     if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER)) {  
