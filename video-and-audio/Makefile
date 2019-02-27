@@ -14,13 +14,14 @@ INCLUDE += $(SDL_INCLUDE)
 CFLAGS +=
 
 #在SRC_PATH中遍历编译的.c文件
+SRC_PATH=.
 vpath %.c $(SRC_PATH)
 
-audio_SRC := audio_out.c
-audio_OBJ := $(subst .c,.o,$(audio_SRC))
+#audio_SRC := audio_out.c
+#audio_OBJ := $(subst .c,.o,$(audio_SRC))
 
-video_SRC := video_out.c
-video_OBJ := $(subst .c,.o,$(video_SRC))
+#video_SRC := video_out.c
+#video_OBJ := $(subst .c,.o,$(video_SRC))
 
 #目标生成文件
 out += audio
