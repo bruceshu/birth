@@ -1,6 +1,21 @@
 
+
+
+#在指定SRC_PATH路径中查找 *.c文件
+SRC_PATH=.
+vpath %.c $(SRC_PATH)
+
+audio_SRC := sdl_audio/audio_out.c
+audio_OBJ := $(subst .c,.o,$(audio_SRC))
+
+video_SRC := video_out.c
+video_OBJ := $(subst .c,.o,$(video_SRC))
+
 #编译工具
 CC=gcc
+
+#编译选项
+CFLAGS += -Wall
 
 #编译依赖的库文件
 LIBS += -L./lib -lSDL -lSDLmain -lm -ldl -lpthread -lrt
@@ -10,14 +25,6 @@ LIBS += -L./lib -lSDL -lSDLmain -lm -ldl -lpthread -lrt
 SDL_INCLUDE=-I./include/sdl
 INCLUDE += $(SDL_INCLUDE)
 
-#编译选项
-CFLAGS += -Wall
-
-audio_SRC := sdl_audio/audio_out.c
-audio_OBJ := $(subst .c,.o,$(audio_SRC))
-
-video_SRC := video_out.c
-video_OBJ := $(subst .c,.o,$(video_SRC))
 
 #目标生成文件
 out += audio
