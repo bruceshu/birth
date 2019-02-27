@@ -6,20 +6,28 @@ ANDROID_INCLUDE += -I$(ANDROID_COMPILE_ARM)/sysroot/usr/include -I$(ANDROID_COMP
 SDL_INCLUDE=-I./include/sdl
 INCLUDE += $(SDL_INCLUDE)
 
-SRC := audio_out.c
-OBJ := $(subst .c,.o,$(SRC))
-
 CFLAGS +=
 
-all: out
+audio_SRC := sdl_audio/audio_out.c
+audio_OBJ := $(subst .c,.o,$(audio_SRC))
+
+video_SRC := sdl_video/video_out.c
+video_OBJ := $(subst .c,.o,$(video_SRC))
+
+out += audio
+ 
+all: $(out)
 
 %.o:%.c
 	$(CC) $(CFLAGS) -c $< $(INCLUDE)
 
-out:$(OBJ)
-	$(CC) $(CFLAGS) -o $@ $(OBJ) $(INCLUDE) $(LIBS)
+audio:$(audio_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(audio_OBJ) $(INCLUDE) $(LIBS)
+	
+video:$(video_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(video_OBJ) $(INCLUDE) $(LIBS)
 
 clean:
-	rm -rf out $(OBJ)
+	rm -rf $(out) $(audio_OBJ) $(video_OBJ)
 
 .PHONY: all clean
