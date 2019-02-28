@@ -3,7 +3,7 @@
 description:调用sdl库，实现pcm文件播放
 */
 
-#include "./../include/sdl/SDL.h"
+#include "./../include/SDL/SDL.h"
 
 #define MAX_AUDIO_FRAME_SIZE 192000 // 1 second of 48khz 32bit audio
  
@@ -28,9 +28,7 @@ void  fill_audio(void *udata,Uint8 *stream,int len){
     SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);
     audio_pos += len; 
     audio_len -= len; 
-} 
-//-----------------
- 
+}
  
 int main(int argc, char* argv[])
 {

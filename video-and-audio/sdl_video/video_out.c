@@ -1,7 +1,7 @@
 
 
 #include <stdio.h>
-#include "./../include/sdl/SDL.h"
+#include "./../include/SDL2/SDL.h"
 
 
 #define SCREEN_W    640             //窗口的宽
