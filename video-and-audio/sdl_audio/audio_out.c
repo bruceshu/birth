@@ -1,9 +1,9 @@
 /* CopyRight (c) bruceshu 2018/01/30 3350207067@qq.com
 
-description:调用sdl库，实现pcm文件播放
+    description:调用sdl库，实现pcm文件播放
 */
 
-#include "./../include/SDL/SDL.h"
+#include "./include/SDL2/SDL.h"
 
 #define MAX_AUDIO_FRAME_SIZE 192000 // 1 second of 48khz 32bit audio
  
@@ -32,7 +32,7 @@ void  fill_audio(void *udata,Uint8 *stream,int len){
  
 int main(int argc, char* argv[])
 {
-    int data_count = 0;
+    //int data_count = 0;
 
     if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER)) {  
         printf( "Could not initialize SDL - %s\n", SDL_GetError()); 
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
         return -1; 
     }
 
-    FILE *fp=fopen("eric_stb.pcm","rb+");
+    FILE *fp=fopen("eric_voice.pcm","rb+");
     if(fp==NULL){
         printf("cannot open this file\n");
         return -1;
@@ -64,19 +64,19 @@ int main(int argc, char* argv[])
         printf("malloc size failed\n");
         return -1;
     }
+    audio_chunk = (Uint8 *) pcm_buffer;
     
     SDL_PauseAudio(0);
  
     while(1){
         if (!fread(pcm_buffer, 1, pcm_buffer_size, fp)){
             printf("fread error or read EOF\n");
-	    break;
+            break;
         }
         
-        printf("Now Playing %10d Bytes data.\n",data_count);
-        data_count += pcm_buffer_size;
+//        printf("Now Playing %10d Bytes data.\n",data_count);
+//        data_count += pcm_buffer_size;
 
-        audio_chunk = (Uint8 *) pcm_buffer; 
         audio_len = pcm_buffer_size;
         audio_pos = audio_chunk;
         

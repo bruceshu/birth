@@ -1,7 +1,7 @@
 
 
 #include <stdio.h>
-#include "./../include/SDL2/SDL.h"
+#include "./include/SDL2/SDL.h"
 
 
 #define SCREEN_W    640          
