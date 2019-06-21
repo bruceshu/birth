@@ -22,7 +22,8 @@ static  Uint8  *audio_pos;
 void  fill_audio(void *udata,Uint8 *stream,int len){ 
     if(audio_len==0)
         return;
-    
+
+    SDL_memset(stream, 0, len);
     len = (len > audio_len ? audio_len : len);
  
     SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);
@@ -32,9 +33,9 @@ void  fill_audio(void *udata,Uint8 *stream,int len){
  
 int main(int argc, char* argv[])
 {
-    //int data_count = 0;
+    //int data_count = 0;| SDL_INIT_TIMER
 
-    if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_TIMER)) {  
+    if(SDL_Init(SDL_INIT_AUDIO)) {  
         printf( "Could not initialize SDL - %s\n", SDL_GetError()); 
         return -1;
     }
@@ -70,7 +71,7 @@ int main(int argc, char* argv[])
  
     while(1){
         if (!fread(pcm_buffer, 1, pcm_buffer_size, fp)){
-            printf("fread error or read EOF\n");
+            printf("read EOF\n");
             break;
         }
         
