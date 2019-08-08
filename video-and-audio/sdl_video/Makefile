@@ -1,12 +1,13 @@
 
-OBJ := video_out.o
 
-CC=gcc
+CC = gcc
 CFLAGS += -Wall -D_REENTRANT
+
 LIBS += -L./lib -lSDL2 -lSDL2main -lm -ldl -lpthread -lrt 
-#ANDROID_INCLUDE += -I$(ANDROID_COMPILE_ARM)/sysroot/usr/include -I$(ANDROID_COMPILE_ARM)/lib64/clang/3.8/include
-SDL_INCLUDE=-I./include/SDL2
-INCLUDE += $(SDL_INCLUDE)
+INCLUDE=-I./include/SDL2
+
+SOURCES := video_out.c
+OBJ := $(subst .c,.o,$(SOURCES))
 
 all:out
 
