@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 	printf("getenv PATH addr=%p\n", getenv("PATH"));
 	printf("getenv=%s\n", getenv("PATH"));
 
-	printf("c:%d, %x, %X\n", 'c', 'c', 'c');
+	printf("c:%d, 0x%02x\n", 'c', 'c');
 	
 	printf("STR(CONNECT(con, 2))=%s\n", STR(CONNECT(con, 2)));
 	printf("TEST(CONNECT(con, 2))=%s\n", TEST(CONNECT(con, 2)));
