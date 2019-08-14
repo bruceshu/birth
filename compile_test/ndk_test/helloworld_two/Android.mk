@@ -1,0 +1,24 @@
+
+
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_SRC_FILES := print.c
+
+LOCAL_MODULE := print
+include $(BUILD_STATIC_LIBRARY)
+
+
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := helloworld
+LOCAL_SRC_FILES := helloworld.c
+
+#LOCAL_CFLAGS += -pie -fPIE
+LOCAL_LDFLAGS += -pie -fPIE
+
+LOCAL_STATIC_LIBRARIES += print
+
+#LOCAL_FORCE_STATIC_EXECUTABLE = true
+#LOCAL_MODULE_PATH := $(TARGET_OUT)
+include $(BUILD_EXECUTABLE)
