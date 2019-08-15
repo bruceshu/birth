@@ -9,8 +9,8 @@ INCLUDE = -I./include/SDL2
 video_path = sdl_video
 audio_path = sdl_audio
 
-video_src := $(video_path)/video_out.c
-audio_src := $(audio_path)/audio_out.c
+video_src := $(video_path)/video.c
+audio_src := $(audio_path)/audio.c
 
 video_obj := $(subst .c,.o,$(video_src))
 audio_obj := $(subst .c,.o,$(audio_src))
