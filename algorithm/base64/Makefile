@@ -7,12 +7,12 @@ LDFLAGS +=
 
 source = $(wildcard *.c)
 obj += $(subst .c,.o,$(source))
-$(warning $(obj))
+#$(warning $(obj))
 
 all:out
 
 $(obj):%.o:%.c
-	$(CC) CFLAGS -c $< 
+	$(CC) $(CFLAGS) -c $< 
 	
 out:$(obj)
 	$(CC) -o $@ $^
