@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>  //sleep
 
 void help();
 void test_fetch_and_add();
@@ -15,7 +16,7 @@ int main(int argc, char * argv[])
     printf("which one do you want to test:");
     scanf("%d", &select);
 
-    switch ()
+    switch (select)
     {
         case 1:
             test_fetch_and_add();
@@ -55,7 +56,7 @@ void test_fetch_and_add()
 
     printf("before execute __sync_fetch_and_add. operand=%d\n", operand);
     result = __sync_fetch_and_add(&operand, 1);
-    printf("result = %d\n", result);
+    printf("the result of execute __sync_fetch_and_add is:%d\n", result);
     printf("after execute __sync_fetch_and_add. operand = %d\n", operand);
     printf("\n");
 }
@@ -87,21 +88,55 @@ void test_strspn()
     printf("\n");
 }
 
+/*
+* 将文件流和缓冲关联在一起，从而可以操作缓冲区的内容和大小。
+* 关联函数：setbuf(FILE *stream, char *buf); fopen("filename", "r+"); open("filename", int flag, int mode); fflush(FILE *stream);
+*/
+#define LOOP_NUM 10
 void test_setvbuf()
 {
     char buff[1024];
+    int i=0;
 
     memset(buff, 0, sizeof(buff));
 
-    fprintf(stdout, "启用全缓存_IOFBF\n");
-    setvbuf(stdout, buff, _IOFBF, sizeof(buff));
-    
-    fprintf(stdout, "hello,my name is shuhuan\n");
-    fprintf(stdout, "output into the buff\n");
+    printf("before setvbuf\n");
+    while (i++ < LOOP_NUM) {
+        printf("hello world!");
+        sleep(1);
+    }
+
+    printf("\nafter setvbuf\n");
     fflush(stdout);
 
+    setvbuf(stdout, buff, _IONBF, sizeof(buff));
+    i = 0;
+    while (i++ < LOOP_NUM) {
+        printf("hello world!");
+        sleep(1);
+    }
+
+    printf("buff is:%s\n", buff);
+
+
+    memset(buff, 0, sizeof(buff));
+    fprintf(stdout, "start line buffer\n");
+    setvbuf(stdout, buff, _IOLBF, sizeof(buff));
+
+    fprintf(stdout, "hello,my name is shuhuan.");
+    fprintf(stdout, "output into the buff.");
+    fflush(stdout);
     fprintf(stdout, "the fflush is called\n");
     fprintf(stdout, "it will sleep 5 seconds next\n");
 
+    memset(buff, 0, sizeof(buff));
+    fprintf(stdout, "start full buffer\n");
+    setvbuf(stdout, buff, _IOFBF, sizeof(buff));
+
+    fprintf(stdout, "hello,my name is shuhuan\n");
+    fprintf(stdout, "output into the buff\n\n\n");
+    fflush(stdout);
+    fprintf(stdout, "the fflush is called\n");
+    fprintf(stdout, "it will sleep 5 seconds next\n");
     sleep(5);
 }
