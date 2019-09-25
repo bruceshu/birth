@@ -2,11 +2,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>  //sleep
+#include <signal.h>  //signal
+
 
 void help();
 void test_fetch_and_add();
 void test_strspn();
 void test_setvbuf();
+void test_signal();
 
 int main(int argc, char * argv[])
 {
@@ -28,9 +31,13 @@ int main(int argc, char * argv[])
             test_setvbuf();
             break;
         case 4:
+            test_signal();
+            break;
+        case 100:
             test_fetch_and_add();
             test_strspn();
             test_setvbuf();
+            test_signal();
             break;
         default:
             printf("your select is error!\n");
@@ -43,12 +50,16 @@ int main(int argc, char * argv[])
 
 void help()
 {
-    printf("======== 1、test_fetch_and_add =========\n");
-    printf("======== 2、test_strspn =========\n");
-    printf("======== 3、test_setvbuf =========\n");
-    printf("======== 4、test all function =========\n");
+    printf("======== 1 test_fetch_and_add =========\n");
+    printf("======== 2 test_strspn =========\n");
+    printf("======== 3 test_setvbuf =========\n");
+    printf("======== 4 test_signal =========\n");
+    printf("======== 100 test all function =========\n");
 }
 
+/*
+* 测试系统原子函数 __sync_fetch_and_add 系列函数
+*/
 void test_fetch_and_add()
 {
     int operand = 10;
@@ -61,6 +72,9 @@ void test_fetch_and_add()
     printf("\n");
 }
 
+/*
+* 测试系统字符串操作函数 strspn 系列函数
+*/
 void test_strspn()
 {
     char *str1 = "abcdefghijklmnopqrstuvwxyz";
@@ -140,3 +154,30 @@ void test_setvbuf()
     fprintf(stdout, "it will sleep 5 seconds next\n");
     sleep(5);
 }
+
+static void handler(int s)
+{
+    if (s == SIGBUS)
+        printf(" now got a bus error signal\n");
+
+    if (s == SIGSEGV)
+        printf(" now got a segmentation violation signal\n");
+
+    if (s == SIGILL)
+        printf(" now got an illegal instruction signal\n");
+
+    exit(1);
+}
+
+/*
+* 测试软中断原理，signal 系列函数
+*/
+void test_signal()
+{
+    int *p=NULL;
+    signal(SIGBUS, handler);
+    signal(SIGSEGV, handler);
+    signal(SIGILL, handler);
+    *p=0;
+}
+
