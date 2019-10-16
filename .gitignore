@@ -3,5 +3,7 @@
 *.a
 *.o
 *.so
+**/a.out
+**/out
 /video-and-audio/video_out
 /video-and-audio/audio_out
