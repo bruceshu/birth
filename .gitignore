@@ -1,0 +1,7 @@
+
+# 二进制文件
+*.a
+*.o
+*.so
+/video-and-audio/video_out
+/video-and-audio/audio_out
