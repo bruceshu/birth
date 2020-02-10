@@ -3,7 +3,7 @@
 CC=gcc
 CFLAGS += -Wall
 
-LIBS += -L./lib -lSDL2 -lSDL2main -lm -ldl -lpthread -lrt
+LIBS += -L./lib -lSDL2 -lSDL2main -lm -ldl -lpthread #-lrt
 INCLUDE = -I./include/SDL2
 
 video_path = sdl_video
