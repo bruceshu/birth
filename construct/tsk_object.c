@@ -44,3 +44,15 @@ tsk_object_t *tsk_object_new(const tsk_object_def_t *obj_def, ...)
         printf("Failed to create new tsk_object.\n");
     }
 }
+
+tsk_size_t tsk_object_sizeof(const tsk_object_t *self)
+{
+	const tsk_object_def_t **objdef = (const tsk_object_def_t **)self;
+	if (objdef && *objdef) {
+		return (*objdef)->size;
+	}
+	else {
+		TSK_DEBUG_ERROR("NULL object definition.");
+		return 0;
+	}
+}
