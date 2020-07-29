@@ -55,4 +55,4 @@ tsk_size_t tsk_object_sizeof(const tsk_object_t *self)
 		TSK_DEBUG_ERROR("NULL object definition.");
 		return 0;
 	}
-}
+}                    

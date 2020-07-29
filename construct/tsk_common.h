@@ -7,7 +7,12 @@
 
 #include <stddef.h>
 
+#define tsk_true	1
+#define tsk_false	0
+
 typedef size_t tsk_size_t;
+typedef int tsk_bool_t;
+typedef unsigned int uint32_t;
 
 #ifdef NULL
 #define tsk_null    NULL /**< Null pointer */
