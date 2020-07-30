@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <time.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "tsk_common.h"
 #include "tsk_log.h"
@@ -16,7 +17,14 @@
 
 static uint32_t gMaxLogLevelConsole = TSK_LOG_INFO;
 static uint32_t gMaxLogLevelFile = TSK_LOG_INFO;
+static FILE *gLogFile = NULL;
 static tsk_mutex_handle_t* gLogFileMutex = tsk_null;
+static uint64_t gLogFileSize = 0;
+static uint64_t gMaxLogFileSize = 10*1024*1024; // 10MB by default
+static char *gLogFilePath = NULL;
+static char *gLogFilePathBak = NULL;
+
+
 
 
 

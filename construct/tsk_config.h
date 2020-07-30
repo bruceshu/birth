@@ -28,7 +28,21 @@
 #	define TINYSAK_GEXTERN	extern
 #endif
 
-
+// Windows (XP/Vista/7/CE and Windows Mobile) macro definition.
+#if defined(WIN32)|| defined(_WIN32) || defined(_WIN32_WCE)
+#	define TSK_UNDER_WINDOWS	1
+#	if defined(_WIN32_WCE) || defined(UNDER_CE)
+#		define TSK_UNDER_WINDOWS_CE	1
+#		define TSK_STDCALL			__cdecl
+#	else
+#		define TSK_STDCALL 
+#	endif
+#	if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP)
+#		define TSK_UNDER_WINDOWS_RT		1
+#	endif
+#else
+#	define TSK_STDCALL
+#endif
 
 
 #endif

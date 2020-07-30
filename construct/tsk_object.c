@@ -35,13 +35,13 @@ tsk_object_t *tsk_object_new(const tsk_object_def_t *obj_def, ...)
                 tsk_free(&new_obj_);
             }
 #if TSK_DEBUG_OBJECTS
-		printf("N∞ objects:%d\n", ++tsk_objects_count);
+		// TSK_DEBUG_INFO("N∞ objects:%d\n", ++tsk_objects_count);
 #endif
         } else {
-            printf("No constructor found.\n");
+            // TSK_DEBUG_WARN("No constructor found.\n");
         }
     } else {
-        printf("Failed to create new tsk_object.\n");
+        // TSK_DEBUG_ERROR("Failed to create new tsk_object.\n");
     }
 }
 
@@ -52,7 +52,7 @@ tsk_size_t tsk_object_sizeof(const tsk_object_t *self)
 		return (*objdef)->size;
 	}
 	else {
-		TSK_DEBUG_ERROR("NULL object definition.");
+		// TSK_DEBUG_ERROR("NULL object definition.");
 		return 0;
 	}
 }                    
