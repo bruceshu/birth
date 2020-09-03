@@ -5,8 +5,10 @@ using namespace std;
 class A
 {
 public:
+    A() {
+        cout << "create A" << endl;
+    }
     virtual void out1() = 0; ///由子类实现
-    virtual ~A(){};
     virtual void out2() ///默认实现
     {
         cout << "A(out2)" << endl;
@@ -15,12 +17,17 @@ public:
     {
         cout << "A(out3)" << endl;
     }
+    virtual ~A(){
+        cout << "delete A" << endl;
+    };
 };
 
 class B : public A
 {
 public:
-    virtual ~B(){};
+    B() {
+        cout << "create B" << endl;
+    }
     void out1()
     {
         cout << "B(out1)" << endl;
@@ -33,6 +40,9 @@ public:
     {
         cout << "B(out3)" << endl;
     }
+    virtual ~B(){
+        cout << "delete B" <<endl;
+    };
 };
 
 int main()
