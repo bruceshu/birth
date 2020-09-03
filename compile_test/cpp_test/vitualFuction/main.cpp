@@ -59,5 +59,6 @@ int main()
 
     delete ab;
     delete bb;
+    //free(ab)  //free释放的是内存空间，与malloc对应。delete首先调用对象的析构函数，然后再释放内存空间，与new对应。
     return 0;
 }
