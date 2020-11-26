@@ -3,6 +3,8 @@
 *.a
 *.o
 *.so
+**/libs
+**/obj
 **/a.out
 **/out
 /video-and-audio/video_out
