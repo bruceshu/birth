@@ -17,6 +17,7 @@ public:
     {
         cout << "A(out3)" << endl;
     }
+
     virtual ~A(){
         cout << "delete A" << endl;
     };
@@ -40,25 +41,28 @@ public:
     {
         cout << "B(out3)" << endl;
     }
-    virtual ~B(){
+    
+    ~B(){
         cout << "delete B" <<endl;
     };
 };
 
 int main()
 {
+    cout << "子类对象赋值给父类指针" << endl;
     A *ab = new B();
     ab->out1();
     ab->out2();
     ab->out3();
     cout << "************************" << endl;
-    B *bb = new B;
-    bb->out1();
-    bb->out2();
-    bb->out3();
+    cout << "子类对象赋值给子类指针" << endl;
+    B *b = new B;
+    b->out1();
+    b->out2();
+    b->out3();
 
     delete ab;
-    delete bb;
+    delete b;
     //free(ab)  //free释放的是内存空间，与malloc对应。delete首先调用对象的析构函数，然后再释放内存空间，与new对应。
     return 0;
 }
