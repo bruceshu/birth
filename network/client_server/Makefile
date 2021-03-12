@@ -8,10 +8,10 @@ lib += -lpthread
 all:$(project)
 
 server:server.o
-	gcc -o %@ %< $(lib)
+	gcc -o $@ $< $(lib)
 
 client:client.o
-	gcc -o %@ %< $(lib)	
+	gcc -o $@ $< $(lib)	
 
 clean:
 	rm -rf *.o $(project)

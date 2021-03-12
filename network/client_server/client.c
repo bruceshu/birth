@@ -124,7 +124,7 @@ void *send_udp_msg(void *arg)
 
         ret = sendto(userClient.udp_client_socket, buf, strlen(buf), 0, (struct sockaddr*)&userClient.udp_ser_addr, sizeof(userClient.udp_ser_addr));
         if(ret == -1) {
-            printf("[%s:%d]Error no.%d: %s\n", errno, strerror(errno), __func__, __LINE__);
+            printf("[%s:%d]Error no.%d: %s\n", __func__, __LINE__, errno, strerror(errno));
             break;
         }
         memset(buf, 0, BUFF_SIZE);
