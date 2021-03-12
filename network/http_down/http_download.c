@@ -24,28 +24,29 @@ void parse_url(const char *url, char *domain, int *port, char *file_name)
     *port = 80;
     char *patterns[] = {"http://", "https://", NULL};
 
-    for (int i = 0; patterns[i]; i++)
-        if (strncmp(url, patterns[i], strlen(patterns[i])) == 0)
-        {
+    for (int i = 0; patterns[i]; i++) {
+        if (strncmp(url, patterns[i], strlen(patterns[i])) == 0) {
             start = strlen(patterns[i]);
             break;
         }
+    }
 
     //解析域名, 保留域名后面的端口号
-    for (int i = start; url[i] != '/' && url[i] != '\0'; i++, j++)
+    for (int i = start; url[i] != '/' && url[i] != '\0'; i++, j++) {
         domain[j] = url[i];
+    }
+        
     domain[j] = '\0';
 
     //解析端口号, 如果没有, 那么设置端口为80
     char *pos = strstr(domain, ":");
-    if (pos)
+    if (pos) {
         sscanf(pos, ":%d", port);
+    }
 
     //删除域名端口号
-    for (int i = 0; i < (int)strlen(domain); i++)
-    {
-        if (domain[i] == ':')
-        {
+    for (int i = 0; i < (int)strlen(domain); i++) {
+        if (domain[i] == ':') {
             domain[i] = '\0';
             break;
         }
@@ -53,10 +54,8 @@ void parse_url(const char *url, char *domain, int *port, char *file_name)
 
     //获取下载文件名
     j = 0;
-    for (int i = start; url[i] != '\0'; i++)
-    {
-        if (url[i] == '/')
-        {
+    for (int i = start; url[i] != '\0'; i++) {
+        if (url[i] == '/') {
             if (i !=  strlen(url) - 1)
                 j = 0;
             continue;

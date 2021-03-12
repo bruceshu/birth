@@ -26,7 +26,7 @@ int main(int argc, char const *argv[])
 
     if (argc == 1)
     {
-        printf("Input a valid URL please\n");
+        printf("please input params\n");
         exit(0);
     }
     else
@@ -53,7 +53,7 @@ int main(int argc, char const *argv[])
     printf("PORT: %d\n", port);
     printf("FILENAME: %s\n\n", file_name);
 
-    //ÉèÖÃhttpÇëÇóÍ·ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½httpï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ï¢
     char header[1024] = {0};
     sprintf(header, \
             "GET %s HTTP/1.1\r\n"\
@@ -66,7 +66,7 @@ int main(int argc, char const *argv[])
 
     printf("the header of http is:\n%sthe length of header is:%d\n", header, (int) strlen(header));
 
-    //´´½¨Ì×½Ó×Ö
+    //ï¿½ï¿½ï¿½ï¿½ï¿½×½ï¿½ï¿½ï¿½
     int client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket < 0)
     {
@@ -74,14 +74,14 @@ int main(int argc, char const *argv[])
         exit(-1);
     }
 
-    //´´½¨µØÖ·½á¹¹Ìå
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½á¹¹ï¿½ï¿½
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = inet_addr(ip_addr);
     addr.sin_port = htons(port);
 
-    //Á¬½Ó·þÎñÆ÷
+    //ï¿½ï¿½ï¿½Ó·ï¿½ï¿½ï¿½ï¿½ï¿½
     puts("3: Connect server...");
     int res = connect(client_socket, (struct sockaddr *) &addr, sizeof(addr));
     if (res == -1)
@@ -90,7 +90,7 @@ int main(int argc, char const *argv[])
         exit(-1);
     }
 
-    puts("4: Send request...");//Ïò·þÎñÆ÷·¢ËÍÏÂÔØÇëÇó
+    puts("4: Send request...");//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     write(client_socket, header, strlen(header));
 
     int mem_size = 4096;
@@ -99,12 +99,12 @@ int main(int argc, char const *argv[])
     char *buf = (char *) malloc(mem_size * sizeof(char));
     char *response = (char *) malloc(mem_size * sizeof(char));
 
-    //Ã¿´Îµ¥¸ö×Ö·û¶ÁÈ¡ÏìÓ¦Í·ÐÅÏ¢, ½ö½ö¶ÁÈ¡µÄÊÇÏìÓ¦²¿·ÖµÄÍ·²¿, ºóÃæµ¥¶À¿ªÏß³ÌÏÂÔØ
+    //Ã¿ï¿½Îµï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½È¡ï¿½ï¿½Ó¦Í·ï¿½ï¿½Ï¢, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Öµï¿½Í·ï¿½ï¿½, ï¿½ï¿½ï¿½æµ¥ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½
     while ((len = read(client_socket, buf, 1)) != 0)
     {
         if (length + len > mem_size)
         {
-            //¶¯Ì¬ÄÚ´æÉêÇë, ÒòÎªÎÞ·¨È·¶¨ÏìÓ¦Í·ÄÚÈÝ³¤¶È
+            //ï¿½ï¿½Ì¬ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½Îªï¿½Þ·ï¿½È·ï¿½ï¿½ï¿½ï¿½Ó¦Í·ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
             mem_size *= 2;
             char * temp = (char *) realloc(response, sizeof(char) * mem_size);
             if (temp == NULL)
@@ -118,7 +118,7 @@ int main(int argc, char const *argv[])
         buf[len] = '\0';
         strcat(response, buf);
 
-        //ÕÒµ½ÏìÓ¦Í·µÄÍ·²¿ÐÅÏ¢, Á½¸ö"\n\r"Îª·Ö¸îµã
+        //ï¿½Òµï¿½ï¿½ï¿½Ó¦Í·ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½Ï¢, ï¿½ï¿½ï¿½ï¿½"\n\r"Îªï¿½Ö¸ï¿½ï¿½
         int flag = 0;
         for (int i = strlen(response) - 1; response[i] == '\n' || response[i] == '\r'; i--, flag++);
         if (flag == 4)
@@ -133,7 +133,7 @@ int main(int argc, char const *argv[])
     strcpy(resp.file_name, file_name);
 
     printf("5: Start thread to download...\n");
-    /*¿ªÐÂµÄÏß³ÌÏÂÔØÎÄ¼þ*/
+    /*ï¿½ï¿½ï¿½Âµï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½*/
     pthread_t download_thread;
     pthread_create(&download_thread, NULL, download, (void *) &client_socket);
     pthread_join(download_thread, NULL);

@@ -1,3 +1,8 @@
+/* 获取ip
+	bruceshu 2021-3-12
+*/
+
+
 #include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +32,6 @@ int main(int argc, char *argv[])
     }
 
     printf("official hostname:%s\n", hptr->h_name);
-
     for (pptr = hptr->h_aliases; *pptr != NULL; pptr++)
     {
 		printf("alias:%s\n", *pptr);
