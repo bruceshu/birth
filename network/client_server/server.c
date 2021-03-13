@@ -176,13 +176,15 @@ void * handle_udp_msg(void *arg)
             printf("Error no.%d: %s\n", errno, strerror(errno));
             break;
         }else if(ret == 0) {
-            printf("client is down! thread id is %d\n", (int)self);
+            printf("client stop to speak to me! thread id is %d\n", (int)self);
             break;
         }
 
         printf("client(%s) said to me:%s\n", inet_ntoa(client_addr.sin_addr), buf);
         memset(buf, 0, BUFF_SIZE);
-        sendto(udp_socket, UDP_ACK, strlen((UDP_ACK)), 0, (struct sockaddr*)&client_addr, sizeof(client_addr));
+
+        // 局域网内，收到的udp包是从0.0.0.0地址传过来的。
+        // sendto(udp_socket, UDP_ACK, strlen((UDP_ACK)), 0, (struct sockaddr*)&client_addr, sizeof(client_addr));
     }
 
     return NULL;

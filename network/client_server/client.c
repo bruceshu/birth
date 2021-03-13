@@ -139,6 +139,7 @@ void *send_udp_msg(void *arg)
 }
 
 void * recv_udp_msg(void *arg) {
+    printf("%s\n", __func__);
     char buf[BUFF_SIZE] = {0};
     struct sockaddr_in addr;
     int addr_len;
@@ -189,7 +190,8 @@ int start_udp() {
     userClient.udp_client_socket = udp_socket;
     userClient.udp_ser_addr = ser_addr;
     pthread_create(&send_udp_thread, NULL, send_udp_msg, NULL);
-    pthread_create(&recv_udp_thread, NULL, recv_udp_msg, NULL);
+    //暂时用不到udp接收
+    // pthread_create(&recv_udp_thread, NULL, recv_udp_msg, NULL);
     pthread_join(send_udp_thread, NULL);
     pthread_join(recv_udp_thread, NULL);
     return 0;
